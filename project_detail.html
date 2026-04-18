@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project detail — TPA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#f5f4f0;--surface:#ffffff;--surface2:#f0efe9;
+    --border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.14);
+    --text:#1a1917;--text-muted:#6b6a66;--text-faint:#9e9d99;
+    --c-gereed:#2d7a4f;--c-gereed-bg:#e8f5ee;
+    --c-loopt:#1a5fa8;--c-loopt-bg:#e3eef9;
+    --c-review:#8a5c0a;--c-review-bg:#fdf0d6;
+    --c-geblokkeerd:#b53030;--c-geblokkeerd-bg:#fce8e8;
+    --c-todo:#555450;--c-todo-bg:#ededea;
+    --border-radius-md:8px;--border-radius-lg:12px;
+  }
+  body { font-family:"DM Sans",sans-serif; background:var(--bg); color:var(--text); font-size:14px; min-height:100vh; }
+
+  .page-header {
+    background:var(--text); color:#fff; padding:0 2rem;
+    display:flex; align-items:center; justify-content:space-between;
+    height:56px; position:sticky; top:0; z-index:100;
+  }
+  .page-header .logo { font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5); }
+  .page-header .project-name { font-size:15px;font-weight:500;color:#fff; }
+  .page-header .meta { font-size:12px;color:rgba(255,255,255,.45);font-family:"DM Mono",monospace; }
+  .btn-back-detail {
+    display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;
+    padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);
+    background:transparent;color:rgba(255,255,255,.55);cursor:pointer;
+    font-family:"DM Sans",sans-serif;transition:all .15s;
+  }
+  .btn-back-detail:hover { background:rgba(255,255,255,.08);color:rgba(255,255,255,.85); }
+
+  .main { max-width:960px;margin:0 auto;padding:1.5rem 2rem 4rem; }
+
+  /* Project info card */
+  .project-info {
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--border-radius-lg);
+    padding:1.25rem 1.5rem;margin-bottom:1.5rem;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;
+  }
+  .info-item .info-label { font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:3px; }
+  .info-item .info-val { font-size:14px;font-weight:500;color:var(--text); }
+
+  /* Mode badge */
+  .mode-bar {
+    display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;
+    padding:.625rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  }
+  .mode-bar .mode-label { font-size:12px;color:var(--text-muted); }
+  .mode-pill {
+    display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;
+    padding:3px 10px;border-radius:12px;
+  }
+  .mode-pill.viewer { background:rgba(26,95,168,.1);color:#1a5fa8; }
+  .mode-pill.editor { background:rgba(45,122,79,.1);color:#2d7a4f; }
+  .mode-pill .dot { width:6px;height:6px;border-radius:50%; }
+  .mode-pill.viewer .dot { background:#1a5fa8; }
+  .mode-pill.editor .dot { background:#2d7a4f; }
+  .saving-indicator { display:none;align-items:center;gap:5px;font-size:11px;color:var(--text-faint);margin-left:auto; }
+  .saving-indicator.show { display:flex; }
+  .saving-dot { width:6px;height:6px;border-radius:50%;background:var(--text-faint);animation:savepulse .6s ease-in-out infinite alternate; }
+  @keyframes savepulse{to{opacity:.2}}
+
+  /* Phase sections */
+  .fase-section { margin-bottom:1.25rem; }
+  .fase-section-header {
+    display:flex;align-items:center;gap:8px;margin-bottom:.625rem;
+    cursor:pointer;user-select:none;
+  }
+  .fase-section-header .fase-title {
+    font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;
+    padding:3px 10px;border-radius:10px;
+  }
+  .fase-section-header .collapse-icon { font-size:10px;color:var(--text-faint);transition:transform .2s; }
+  .fase-section-header.collapsed .collapse-icon { transform:rotate(-90deg); }
+  .fase-section-body { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+  .fase-section-body.collapsed { display:none; }
+
+  /* Field rows */
+  .field-row {
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--border-radius-md);
+    padding:.625rem .875rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+    min-height:42px;
+  }
+  .field-row.full-width { grid-column:1/-1; }
+  .field-label { font-size:12px;color:var(--text-muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .field-val { flex-shrink:0;text-align:right; }
+
+  /* Badges */
+  .badge { display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:8px;white-space:nowrap; }
+  .G { background:var(--c-gereed-bg);color:var(--c-gereed); }
+  .L { background:var(--c-loopt-bg);color:var(--c-loopt); }
+  .R { background:var(--c-review-bg);color:var(--c-review); }
+  .B { background:var(--c-geblokkeerd-bg);color:var(--c-geblokkeerd); }
+  .N { background:var(--c-todo-bg);color:var(--c-todo); }
+  .wk-over { color:var(--c-geblokkeerd);font-weight:600;font-family:"DM Mono",monospace;font-size:12px; }
+  .wk-warn { color:var(--c-review);font-weight:500;font-family:"DM Mono",monospace;font-size:12px; }
+  .wk-ok   { color:var(--c-gereed);font-family:"DM Mono",monospace;font-size:12px; }
+  .janee-ja  { display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:10px;background:#e8f5ee;color:#2d7a4f; }
+  .janee-nee { display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:10px;background:#fce8e8;color:#b53030; }
+  .janee-leeg{ display:inline-block;font-size:11px;padding:2px 9px;border-radius:10px;background:var(--surface2);color:var(--text-faint); }
+  .date-val { font-size:12px;font-family:"DM Mono",monospace;color:var(--text-muted); }
+  .opmerking-tekst { font-size:11px;color:var(--text);background:#fdf8e8;border-radius:4px;padding:2px 6px;border-left:2px solid #f0a500; }
+  .opmerking-leeg  { font-size:11px;font-style:italic;color:var(--text-faint); }
+
+  /* Editable fields */
+  .mode-editor .field-row.editable { cursor:pointer;transition:background .1s; }
+  .mode-editor .field-row.editable:hover { background:var(--surface2); }
+  .mode-editor .field-row.editable:hover .badge,
+  .mode-editor .field-row.editable:hover .janee-ja,
+  .mode-editor .field-row.editable:hover .janee-nee,
+  .mode-editor .field-row.editable:hover .janee-leeg,
+  .mode-editor .field-row.editable:hover .date-val,
+  .mode-editor .field-row.editable:hover .opmerking-tekst,
+  .mode-editor .field-row.editable:hover .opmerking-leeg { outline:2px solid var(--border-strong);outline-offset:1px; }
+
+  /* Pickers (reused from main) */
+  .status-picker,.date-popup {
+    position:fixed;background:var(--surface);border:1px solid var(--border-strong);
+    border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:500;padding:6px;display:none;
+  }
+  .status-picker.open,.date-popup.open { display:block; }
+  .sp-header,.date-popup-header { font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-faint);padding:4px 6px 6px; }
+  .status-option { display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text);transition:background .1s; }
+  .status-option:hover,.status-option.active { background:var(--surface2); }
+  .sdot { width:8px;height:8px;border-radius:2px;flex-shrink:0; }
+  .date-popup { flex-direction:column;gap:.75rem;min-width:220px; }
+  .date-popup.open { display:flex; }
+  .date-popup input[type="date"] { padding:7px 10px;font-family:"DM Sans",sans-serif;font-size:13px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg);color:var(--text);outline:none;width:100%; }
+  .date-popup input[type="date"]:focus { border-color:var(--text); }
+  .date-popup-actions { display:flex;gap:6px;justify-content:flex-end; }
+  .date-popup-actions button { padding:6px 13px;font-size:12px;font-family:"DM Sans",sans-serif;border-radius:7px;cursor:pointer;border:1px solid var(--border-strong);transition:all .15s; }
+  .btn-date-cancel { background:transparent;color:var(--text-muted); }
+  .btn-date-cancel:hover { background:var(--surface2); }
+  .btn-date-save { background:var(--text);color:#fff;border-color:var(--text);font-weight:600; }
+  .btn-date-save:hover { background:#333; }
+  .btn-date-clear { background:transparent;color:var(--c-geblokkeerd);border-color:transparent;margin-right:auto; }
+
+  /* Opmerking modal */
+  .opm-overlay { position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:600;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .15s; }
+  .opm-overlay.open { opacity:1;pointer-events:all; }
+  .opm-modal { background:var(--surface);border-radius:14px;width:100%;max-width:460px;box-shadow:0 16px 48px rgba(0,0,0,.15);transform:translateY(6px);transition:transform .15s; }
+  .opm-overlay.open .opm-modal { transform:translateY(0); }
+  .opm-modal-header { padding:1rem 1.25rem .75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+  .opm-modal-title { font-size:14px;font-weight:600;color:var(--text); }
+  .opm-modal-sub { font-size:11px;color:var(--text-faint);margin-top:1px; }
+  .opm-close { background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:16px;padding:2px 6px;border-radius:4px; }
+  .opm-close:hover { background:var(--surface2);color:var(--text); }
+  .opm-modal-body { padding:1rem 1.25rem; }
+  .opm-textarea { width:100%;min-height:100px;padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:13px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg);color:var(--text);outline:none;resize:vertical;line-height:1.5; }
+  .opm-textarea:focus { border-color:var(--text);background:#fff; }
+  .opm-modal-footer { padding:.75rem 1.25rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;align-items:center; }
+  .opm-char-count { font-size:11px;color:var(--text-faint);margin-right:auto; }
+  .btn-opm-cancel { padding:7px 14px;font-size:13px;font-family:"DM Sans",sans-serif;border:1px solid var(--border-strong);border-radius:8px;background:transparent;color:var(--text-muted);cursor:pointer; }
+  .btn-opm-cancel:hover { background:var(--surface2); }
+  .btn-opm-save { padding:7px 16px;font-size:13px;font-family:"DM Sans",sans-serif;font-weight:600;border:none;border-radius:8px;background:var(--text);color:#fff;cursor:pointer; }
+  .btn-opm-save:hover { background:#333; }
+
+  /* Toast */
+  .toast { position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--text);color:#fff;border-radius:10px;padding:.6rem 1.2rem;font-size:13px;z-index:300;transition:transform .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  .toast.success { background:#2d7a4f; }
+  .toast.error { background:#b53030; }
+  .toast.info { background:#1a5fa8; }
+
+  /* Loading */
+  .spinner { width:28px;height:28px;border:2.5px solid var(--border-strong);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem; }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-box { text-align:center;padding:4rem;color:var(--text-faint);font-size:13px; }
+
+  @media(max-width:600px) {
+    .main { padding:1rem; }
+    .fase-section-body { grid-template-columns:1fr; }
+    .project-info { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div>
+    <div class="logo">TPA · Engineeringsplanning</div>
+    <div class="project-name" id="pageTitle">Project laden...</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:.75rem">
+    <span class="meta" id="pageWP"></span>
+    <button class="btn-back-detail" onclick="window.close()">&#10005; Sluiten</button>
+  </div>
+</header>
+
+<main class="main" id="mainContent">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div>Project laden...</div>
+  </div>
+</main>
+
+<!-- Status picker -->
+<div class="status-picker" id="statusPicker">
+  <div class="sp-header">Status wijzigen</div>
+  <div class="status-option" data-val="Gereed"         onclick="applyStatus('Gereed')"><span class="sdot" style="background:#2d7a4f"></span>Gereed</div>
+  <div class="status-option" data-val="Loopt"          onclick="applyStatus('Loopt')"><span class="sdot" style="background:#1a5fa8"></span>Loopt</div>
+  <div class="status-option" data-val="Review"         onclick="applyStatus('Review')"><span class="sdot" style="background:#8a5c0a"></span>Review</div>
+  <div class="status-option" data-val="Geblokkeerd"    onclick="applyStatus('Geblokkeerd')"><span class="sdot" style="background:#b53030"></span>Geblokkeerd</div>
+  <div class="status-option" data-val="Nog te starten" onclick="applyStatus('Nog te starten')"><span class="sdot" style="background:#555450"></span>Nog te starten</div>
+  <div style="border-top:1px solid var(--border);margin:4px 0"></div>
+  <div class="status-option" onclick="closeStatusPicker()" style="color:var(--text-faint)">Annuleren</div>
+</div>
+
+<!-- Date picker -->
+<div class="date-popup" id="datePicker">
+  <div class="date-popup-header">Datum aanpassen</div>
+  <input type="date" id="dateInput" />
+  <div class="date-popup-actions">
+    <button class="btn-date-clear" onclick="clearDate()">Wissen</button>
+    <button class="btn-date-cancel" onclick="closeDatePicker()">Annuleren</button>
+    <button class="btn-date-save"  onclick="saveDate()">Opslaan</button>
+  </div>
+</div>
+
+<!-- Opmerking modal -->
+<div class="opm-overlay" id="opmOverlay" onclick="if(event.target===this)closeOpmModal()">
+  <div class="opm-modal">
+    <div class="opm-modal-header">
+      <div>
+        <div class="opm-modal-title">&#128221; Opmerking</div>
+        <div class="opm-modal-sub" id="opmModalSub"></div>
+      </div>
+      <button class="opm-close" onclick="closeOpmModal()">&#10005;</button>
+    </div>
+    <div class="opm-modal-body">
+      <textarea class="opm-textarea" id="opmTextarea" placeholder="Typ hier je opmerking..." oninput="updateOpmCount()" maxlength="500"></textarea>
+    </div>
+    <div class="opm-modal-footer">
+      <span class="opm-char-count" id="opmCharCount">0 / 500</span>
+      <button class="btn-opm-cancel" onclick="closeOpmModal()">Annuleren</button>
+      <button class="btn-opm-save"   onclick="saveOpmerking()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://yuyogdqobekvsvjgwllf.supabase.co';
+const SUPA_KEY = 'sb_publishable_Etgi3cTtObxJbAvf2WR-mw_dFajr5Qr';
+
+function esc(v) {
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+const supa = {
+  async req(method, path, body) {
+    const r = await fetch(SUPA_URL + path, {
+      method,
+      headers: { 'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':'return=minimal' },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message||'HTTP '+r.status); }
+    return (method==='PATCH'||method==='DELETE') ? null : r.json();
+  },
+  get:   (p)    => supa.req('GET',p),
+  patch: (p,b)  => supa.req('PATCH',p,b),
+  post:  (p,b)  => supa.req('POST',p,b),
+};
+
+const COLS = [
+  {i:0,f:"",n:"Projectnummer intern"},{i:1,f:"",n:"Projectnummer extern"},{i:2,f:"",n:"Projectnaam"},
+  {i:3,f:"",n:"APD Bouwdeel"},{i:4,f:"",n:"Liander Tracédeel"},{i:5,f:"",n:"WP nummer"},
+  {i:6,f:"",n:"Tracé start"},{i:7,f:"",n:"Tracé eind"},{i:8,f:"",n:"Engineer"},
+  {i:9,f:"",n:"Lengte nieuw (m)"},{i:10,f:"",n:"Lengte verwijderen (m)"},{i:11,f:"",n:"Overdracht VO aannemer"},
+  {i:12,f:"Analyse",n:"Stukken VO controleren"},{i:13,f:"Analyse",n:"VO inhoudelijk beoordelen"},
+  {i:14,f:"Analyse",n:"Verificatieplan opstellen"},{i:15,f:"Analyse",n:"Eisen importeren Relatics"},
+  {i:16,f:"Analyse",n:"VO QuickScan beoordelen"},{i:17,f:"Analyse",n:"Taakstellend Budget"},
+  {i:18,f:"Analyse",n:"Input Startnota (1)"},{i:19,f:"Analyse",n:"Input Startnota (2)"},
+  {i:20,f:"Analyse",n:"Input Startnota (3)"},{i:21,f:"Analyse",n:"Input Startnota (4)"},
+  {i:22,f:"Analyse",n:"Warme overdracht"},{i:23,f:"Analyse",n:"Inrichten projectomgeving"},
+  {i:24,f:"Analyse",n:"[Analyse] Overgangsdatum"},{i:25,f:"Analyse",n:"[Analyse] Weken resterend"},
+  {i:26,f:"Analyse",n:"[Analyse] Gereed"},
+  {i:200,f:"Analyse",n:"[Analyse] Opmerkingen"},
+  {i:27,f:"VO-Fase",n:"Eisen beoordelen projectteam"},{i:28,f:"VO-Fase",n:"Eisen verwerken Excel"},
+  {i:29,f:"VO-Fase",n:"Kennismaking bevoegd gezag"},{i:30,f:"VO-Fase",n:"Periodiek overleg BG"},
+  {i:31,f:"VO-Fase",n:"Opvragen raakvlakken"},{i:32,f:"VO-Fase",n:"DR's/iMSR's bespreken"},
+  {i:33,f:"VO-Fase",n:"Spelregels bevoegd gezag"},{i:34,f:"VO-Fase",n:"Schetsontwerp opstellen"},
+  {i:35,f:"VO-Fase",n:"[VO] Overgangsdatum"},{i:36,f:"VO-Fase",n:"[VO] Weken resterend"},
+  {i:37,f:"VO-Fase",n:"[VO] Gereed"},
+  {i:201,f:"VO-Fase",n:"[VO] Opmerkingen"},
+  {i:38,f:"DO-Fase",n:"Eisen BG in werktekening"},{i:39,f:"DO-Fase",n:"CROW-500 invullen"},
+  {i:40,f:"DO-Fase",n:"EV-beheerders contacteren"},{i:41,f:"DO-Fase",n:"Vitens contacteren"},
+  {i:42,f:"DO-Fase",n:"Stakeholders inventariseren"},{i:43,f:"DO-Fase",n:"Aantal percelen"},
+  {i:44,f:"DO-Fase",n:"Aantal perceeleigenaren"},{i:45,f:"DO-Fase",n:"Boorlocaties uitzetten"},
+  {i:46,f:"DO-Fase",n:"Aantal boringen"},{i:47,f:"DO-Fase",n:"Kabeltrekplan maken"},
+  {i:48,f:"DO-Fase",n:"Duikers inmeten"},{i:49,f:"DO-Fase",n:"Schouwverslag maken"},
+  {i:50,f:"DO-Fase",n:"Boringen uitwerken"},{i:51,f:"DO-Fase",n:"Werkterrein-inrichting"},
+  {i:52,f:"DO-Fase",n:"Kennismaking ZRO"},{i:53,f:"DO-Fase",n:"Principe-akkoord grondeigenaren"},
+  {i:54,f:"DO-Fase",n:"Schouwen met realisatie"},{i:55,f:"DO-Fase",n:"Opmerkingen schouw realisatie"},
+  {i:56,f:"DO-Fase",n:"Schouw bevoegd gezag"},{i:57,f:"DO-Fase",n:"Opmerkingen schouw BG"},
+  {i:58,f:"DO-Fase",n:"[DO] Overgangsdatum"},{i:59,f:"DO-Fase",n:"[DO] Weken resterend"},
+  {i:60,f:"DO-Fase",n:"[DO] Gereed"},
+  {i:202,f:"DO-Fase",n:"[DO] Opmerkingen"},
+  {i:61,f:"Onderzoeksfase",n:"Conditionerende onderzoeken"},{i:62,f:"Onderzoeksfase",n:"Beïnvloedingsberekening"},
+  {i:63,f:"Onderzoeksfase",n:"Toestemming GasUnie/NEN3654"},{i:64,f:"Onderzoeksfase",n:"Belastbaarheidsberekening"},
+  {i:65,f:"Onderzoeksfase",n:"Toestemming TenneT"},{i:66,f:"Onderzoeksfase",n:"Toetsen met OIV'er"},
+  {i:67,f:"Onderzoeksfase",n:"ZRO-tekeningen opstellen"},{i:68,f:"Onderzoeksfase",n:"Vervolggesprekken grondeigenaren"},
+  {i:69,f:"Onderzoeksfase",n:"Proefsleuflocaties uitzetten"},{i:70,f:"Onderzoeksfase",n:"Controle boven/ondergrond"},
+  {i:71,f:"Onderzoeksfase",n:"Verkeersplan proefsleuven"},{i:72,f:"Onderzoeksfase",n:"Melden grondeigenaren"},
+  {i:73,f:"Onderzoeksfase",n:"Melding proefsleuven"},{i:74,f:"Onderzoeksfase",n:"Graafmelding KLIC"},
+  {i:75,f:"Onderzoeksfase",n:"Inladen Marxact"},{i:76,f:"Onderzoeksfase",n:"Graven proefsleuven"},
+  {i:77,f:"Onderzoeksfase",n:"Beschoeiing aanvragen"},{i:78,f:"Onderzoeksfase",n:"Melding beschoeiing grond."},
+  {i:79,f:"Onderzoeksfase",n:"Melding beschoeiing BG"},{i:80,f:"Onderzoeksfase",n:"Beschoeiing inmeten"},
+  {i:81,f:"Onderzoeksfase",n:"Sonderingen aanvragen"},{i:82,f:"Onderzoeksfase",n:"Melding sonderingen grond."},
+  {i:83,f:"Onderzoeksfase",n:"Melding sonderingen BG"},{i:84,f:"Onderzoeksfase",n:"Sonderingen maken"},
+  {i:85,f:"Onderzoeksfase",n:"Verwerken in boorplan"},{i:86,f:"Onderzoeksfase",n:"Resultaten proefsleuven"},
+  {i:87,f:"Onderzoeksfase",n:"Toetsen OIV'er (2)"},{i:88,f:"Onderzoeksfase",n:"Meeloopkansen controle"},
+  {i:89,f:"Onderzoeksfase",n:"ZRO's afronden"},{i:90,f:"Onderzoeksfase",n:"Rentmeesters inplannen"},
+  {i:91,f:"Onderzoeksfase",n:"Risicodossier opstellen"},{i:92,f:"Onderzoeksfase",n:"Verificatie- en validatieplan"},
+  {i:93,f:"Onderzoeksfase",n:"Verkeersplannen opstellen"},{i:94,f:"Onderzoeksfase",n:"DO-raming opstellen"},
+  {i:95,f:"Onderzoeksfase",n:"[Onderzoek] Overgangsdatum"},{i:96,f:"Onderzoeksfase",n:"[Onderzoek] Weken resterend"},
+  {i:97,f:"Onderzoeksfase",n:"[Onderzoek] Gereed"},
+  {i:203,f:"Onderzoeksfase",n:"[Onderzoek] Opmerkingen"},
+  {i:98,f:"DO-Fase",n:"AVOI-vergunningen aanvragen"},{i:99,f:"DO-Fase",n:"Omgevingsvergunningen"},
+  {i:100,f:"DO-Fase",n:"Input Ontwikkelnota (1)"},{i:101,f:"DO-Fase",n:"Input Ontwikkelnota (2)"},
+  {i:102,f:"DO-Fase",n:"Input Ontwikkelnota (3)"},{i:103,f:"DO-Fase",n:"Input Ontwikkelnota (4)"},
+  {i:104,f:"DO-Fase",n:"Interne review DO nota"},{i:105,f:"DO-Fase",n:"Beoordeling OG"},
+  {i:106,f:"DO-Fase",n:"[DO-verg.] Overgangsdatum"},{i:107,f:"DO-Fase",n:"[DO-verg.] Weken resterend"},
+  {i:108,f:"DO-Fase",n:"[DO-verg.] Gereed"},
+  {i:204,f:"DO-Fase",n:"[DO-verg.] Opmerkingen"},
+  {i:109,f:"UO-Fase",n:"UO-tekeningen (stempel)"},{i:110,f:"UO-Fase",n:"UO-kabeltrektekening"},
+  {i:111,f:"UO-Fase",n:"Materiaallijst definitief"},{i:112,f:"UO-Fase",n:"WBS-tracker opstellen"},
+  {i:113,f:"UO-Fase",n:"Verificatierapport"},{i:114,f:"UO-Fase",n:"Bemalingsplan"},
+  {i:115,f:"UO-Fase",n:"Cultuurtechnisch werkplan"},{i:116,f:"UO-Fase",n:"NSA-aanvraag indienen"},
+  {i:117,f:"UO-Fase",n:"Keuringsplannen"},{i:118,f:"UO-Fase",n:"Capaciteitsaanvraag definitief"},
+  {i:119,f:"UO-Fase",n:"Werkplannen/bedieningsplannen"},{i:120,f:"UO-Fase",n:"Stappenplan montage"},
+  {i:121,f:"UO-Fase",n:"Interne W-formulier"},{i:122,f:"UO-Fase",n:"UO begroting opstellen"},
+  {i:123,f:"UO-Fase",n:"[UO] Overgangsdatum"},{i:124,f:"UO-Fase",n:"[UO] Weken resterend"},
+  {i:125,f:"UO-Fase",n:"[UO] Gereed"},
+  {i:205,f:"UO-Fase",n:"[UO] Opmerkingen"},
+  {i:126,f:"Natuurtoets",n:"Ecologische quickscan uitgezet"},{i:127,f:"Natuurtoets",n:"Ecologische quickscan: datum"},
+  {i:128,f:"Natuurtoets",n:"Ecologische quickscan: gereed"},
+  {i:206,f:"Natuurtoets",n:"Ecologische quickscan: opmerkingen"},{i:129,f:"Natuurtoets",n:"Ecologisch vervolgonderzoek"},
+  {i:130,f:"Natuurtoets",n:"Vervolgonderzoek: datum"},{i:131,f:"Natuurtoets",n:"Vervolgonderzoek: gereed"},
+  {i:207,f:"Natuurtoets",n:"Vervolgonderzoek: opmerkingen"},
+  {i:132,f:"Natuurtoets",n:"Natura 2000 / AERIUS uitgezet"},{i:133,f:"Natuurtoets",n:"AERIUS: datum"},
+  {i:134,f:"Natuurtoets",n:"AERIUS: gereed"},
+  {i:208,f:"Natuurtoets",n:"AERIUS: opmerkingen"},{i:135,f:"Natuurtoets",n:"Natuurtoets / voortoets uitgezet"},
+  {i:136,f:"Natuurtoets",n:"Voortoets: datum"},{i:137,f:"Natuurtoets",n:"Voortoets: gereed"},
+  {i:209,f:"Natuurtoets",n:"Voortoets: opmerkingen"},
+  {i:138,f:"Archeologie",n:"Bureauonderzoek uitgezet"},{i:139,f:"Archeologie",n:"Bureauonderzoek: datum"},
+  {i:140,f:"Archeologie",n:"Bureauonderzoek: gereed"},
+  {i:210,f:"Archeologie",n:"Bureauonderzoek: opmerkingen"},{i:141,f:"Archeologie",n:"IVO uitgezet"},
+  {i:142,f:"Archeologie",n:"IVO: datum"},{i:143,f:"Archeologie",n:"IVO: gereed"},
+  {i:211,f:"Archeologie",n:"IVO: opmerkingen"},
+  {i:144,f:"Archeologie",n:"Proefsleuvenonderzoek uitgezet"},{i:145,f:"Archeologie",n:"Proefsleuven: datum"},
+  {i:146,f:"Archeologie",n:"Proefsleuven: gereed"},
+  {i:212,f:"Archeologie",n:"Proefsleuven: opmerkingen"},
+  {i:147,f:"Bodem",n:"Historisch bodemonderzoek uitgezet"},{i:148,f:"Bodem",n:"Historisch bodem: datum"},
+  {i:149,f:"Bodem",n:"Historisch bodem: gereed"},
+  {i:213,f:"Bodem",n:"Historisch bodem: opmerkingen"},{i:150,f:"Bodem",n:"Verkennend bodemonderzoek"},
+  {i:151,f:"Bodem",n:"Verkennend bodem: datum"},{i:152,f:"Bodem",n:"Verkennend bodem: gereed"},
+  {i:214,f:"Bodem",n:"Verkennend bodem: opmerkingen"},
+  {i:153,f:"Bodem",n:"Nader onderzoek / sanering"},{i:154,f:"Bodem",n:"Nader onderzoek: datum"},
+  {i:155,f:"Bodem",n:"Nader onderzoek: gereed"},
+  {i:215,f:"Bodem",n:"Nader onderzoek: opmerkingen"},
+  {i:156,f:"NGE/OO",n:"Explosieven quickscan uitgezet"},{i:157,f:"NGE/OO",n:"Explosieven quickscan: datum"},
+  {i:158,f:"NGE/OO",n:"Explosieven quickscan: gereed"},
+  {i:216,f:"NGE/OO",n:"Explosieven quickscan: opmerkingen"},{i:159,f:"NGE/OO",n:"NGE detectieonderzoek"},
+  {i:160,f:"NGE/OO",n:"NGE detectie: datum"},{i:161,f:"NGE/OO",n:"NGE detectie: gereed"},
+  {i:217,f:"NGE/OO",n:"NGE detectie: opmerkingen"},
+  {i:162,f:"NGE/OO",n:"NGE begeleiding graafwerk"},{i:163,f:"NGE/OO",n:"NGE begeleiding: datum"},
+  {i:164,f:"NGE/OO",n:"NGE begeleiding: gereed"},
+  {i:218,f:"NGE/OO",n:"NGE begeleiding: opmerkingen"},
+  {i:165,f:"Geotechnisch",n:"Geotechnisch onderzoek uitgezet"},{i:166,f:"Geotechnisch",n:"Geotechnisch: datum"},
+  {i:167,f:"Geotechnisch",n:"Geotechnisch: gereed"},
+  {i:219,f:"Geotechnisch",n:"Geotechnisch: opmerkingen"},{i:168,f:"Geotechnisch",n:"Thermische grondweerstand"},
+  {i:169,f:"Geotechnisch",n:"Thermische weerstand: datum"},{i:170,f:"Geotechnisch",n:"Thermische weerstand: gereed"},
+  {i:220,f:"Geotechnisch",n:"Thermische weerstand: opmerkingen"},
+  {i:171,f:"Geotechnisch",n:"Grondwateronderzoek uitgezet"},{i:172,f:"Geotechnisch",n:"Grondwater: datum"},
+  {i:173,f:"Geotechnisch",n:"Grondwater: gereed"},
+  {i:221,f:"Geotechnisch",n:"Grondwater: opmerkingen"}
+];
+
+const FASE_STYLE = {
+  'Analyse':      {color:'var(--fase-analyse)',   bg:'var(--fase-analyse-bg)',   cls:'fl-analyse'},
+  'VO-Fase':      {color:'var(--fase-vo)',        bg:'var(--fase-vo-bg)',        cls:'fl-vo'},
+  'DO-Fase':      {color:'var(--fase-do)',        bg:'var(--fase-do-bg)',        cls:'fl-do'},
+  'Onderzoeksfase':{color:'var(--fase-onderzoek)',bg:'var(--fase-onderzoek-bg)',cls:'fl-onderzoek'},
+  'UO-Fase':      {color:'var(--fase-uo)',        bg:'var(--fase-uo-bg)',        cls:'fl-uo'},
+  'Natuurtoets':  {color:'var(--fase-natuur)',    bg:'var(--fase-natuur-bg)',    cls:'fl-natuur'},
+  'Archeologie':  {color:'var(--fase-archeologie)',bg:'var(--fase-archeologie-bg)',cls:'fl-archeologie'},
+  'Bodem':        {color:'var(--fase-bodem)',     bg:'var(--fase-bodem-bg)',     cls:'fl-bodem'},
+  'NGE/OO':       {color:'var(--fase-nge)',       bg:'var(--fase-nge-bg)',       cls:'fl-nge'},
+  'Geotechnisch': {color:'var(--fase-geo)',       bg:'var(--fase-geo-bg)',       cls:'fl-geo'},
+};
+
+
+var DATE_WEEK_PAIRS   = [[24,25],[35,36],[58,59],[95,96],[106,107],[123,124]];
+var PLANDATUM_COLS    = [127,130,133,136,139,142,145,148,151,154,157,160,163,166,169,172];
+var DATE_COL_INDICES  = DATE_WEEK_PAIRS.map(p=>p[0]).concat(PLANDATUM_COLS);
+var JANEE_COL_INDICES = [26,37,60,97,108,125,128,131,134,137,140,143,146,149,152,155,158,161,164,167,170,173];
+var VIRT_COLS         = [200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221];
+var OPM_VIRT_MAP      = {200:'Analyse',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-Fase',205:'UO-Fase',206:'Natuurtoets',207:'Natuurtoets',208:'Natuurtoets',209:'Natuurtoets',210:'Archeologie',211:'Archeologie',212:'Archeologie',213:'Bodem',214:'Bodem',215:'Bodem',216:'NGE/OO',217:'NGE/OO',218:'NGE/OO',219:'Geotechnisch',220:'Geotechnisch',221:'Geotechnisch'};
+var OPM_SUB_LABELS    = {200:'Analyse-fase',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-vergunningen',205:'UO-Fase',206:'Ecologische quickscan',207:'Ecologisch vervolgonderzoek',208:'Natura 2000 / AERIUS',209:'Natuurtoets / voortoets',210:'Bureauonderzoek',211:'Inventariserend veldonderzoek',212:'Proefsleuvenonderzoek',213:'Historisch bodemonderzoek',214:'Verkennend bodemonderzoek',215:'Nader onderzoek / sanering',216:'Explosieven quickscan',217:'NGE detectieonderzoek',218:'NGE begeleiding graafwerk',219:'Geotechnisch onderzoek',220:'Thermische grondweerstand',221:'Grondwateronderzoek'};
+
+function parseDatum(str) {
+  if (!str||str==='?') return null; str=str.trim();
+  var m=str.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if(m) return new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]));
+  m=str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m) return new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3]));
+  return null;
+}
+function toInputDate(d) {
+  if(!d) return '';
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function calcWeken(s) {
+  var d=parseDatum(s); if(!d) return '';
+  var today=new Date(); today.setHours(0,0,0,0);
+  return String(Math.ceil((d-today)/(1000*60*60*24*7)));
+}
+function badgeCls(v) {
+  if(v==='Gereed') return 'G'; if(v==='Loopt') return 'L';
+  if(v==='Review') return 'R'; if(v==='Geblokkeerd') return 'B';
+  if(v==='Nog te starten') return 'N'; return '';
+}
+
+// ══ STATE ══
+var ROW_DATA    = null;  // array[174]
+var ROW_IDX     = -1;
+var DB_ROW      = null;
+var OPMERKINGEN = {};
+var currentMode = 'viewer';
+var currentUser = '';
+var isSaving    = false;
+var pickerTarget = null;
+var datePicker_target = null;
+var opmTarget   = null;
+var toastTimer  = null;
+
+// ══ INIT ══
+window.addEventListener('load', async function() {
+  // Read params from sessionStorage (set by main page)
+  var params = JSON.parse(sessionStorage.getItem('detail_params') || 'null');
+  if (!params) {
+    document.getElementById('mainContent').innerHTML = '<div class="loading-box">Geen projectdata gevonden. Open dit scherm via het dashboard.</div>';
+    return;
+  }
+  ROW_IDX     = params.rowIdx;
+  currentUser = params.user  || 'Onbekend';
+  currentMode = params.mode  || 'viewer';
+
+  await loadProject();
+});
+
+async function loadProject() {
+  try {
+    var data = await supa.get('/rest/v1/werkpakketten?row_idx=eq.'+ROW_IDX+'&select=*');
+    if (!data || !data.length) throw new Error('Project niet gevonden');
+    DB_ROW = data[0];
+    ROW_DATA = new Array(174).fill('');
+    var cd = DB_ROW.cel_data || {};
+    Object.keys(cd).forEach(function(k){ ROW_DATA[parseInt(k)] = cd[k]||''; });
+
+    // Load opmerkingen
+    var opms = await supa.get('/rest/v1/opmerkingen?row_idx=eq.'+ROW_IDX+'&select=fase,tekst');
+    opms.forEach(function(o){ OPMERKINGEN[ROW_IDX+'-'+o.fase] = o.tekst||''; });
+
+    renderPage();
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML = '<div class="loading-box" style="color:#b53030">Fout: '+esc(e.message)+'</div>';
+  }
+}
+
+function renderPage() {
+  var naam = ROW_DATA[2] || 'Onbekend project';
+  var wp   = ROW_DATA[5] || '';
+  var eng  = ROW_DATA[8] || '';
+  document.title = naam + ' · TPA';
+  document.getElementById('pageTitle').textContent = naam;
+  document.getElementById('pageWP').textContent = wp + (eng ? ' — ' + eng : '');
+
+  var appEl = document.getElementById('app-wrapper');
+  if (appEl) appEl.className = currentMode === 'editor' ? 'mode-editor' : '';
+
+  var html = '<div id="app-wrapper" class="'+(currentMode==='editor'?'mode-editor':'')+'">';
+
+  // Mode bar
+  html += '<div class="mode-bar">';
+  html += '<span class="mode-label">Ingelogd als <b>'+esc(currentUser)+'</b></span>';
+  html += '<span class="mode-pill '+currentMode+'"><span class="dot"></span>'+
+    (currentMode==='viewer'?'Viewer':'Bewerker')+'</span>';
+  html += '<span class="saving-indicator" id="savingIndicator"><span class="saving-dot"></span>opslaan...</span>';
+  html += '</div>';
+
+  // Project info
+  html += '<div class="project-info">';
+  var infoFields = [
+    [2,'Projectnaam'],[3,'APD Bouwdeel'],[4,'Tracédeel'],[5,'WP nummer'],
+    [6,'Tracé start'],[7,'Tracé eind'],[8,'Engineer'],[9,'Lengte nieuw (m)'],
+    [10,'Lengte verwijderen (m)'],[11,'Overdracht VO aannemer']
+  ];
+  infoFields.forEach(function(f) {
+    var val = ROW_DATA[f[0]] || '—';
+    html += '<div class="info-item"><div class="info-label">'+esc(f[1])+'</div><div class="info-val">'+esc(val)+'</div></div>';
+  });
+  html += '</div>';
+
+  // Phase sections
+  var phases = ['Analyse','VO-Fase','DO-Fase','Onderzoeksfase','UO-Fase','Natuurtoets','Archeologie','Bodem','NGE/OO','Geotechnisch'];
+  phases.forEach(function(fase) {
+    var faseCols = COLS.filter(function(c){ return c.f === fase; });
+    if (!faseCols.length) return;
+    var fs = FASE_STYLE[fase] || {};
+
+    html += '<div class="fase-section">';
+    html += '<div class="fase-section-header" onclick="toggleSection(this)">';
+    html += '<span class="fase-title" style="background:'+fs.bg+';color:'+fs.color+'">'+esc(fase)+'</span>';
+    html += '<span class="collapse-icon">&#9660;</span>';
+    html += '</div>';
+    html += '<div class="fase-section-body">';
+
+    faseCols.forEach(function(col) {
+      var raw = ROW_DATA[col.i] || '';
+      var bc  = badgeCls(raw);
+      var isDate   = DATE_COL_INDICES.indexOf(col.i) >= 0;
+      var isJaNee  = JANEE_COL_INDICES.indexOf(col.i) >= 0;
+      var isVirt   = VIRT_COLS.indexOf(col.i) >= 0;
+      var isWeek   = col.n.indexOf('Weken resterend') >= 0;
+      var isFullW  = isVirt || col.n.length > 35;
+
+      var valHtml;
+      if (bc) {
+        valHtml = '<span class="badge '+bc+'">'+esc(raw)+'</span>';
+      } else if (isWeek && raw) {
+        var wn = parseInt(raw);
+        if (!isNaN(wn) && Math.abs(wn)<1000) {
+          var wc = wn<0?'wk-over':wn<=4?'wk-warn':'wk-ok';
+          valHtml = '<span class="'+wc+'">'+wn+'w</span>';
+        } else { valHtml = esc(raw); }
+      } else if (isDate && raw) {
+        valHtml = '<span class="date-val">'+esc(raw)+'</span>';
+      } else if (isJaNee) {
+        var jc = raw==='Ja'?'janee-ja':raw==='Nee'?'janee-nee':'janee-leeg';
+        valHtml = '<span class="'+jc+'">'+(raw||'—')+'</span>';
+      } else if (isVirt) {
+        var oKey = ROW_IDX+'-opm-'+col.i;
+        var ot   = OPMERKINGEN[oKey]||'';
+        valHtml = ot
+          ? '<span class="opmerking-tekst" title="'+esc(ot)+'">'+esc(ot)+'</span>'
+          : '<span class="opmerking-leeg">'+(currentMode==='editor'?'+ opmerking':'—')+'</span>';
+      } else {
+        valHtml = raw ? esc(raw) : '<span style="color:var(--text-faint)">—</span>';
+      }
+
+      // Click handler for editor
+      var clickAttr = '';
+      var editCls   = '';
+      if (currentMode === 'editor') {
+        if (bc) {
+          clickAttr = ' onclick="openStatusPicker(event,'+col.i+')"';
+          editCls   = ' editable';
+        } else if (isDate) {
+          clickAttr = ' onclick="openDatePicker(event,'+col.i+')"';
+          editCls   = ' editable';
+        } else if (isJaNee) {
+          clickAttr = ' onclick="toggleJaNee(event,'+col.i+')"';
+          editCls   = ' editable';
+        } else if (isVirt) {
+          clickAttr = ' onclick="openOpmModal(event,'+col.i+')"';
+          editCls   = ' editable';
+        }
+      }
+
+      html += '<div class="field-row'+(isFullW?' full-width':'')+editCls+'"'+clickAttr+'>';
+      html += '<span class="field-label" title="'+esc(col.n)+'">'+esc(col.n)+'</span>';
+      html += '<span class="field-val">'+valHtml+'</span>';
+      html += '</div>';
+    });
+
+    html += '</div></div>'; // fase-section-body + fase-section
+  });
+
+  html += '</div>'; // app-wrapper
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function toggleSection(header) {
+  header.classList.toggle('collapsed');
+  header.nextElementSibling.classList.toggle('collapsed');
+}
+
+// ══ STATUS PICKER ══
+function openStatusPicker(e, colIdx) {
+  e.stopPropagation();
+  pickerTarget = colIdx;
+  var picker = document.getElementById('statusPicker');
+  var cur = ROW_DATA[colIdx];
+  picker.querySelectorAll('.status-option[data-val]').forEach(function(opt){
+    opt.classList.toggle('active', opt.getAttribute('data-val')===cur);
+  });
+  positionPopup(picker, e, 170, 230);
+  picker.classList.add('open');
+  setTimeout(function(){ document.addEventListener('click', closePickerOutside, {once:true}); }, 0);
+}
+function closePickerOutside(e) {
+  if (!document.getElementById('statusPicker').contains(e.target)) closeStatusPicker();
+}
+function closeStatusPicker() {
+  document.getElementById('statusPicker').classList.remove('open');
+  pickerTarget = null;
+}
+async function applyStatus(newVal) {
+  if (pickerTarget === null) return;
+  var ci  = pickerTarget;
+  var old = ROW_DATA[ci];
+  closeStatusPicker();
+  if (newVal === old) return;
+  ROW_DATA[ci] = newVal;
+  renderPage();
+  await saveCell(ci, newVal, old);
+}
+
+// ══ DATE PICKER ══
+function openDatePicker(e, colIdx) {
+  e.stopPropagation();
+  datePicker_target = colIdx;
+  var cur = ROW_DATA[colIdx];
+  var d   = parseDatum(cur);
+  document.getElementById('dateInput').value = d ? toInputDate(d) : '';
+  var popup = document.getElementById('datePicker');
+  positionPopup(popup, e, 240, 150);
+  popup.classList.add('open');
+  setTimeout(function(){ document.getElementById('dateInput').focus(); document.addEventListener('click', closeDateOutside, {once:true}); }, 50);
+}
+function closeDateOutside(e) {
+  if (!document.getElementById('datePicker').contains(e.target)) closeDatePicker();
+}
+function closeDatePicker() { document.getElementById('datePicker').classList.remove('open'); datePicker_target=null; }
+function clearDate()  { applyDate(''); }
+function saveDate()   {
+  var v = document.getElementById('dateInput').value;
+  if (!v) { applyDate(''); return; }
+  var p = v.split('-');
+  applyDate(p[2]+'-'+p[1]+'-'+p[0]);
+}
+async function applyDate(newDateStr) {
+  if (datePicker_target === null) return;
+  var ci   = datePicker_target;
+  var old  = ROW_DATA[ci];
+  closeDatePicker();
+  var updates = {};
+  updates[ci] = newDateStr;
+  DATE_WEEK_PAIRS.forEach(function(pair){
+    if (pair[0]===ci) updates[pair[1]] = newDateStr ? calcWeken(newDateStr) : '';
+  });
+  var oldVals = {};
+  Object.keys(updates).forEach(function(k){ oldVals[k]=ROW_DATA[parseInt(k)]; ROW_DATA[parseInt(k)]=updates[k]; });
+  renderPage();
+  await saveCells(updates, oldVals);
+}
+
+// ══ JA/NEE TOGGLE ══
+async function toggleJaNee(e, colIdx) {
+  e.stopPropagation();
+  var old = ROW_DATA[colIdx];
+  var nw  = old==='Ja'?'Nee':'Ja';
+  ROW_DATA[colIdx] = nw;
+  renderPage();
+  await saveCell(colIdx, nw, old);
+}
+
+// ══ OPMERKING ══
+function openOpmModal(e, virtColIdx) {
+  e.stopPropagation();
+  opmTarget = virtColIdx;
+  var tekst = OPMERKINGEN[ROW_IDX+'-opm-'+virtColIdx]||'';
+  document.getElementById('opmTextarea').value = tekst;
+  document.getElementById('opmModalSub').textContent = OPM_SUB_LABELS[virtColIdx]||'';
+  updateOpmCount();
+  document.getElementById('opmOverlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('opmTextarea').focus(); },100);
+}
+function closeOpmModal() { document.getElementById('opmOverlay').classList.remove('open'); opmTarget=null; }
+function updateOpmCount() { document.getElementById('opmCharCount').textContent=document.getElementById('opmTextarea').value.length+' / 500'; }
+async function saveOpmerking() {
+  if (opmTarget===null) return;
+  var vci   = opmTarget;
+  var tekst = document.getElementById('opmTextarea').value.trim();
+  closeOpmModal();
+  var key = ROW_IDX+'-opm-'+vci;
+  OPMERKINGEN[key] = tekst;
+  renderPage();
+  showSaving(true);
+  try {
+    var existing = await supa.get('/rest/v1/opmerkingen?row_idx=eq.'+ROW_IDX+'&fase=eq.opm-'+vci+'&select=id');
+    if (existing && existing.length) {
+      await supa.patch('/rest/v1/opmerkingen?row_idx=eq.'+ROW_IDX+'&fase=eq.opm-'+vci,
+        {tekst:tekst,updated_by:currentUser,updated_at:new Date().toISOString()});
+    } else {
+      await supa.post('/rest/v1/opmerkingen',{row_idx:ROW_IDX,fase:'opm-'+vci,tekst:tekst,updated_by:currentUser,updated_at:new Date().toISOString()});
+    }
+    showToast('&#10003; Opmerking opgeslagen','success');
+  } catch(err) {
+    showToast('&#10007; '+err.message,'error');
+  } finally { showSaving(false); }
+}
+
+// ══ SAVE HELPERS ══
+async function saveCell(ci, newVal, oldVal) {
+  showSaving(true);
+  try {
+    var cd = Object.assign({}, DB_ROW.cel_data||{});
+    if (newVal) cd[String(ci)]=newVal; else delete cd[String(ci)];
+    await supa.patch('/rest/v1/werkpakketten?row_idx=eq.'+ROW_IDX,
+      {cel_data:cd,updated_by:currentUser,updated_at:new Date().toISOString()});
+    DB_ROW.cel_data = cd;
+    showToast('&#10003; Opgeslagen','success');
+  } catch(err) {
+    ROW_DATA[ci] = oldVal; renderPage();
+    showToast('&#10007; '+err.message,'error');
+  } finally { showSaving(false); }
+}
+async function saveCells(updates, oldVals) {
+  showSaving(true);
+  try {
+    var cd = Object.assign({}, DB_ROW.cel_data||{});
+    Object.keys(updates).forEach(function(k){ if(updates[k]) cd[k]=updates[k]; else delete cd[k]; });
+    await supa.patch('/rest/v1/werkpakketten?row_idx=eq.'+ROW_IDX,
+      {cel_data:cd,updated_by:currentUser,updated_at:new Date().toISOString()});
+    DB_ROW.cel_data = cd;
+    showToast('&#10003; Opgeslagen','success');
+  } catch(err) {
+    Object.keys(oldVals).forEach(function(k){ ROW_DATA[parseInt(k)]=oldVals[k]; });
+    renderPage();
+    showToast('&#10007; '+err.message,'error');
+  } finally { showSaving(false); }
+}
+
+function showSaving(on) {
+  isSaving = on;
+  var el = document.getElementById('savingIndicator');
+  if (el) el.classList.toggle('show', on);
+}
+
+// ══ UTILS ══
+function positionPopup(el, e, w, h) {
+  var rect = e.currentTarget.getBoundingClientRect();
+  var left = rect.left, top = rect.bottom+6;
+  if (left+w > window.innerWidth)  left = window.innerWidth-w-5;
+  if (top +h > window.innerHeight) top  = rect.top-h-6;
+  el.style.top=top+'px'; el.style.left=left+'px';
+}
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.innerHTML=msg; t.className='toast '+(type||'')+' show';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){ t.className='toast '+(type||''); },2500);
+}
+</script>
+</body>
+</html>

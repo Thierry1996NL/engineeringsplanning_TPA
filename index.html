@@ -822,6 +822,14 @@
   }
   .btn-opm-save:hover { background: #333; }
 
+
+  /* ══ CLICKABLE ROWS ══ */
+  tbody tr { cursor: pointer; }
+  tbody tr:hover td { background: #faf9f6; }
+  tbody tr:hover td.col-base { color: var(--c-loopt); }
+  .row-link-icon { font-size:10px; opacity:0; margin-left:4px; transition:opacity .15s; }
+  tbody tr:hover .row-link-icon { opacity:.5; }
+
 </style>
 </head>
 <body>
@@ -1763,6 +1771,18 @@ async function saveOpmerking() {
 }
 
 
+// ══ OPEN DETAIL PAGE ══
+function openDetail(rowIdx) {
+  // Store params in sessionStorage for the detail page to read
+  sessionStorage.setItem('detail_params', JSON.stringify({
+    rowIdx:   rowIdx,
+    user:     currentUser,
+    mode:     currentMode
+  }));
+  window.open('project_detail.html', '_blank');
+}
+
+
 // ══ RENDER ══
 function visibleCols() {
   if (currentFase === 'alle') {
@@ -1867,7 +1887,7 @@ function render() {
   } else {
     rows.forEach(function(r, ri) {
       var actualIdx = ROWS.indexOf(r);
-      html += '<tr>';
+      html += '<tr onclick="openDetail('+actualIdx+')" title="Klik om project te openen">';
       vcols.forEach(function(c, ci) {
         var raw = r[c.i] !== undefined ? r[c.i] : '';
         var val = esc(raw);
@@ -1940,7 +1960,8 @@ function render() {
           }
         }
 
-        html += '<td class="'+cls+editCls+changedCls+'" style="'+bl+'" title="'+val+'"'+whoAttr+clickAttr+'>'+cell+'</td>';
+        var linkIcon = (c.i === 2) ? '<span class="row-link-icon">&#8599;</span>' : '';
+        html += '<td class="'+cls+editCls+changedCls+'" style="'+bl+'" title="'+val+'"'+whoAttr+clickAttr+'>'+cell+linkIcon+'</td>';
       });
       html += '</tr>';
     });
