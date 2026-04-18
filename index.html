@@ -551,84 +551,138 @@
   .save-status.error { display: flex; color: #f28b8b; }
 
 
+
+  /* ══ LOGIN SCREEN ══ */
+  #loginScreen {
+    position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;
+    justify-content:center;z-index:2000;padding:1rem;
+  }
+  .login-box {
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:2.5rem 2rem;width:100%;max-width:380px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.08);
+  }
+  .login-logo {
+    font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--text-faint);margin-bottom:1.5rem;
+  }
+  .login-title {font-size:22px;font-weight:300;color:var(--text);margin-bottom:6px;}
+  .login-sub {font-size:13px;color:var(--text-muted);margin-bottom:2rem;}
+  .login-field {display:flex;flex-direction:column;gap:5px;margin-bottom:1rem;}
+  .login-label {font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);}
+  .login-input {
+    padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;
+    border:1px solid var(--border-strong);border-radius:8px;
+    background:var(--bg);color:var(--text);outline:none;
+    transition:border-color .15s;
+  }
+  .login-input:focus {border-color:var(--text);background:#fff;}
+  .login-btn {
+    width:100%;padding:11px;font-family:'DM Sans',sans-serif;font-size:14px;
+    font-weight:600;border:none;border-radius:8px;background:var(--text);
+    color:#fff;cursor:pointer;transition:background .15s;margin-top:.5rem;
+  }
+  .login-btn:hover {background:#333;}
+  .login-btn:disabled {opacity:.5;cursor:not-allowed;}
+  .login-error {
+    font-size:12px;color:#b53030;background:#fce8e8;border-radius:6px;
+    padding:8px 10px;margin-top:.75rem;display:none;
+  }
+  /* ══ REALTIME INDICATOR ══ */
+  .rt-dot {
+    width:7px;height:7px;border-radius:50%;background:#2d7a4f;
+    display:inline-block;margin-right:5px;
+    animation:rtpulse 2s ease-in-out infinite;
+  }
+  @keyframes rtpulse {0%,100%{opacity:1}50%{opacity:.4}}
+  .rt-offline {background:#b53030;animation:none;}
+  /* ══ USER BADGE ══ */
+  .user-badge {
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;color:rgba(255,255,255,.6);margin-right:1rem;
+  }
+  .user-avatar {
+    width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.15);
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:600;color:#fff;
+  }
+  /* ══ SAVE TOAST ══ */
+  .toast {
+    position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);
+    background:var(--text);color:#fff;border-radius:10px;padding:.6rem 1.2rem;
+    font-size:13px;z-index:300;transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+    pointer-events:none;white-space:nowrap;
+  }
+  .toast.show {transform:translateX(-50%) translateY(0);}
+  .toast.success {background:#2d7a4f;}
+  .toast.error {background:#b53030;}
 </style>
 </head>
 <body>
 
-<!-- LANDING -->
-<div id="landing">
-  <div class="landing-logo">TPA · Engineeringsplanning</div>
-  <h1 class="landing-title">Engineeringsplanning</h1>
-  <p class="landing-sub">Kies hoe je de planning wilt gebruiken</p>
-  <div class="landing-cards">
-    <div class="landing-card viewer" onclick="enterMode('viewer')">
-      <div class="card-icon">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#1a5fa8" stroke-width="1.5"/><circle cx="10" cy="10" r="2.5" fill="#1a5fa8"/><path d="M3 10c2-4 12-4 14 0" stroke="#1a5fa8" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </div>
-      <div class="card-title">Viewer</div>
-      <div class="card-desc">Bekijk en doorzoek alle werkpakketten. Filteren, sorteren en exporteren mogelijk. Geen wijzigingen.</div>
-      <span class="card-arrow">↗</span>
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">TPA · Engineeringsplanning</div>
+    <h1 class="login-title">Welkom terug</h1>
+    <p class="login-sub">Selecteer je naam om verder te gaan</p>
+    <div class="login-field">
+      <label class="login-label">Engineer</label>
+      <select class="login-input" id="loginEngineer">
+        <option value="">— Kies je naam —</option>
+        <option>Peter Teeninga</option>
+        <option>Lucas van der Cammen</option>
+        <option>Frans Hamelijnck</option>
+        <option>Dennis Verkoeijen</option>
+        <option>Gabor Misic</option>
+        <option>Thierry Papenhuijzen</option>
+        <option value="__viewer__">Viewer (alleen lezen)</option>
+      </select>
     </div>
-    <div class="landing-card editor" onclick="enterMode('editor')">
-      <div class="card-icon">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M13.5 3.5l3 3L6 17H3v-3L13.5 3.5z" stroke="#2d7a4f" stroke-width="1.5" stroke-linejoin="round"/><path d="M11 6l3 3" stroke="#2d7a4f" stroke-width="1.5"/></svg>
-      </div>
-      <div class="card-title">Bewerker</div>
-      <div class="card-desc">Pas taakstatussen aan door op een cel te klikken. Wijzigingen worden bijgehouden en exporteerbaar.</div>
-      <span class="card-arrow">↗</span>
+    <div class="login-field">
+      <label class="login-label">Rol</label>
+      <select class="login-input" id="loginRole">
+        <option value="viewer">Viewer — alleen bekijken</option>
+        <option value="editor">Bewerker — statussen aanpassen</option>
+      </select>
     </div>
-  </div>
-  <div class="landing-stats">
-    <span><b>65</b> werkpakketten</span>
-    <span><b>4</b> locaties</span>
-    <span><b>10</b> fases</span>
-    <span><b>174</b> kolommen</span>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Verder →</button>
+    <div class="login-error" id="loginError"></div>
   </div>
 </div>
 
-<!-- APP -->
+<!-- ══ APP ══ -->
 <div id="app" style="display:none">
+
 <header class="site-header">
   <div class="logo">TPA · Engineeringsplanning</div>
   <div style="display:flex;align-items:center">
-    <span class="mode-badge viewer" id="modeBadge"><span class="dot"></span><span id="modeLabel">Viewer</span></span>
-    <div class="meta" id="hdr-count">65 werkpakketten</div>
-    <div class="updated">Bijgewerkt 18 april 2026</div>
-    <button class="btn-back" onclick="goBack()">← Startscherm</button>
+    <span class="user-badge">
+      <span class="user-avatar" id="userAvatar">?</span>
+      <span id="userName">—</span>
+    </span>
+    <span class="mode-badge viewer" id="modeBadge">
+      <span class="dot"></span>
+      <span id="modeLabel">Viewer</span>
+    </span>
+    <span style="font-size:11px;color:rgba(255,255,255,.4);margin-right:1rem;display:flex;align-items:center">
+      <span class="rt-dot" id="rtDot"></span>
+      <span id="rtStatus">verbinden...</span>
+    </span>
+    <div class="meta" id="hdr-count">laden...</div>
+    <button class="btn-back" onclick="doLogout()">↩ Uitloggen</button>
   </div>
 </header>
-<main class="main">
 
-  <!-- KPI row -->
+<main class="main">
   <div class="kpi-row">
-    <div class="kpi">
-      <div class="label">Werkpakketten</div>
-      <div class="number" id="kpi-total">65</div>
-      <div class="sublabel">gefilterd weergegeven</div>
-    </div>
-    <div class="kpi k-gereed">
-      <div class="label">Gereed</div>
-      <div class="number" id="kpi-gereed">—</div>
-      <div class="sublabel" id="kpi-gereed-pct"></div>
-    </div>
-    <div class="kpi k-loopt">
-      <div class="label">Loopt</div>
-      <div class="number" id="kpi-loopt">—</div>
-      <div class="sublabel">actief</div>
-    </div>
-    <div class="kpi k-review">
-      <div class="label">Review</div>
-      <div class="number" id="kpi-review">—</div>
-      <div class="sublabel">wacht op beoordeling</div>
-    </div>
-    <div class="kpi k-geblokkeerd">
-      <div class="label">Geblokkeerd</div>
-      <div class="number" id="kpi-geblokkeerd">—</div>
-      <div class="sublabel">vereist actie</div>
-    </div>
+    <div class="kpi"><div class="label">Werkpakketten</div><div class="number" id="kpi-total">—</div><div class="sublabel">gefilterd</div></div>
+    <div class="kpi k-gereed"><div class="label">Gereed</div><div class="number" id="kpi-gereed">—</div><div class="sublabel" id="kpi-gereed-pct"></div></div>
+    <div class="kpi k-loopt"><div class="label">Loopt</div><div class="number" id="kpi-loopt">—</div><div class="sublabel">actief</div></div>
+    <div class="kpi k-review"><div class="label">Review</div><div class="number" id="kpi-review">—</div><div class="sublabel">wacht op beoordeling</div></div>
+    <div class="kpi k-geblokkeerd"><div class="label">Geblokkeerd</div><div class="number" id="kpi-geblokkeerd">—</div><div class="sublabel">vereist actie</div></div>
   </div>
 
-  <!-- Controls -->
   <div class="controls-bar">
     <div class="fase-row">
       <span class="fase-label">Fase</span>
@@ -645,32 +699,28 @@
       <button class="tab" onclick="setFase('Geotechnisch',this)">Geotechnisch</button>
     </div>
     <div class="filter-row">
-      <input class="search-box" type="text" id="search" placeholder="&#128269;  Zoek op naam, engineer, werkpakket, tracé..." oninput="render()">
+      <input class="search-box" type="text" id="search" placeholder="🔍  Zoek op naam, engineer, werkpakket..." oninput="render()">
       <select id="locFilter" onchange="render()">
         <option value="">Alle locaties</option>
-        <option>Spannenburg</option>
-        <option>Joure</option>
-        <option>Wolvega</option>
-        <option>Luinjeberd</option>
+        <option>Spannenburg</option><option>Joure</option><option>Wolvega</option><option>Luinjeberd</option>
       </select>
       <select id="statusFilter" onchange="render()">
         <option value="">Alle statussen</option>
-        <option>Gereed</option>
-        <option>Loopt</option>
-        <option>Review</option>
-        <option>Geblokkeerd</option>
-        <option>Nog te starten</option>
+        <option>Gereed</option><option>Loopt</option><option>Review</option><option>Geblokkeerd</option><option>Nog te starten</option>
       </select>
       <select id="engFilter" onchange="render()">
         <option value="">Alle engineers</option>
+        <option>Peter Teeninga</option><option>Lucas van der Cammen</option>
+        <option>Frans Hamelijnck</option><option>Dennis Verkoeijen</option>
+        <option>Gabor Misic</option><option>Thierry Papenhuijzen</option>
       </select>
       <span class="row-count" id="row-count"></span>
-      <div class="export-group">
-        <button class="btn-export csv" onclick="exportCSV()" title="Exporteer huidige gefilterde weergave als CSV">
+      <div class="export-group" id="exportGroup">
+        <button class="btn-export csv" onclick="exportCSV()">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 12v2h12v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           CSV
         </button>
-        <button class="btn-export xlsx" onclick="exportXLSX()" title="Exporteer huidige gefilterde weergave als Excel">
+        <button class="btn-export xlsx" onclick="exportXLSX()">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 12v2h12v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Excel
         </button>
@@ -678,7 +728,6 @@
     </div>
   </div>
 
-  <!-- Legend -->
   <div class="legend">
     <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-right:4px;">Status</span>
     <span class="legend-item"><span class="legend-dot" style="background:var(--c-gereed)"></span>Gereed</span>
@@ -686,24 +735,26 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--c-review)"></span>Review</span>
     <span class="legend-item"><span class="legend-dot" style="background:var(--c-geblokkeerd)"></span>Geblokkeerd</span>
     <span class="legend-item"><span class="legend-dot" style="background:var(--c-todo)"></span>Nog te starten</span>
-    <span style="margin-left:1rem;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-right:4px;">Weken</span>
-    <span class="legend-item"><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--c-geblokkeerd);font-weight:600">−3w</span> overschreden</span>
-    <span class="legend-item"><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--c-review);font-weight:500">2w</span> &lt; 4 weken</span>
-    <span class="legend-item"><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--c-gereed)">8w</span> op schema</span>
   </div>
 
-  <div class="editor-notice" id="editorNotice" style="display:none">
+  <div id="editorNotice" class="editor-notice" style="display:none">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#2d7a4f" stroke-width="1.2"/><path d="M8 5v4M8 10.5v.5" stroke="#2d7a4f" stroke-width="1.3" stroke-linecap="round"/></svg>
-    <span><b>Bewerkermodus actief</b> — Klik op een statuscel om de waarde te wijzigen. Gele omlijning = gewijzigd.</span>
+    <span><b>Bewerkermodus</b> — klik op een statuscel om de waarde te wijzigen. Wijzigingen worden direct opgeslagen in de database.</span>
   </div>
-  <!-- Table -->
-  <div class="table-card">
+
+  <div id="loadingState" style="text-align:center;padding:3rem;color:var(--text-faint);font-size:13px;">
+    Data laden uit database...
+  </div>
+
+  <div class="table-card" id="tableCard" style="display:none">
     <div class="tbl-scroll">
       <table id="tbl"></table>
     </div>
   </div>
-</main></div><!-- /#app -->
+</main>
+</div>
 
+<!-- Status picker -->
 <div class="status-picker" id="statusPicker">
   <div class="sp-header">Status wijzigen</div>
   <div class="status-option" data-val="Gereed" onclick="applyStatus('Gereed')"><span class="sdot" style="background:#2d7a4f"></span>Gereed</div>
@@ -715,60 +766,39 @@
   <div class="status-option" onclick="closeStatusPicker()" style="color:var(--text-faint)">Annuleren</div>
 </div>
 
-<div class="save-bar" id="saveBar">
-  <span class="changes" id="saveBarCount">0 wijzigingen</span>
-  <span class="save-status" id="saveStatus"></span>
-  <button class="btn-discard" onclick="discardChanges()">Verwerpen</button>
-  <button class="btn-export-changes btn-save" onclick="exportXLSX()" title="Download als Excel">↓ Excel</button>
-  
-  <button class="btn-gh-settings" onclick="openGithubModal()" title="GitHub instellingen" id="btnGhSettings">⚙</button>
-  <button class="btn-gh-save" id="btnGhSave" onclick="pushToGithub()">
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.134 1 1 4.134 1 8c0 3.09 2.003 5.716 4.784 6.641.35.064.478-.152.478-.337 0-.166-.006-.606-.01-1.19-1.947.424-2.358-.94-2.358-.94-.318-.809-.777-1.024-.777-1.024-.635-.434.048-.425.048-.425.703.049 1.073.722 1.073.722.624 1.07 1.638.761 2.037.582.063-.452.244-.761.444-.936-1.554-.177-3.188-.777-3.188-3.462 0-.765.273-1.39.722-1.88-.072-.177-.313-.888.069-1.851 0 0 .589-.189 1.928.72A6.71 6.71 0 018 4.958c.596.003 1.196.081 1.756.237 1.338-.909 1.926-.72 1.926-.72.383.963.142 1.674.07 1.851.45.49.72 1.115.72 1.88 0 2.692-1.637 3.283-3.196 3.456.251.217.474.645.474 1.3 0 .938-.009 1.694-.009 1.924 0 .187.126.405.48.337C12.999 13.714 15 11.089 15 8c0-3.866-3.134-7-7-7z" fill="currentColor"/></svg>
-    Opslaan naar GitHub
-  </button>
-</div>
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
 
-<!-- GitHub Settings Modal -->
-<div class="modal-overlay" id="githubModal" onclick="if(event.target===this)closeGithubModal()">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.134 1 1 4.134 1 8c0 3.09 2.003 5.716 4.784 6.641.35.064.478-.152.478-.337 0-.166-.006-.606-.01-1.19-1.947.424-2.358-.94-2.358-.94-.318-.809-.777-1.024-.777-1.024-.635-.434.048-.425.048-.425.703.049 1.073.722 1.073.722.624 1.07 1.638.761 2.037.582.063-.452.244-.761.444-.936-1.554-.177-3.188-.777-3.188-3.462 0-.765.273-1.39.722-1.88-.072-.177-.313-.888.069-1.851 0 0 .589-.189 1.928.72A6.71 6.71 0 018 4.958c.596.003 1.196.081 1.756.237 1.338-.909 1.926-.72 1.926-.72.383.963.142 1.674.07 1.851.45.49.72 1.115.72 1.88 0 2.692-1.637 3.283-3.196 3.456.251.217.474.645.474 1.3 0 .938-.009 1.694-.009 1.924 0 .187.126.405.48.337C12.999 13.714 15 11.089 15 8c0-3.866-3.134-7-7-7z" fill="var(--text)"/></svg>
-        GitHub instellingen
-      </div>
-      <button class="modal-close" onclick="closeGithubModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label class="field-label">Personal Access Token</label>
-        <input class="field-input mono" type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-        <span class="field-hint">Maak een token aan via GitHub → Settings → Developer settings → Personal access tokens. Scope: <b>repo</b>.</span>
-      </div>
-      <div class="field-group">
-        <label class="field-label">Repository (gebruiker/repo)</label>
-        <input class="field-input mono" type="text" id="ghRepo" placeholder="Thierry1996NL/engineeringsplanning_TPA">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Bestandspad in repository</label>
-        <input class="field-input mono" type="text" id="ghPath" placeholder="engineeringsplanning_TPA/index.html">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Branch</label>
-        <input class="field-input mono" type="text" id="ghBranch" placeholder="main">
-      </div>
-      <div class="field-hint" style="background:var(--surface2);border-radius:8px;padding:.625rem .875rem;line-height:1.6;">
-        ⚠️ Je token wordt <b>niet</b> opgeslagen na het sluiten van de browser. Vul het elke sessie opnieuw in.
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-modal-cancel" onclick="closeGithubModal()">Annuleren</button>
-      <button class="btn-modal-save" onclick="saveGithubSettings()">Opslaan</button>
-    </div>
-  </div>
-</div>
-
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
+// ══ SUPABASE CONFIG ══
+const SUPA_URL = 'https://yuyogdqobekvsvjgwllf.supabase.co';
+const SUPA_KEY = 'sb_publishable_Etgi3cTtObxJbAvf2WR-mw_dFajr5Qr';
+
+const supa = {
+  async req(method, path, body) {
+    const r = await fetch(SUPA_URL + path, {
+      method,
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal'
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.message || r.status);
+    }
+    return method === 'PATCH' ? null : r.json();
+  },
+  get: (path) => supa.req('GET', path),
+  post: (path, b) => supa.req('POST', path, b),
+  patch: (path, b) => supa.req('PATCH', path, b),
+};
+
+// ══ STATE ══
 const COLS = [
   {i:0,f:"",n:"Projectnummer intern"},{i:1,f:"",n:"Projectnummer extern"},{i:2,f:"",n:"Projectnaam"},
   {i:3,f:"",n:"APD Bouwdeel"},{i:4,f:"",n:"Liander Tracédeel"},{i:5,f:"",n:"WP nummer"},
@@ -862,6 +892,7 @@ const COLS = [
   {i:173,f:"Geotechnisch",n:"Grondwater: gereed"}
 ];
 
+
 const FASE_STYLE = {
   'Analyse':      {color:'var(--fase-analyse)',   bg:'var(--fase-analyse-bg)',   cls:'fl-analyse'},
   'VO-Fase':      {color:'var(--fase-vo)',        bg:'var(--fase-vo-bg)',        cls:'fl-vo'},
@@ -875,98 +906,208 @@ const FASE_STYLE = {
   'Geotechnisch': {color:'var(--fase-geo)',       bg:'var(--fase-geo-bg)',       cls:'fl-geo'},
 };
 
-const RAW_CSV = `placeholder,placeholder,Spannenburg,Spannenburg,Oost,WP1,RS Tjerkgaast,DR01,Peter Teeninga,0,,23-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Ja,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Ja,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,Oost,WP2,DR01,DR02,Peter Teeninga,2400,,23-10-2025,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,26-04-2026,2,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,26-04-2026,2,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,,,Geblokkeerd,,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,26-04-2026,2,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,26-04-2026,2,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,Oost,WP3,DR02,DR03,Peter Teeninga,1300,,23-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,07-06-2026,11,Ja,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,07-06-2026,11,Ja,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,07-06-2026,11,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,07-06-2026,11,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,Oost,WP4,DR03,DR04,Peter Teeninga,1950,,23-10-2025,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,,,Review,,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,Oost,WP5,DR04,DR05,Peter Teeninga,2800,,23-10-2025,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,20-11-2025,-22,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,20-11-2025,-22,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,,,Review,,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,20-11-2025,-22,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,20-11-2025,-22,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,Oost,WP6,DR05,DR06,Peter Teeninga,2025,,23-10-2025,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,20-11-2025,-22,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,20-11-2025,-22,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,,,Geblokkeerd,,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,20-11-2025,-22,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,20-11-2025,-22,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,Oost,WP7,DR06,DR07,Peter Teeninga,7100,,23-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,Oost,WP8,DR07,DR08,Peter Teeninga,2600,,23-10-2025,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,,,Review,,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,West,WP9,DR08,DR09,Peter Teeninga,1650,,23-10-2025,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,20-11-2025,-22,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,20-11-2025,-22,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,,,Review,,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,20-11-2025,-22,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,20-11-2025,-22,Nee,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,Geblokkeerd,Review,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,West,WP10,DR09,DR10,Peter Teeninga,2900,,23-10-2025,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,,,Review,,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,20-11-2025,-22,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,West,WP11,DR10,DR11,Peter Teeninga,6900,,23-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,West,WP12,DR11,DR12,Peter Teeninga,5850,,23-10-2025,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,20-11-2025,-22,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,20-11-2025,-22,Nee,Review,Gereed,Review,Gereed,Review,,,Gereed,,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,20-11-2025,-22,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,20-11-2025,-22,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,West,WP13,DR12,RS Tjerkgaast,Peter Teeninga,100,,23-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,20-11-2025,-22,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Spannenburg,Spannenburg,Verbinding,WP14,RS Tjerkgaast,DR08,Peter Teeninga,6000,,23-10-2025,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,20-11-2025,-22,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,20-11-2025,-22,Nee,Review,Gereed,Review,Gereed,Review,,,Gereed,,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,20-11-2025,-22,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,20-11-2025,-22,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD2,WP1,RS Jou,DR06,Lucas van der Cammen,1100,,19-10-2025,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,12-11-2025,-25,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,12-11-2025,-25,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,,,Gereed,,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,12-11-2025,-25,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,12-11-2025,-25,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD2,WP2,DR06,DR04,Lucas van der Cammen,1200,,19-10-2025,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,12-11-2025,-25,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,12-11-2025,-25,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,,,Gereed,,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,12-11-2025,-25,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,12-11-2025,-25,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD2,WP3,DR04,DR05,Lucas van der Cammen,920,,19-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD2,WP4,DR05,DR01,Lucas van der Cammen,860,,19-10-2025,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,12-11-2025,-25,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,12-11-2025,-25,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,,,Loopt,,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,12-11-2025,-25,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,12-11-2025,-25,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD2,WP5,DR01,DR02,Lucas van der Cammen,1200,,19-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD2,WP6,DR02,DR03,Lucas van der Cammen,1550,,19-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD2,WP7,DR03,RS Jou,Lucas van der Cammen,1250,,19-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD1,WP8,RS Jou,DR08,Lucas van der Cammen,3000,,19-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD1,WP9,DR08,DR09,Lucas van der Cammen,5000,,19-10-2025,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,12-11-2025,-25,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,12-11-2025,-25,Nee,Review,Gereed,Review,Gereed,Review,,,Gereed,,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,12-11-2025,-25,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,12-11-2025,-25,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD1,WP10,DR09,DR10,Lucas van der Cammen,4150,,19-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD1,WP11,DR10,DR07,Lucas van der Cammen,4800,,19-10-2025,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,12-11-2025,-25,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,12-11-2025,-25,Nee,Gereed,Review,Gereed,Review,Gereed,,,Review,,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,12-11-2025,-25,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,12-11-2025,-25,Nee,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD1,WP12,DR07,DR11,Lucas van der Cammen,8100,,19-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD1,WP13,DR11,DR12,Lucas van der Cammen,3450,,19-10-2025,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,12-11-2025,-25,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Joure,Joure,APD1,WP14,DR12,RS Jou,Lucas van der Cammen,1650,,19-10-2025,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,12-11-2025,-25,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,12-11-2025,-25,Nee,Review,Gereed,Review,Gereed,Review,,,Gereed,,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,12-11-2025,-25,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,12-11-2025,-25,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP1-w,OSO1 Wolvega,MSR02 Stadsburen,Frans Hamelijnck,3952,,01-12-2024,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,25-12-2024,-76,Nee,Review,Review,Review,Review,Review,Review,Review,Review,25-12-2024,-76,Nee,Review,Review,Review,Review,Review,,,Review,,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Nee,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,25-12-2024,-76,Nee,Review,Review,Review,Review,Review,Review,Review,Review,25-12-2024,-76,Nee,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP2-w,MSR02 Stadsburen,MSR03 Kooiweg,Frans Hamelijnck,2967,,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP3-w,MSR03 Kooiweg,MSR04 De Weeren,Frans Hamelijnck,3694,,01-12-2024,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,25-12-2024,-76,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,25-12-2024,-76,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,,,Geblokkeerd,,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,25-12-2024,-76,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,25-12-2024,-76,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP4-w,MSR04 De Weeren,MSR05 Hoofdweg,Frans Hamelijnck,2574,,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,Wolvega West,,WP4-w2,MSR05 Hoofdweg,MSR06 Kerkeweg,Frans Hamelijnck,426,10kv,01-12-2024,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,25-12-2024,-76,Nee,Review,Review,Review,Review,Review,Review,Review,Review,25-12-2024,-76,Nee,Review,Review,Review,Review,Review,,,Review,,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Nee,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,25-12-2024,-76,Nee,Review,Review,Review,Review,Review,Review,Review,Review,25-12-2024,-76,Nee,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,Review,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP5-w,MSR06 Kerkeweg,MSR07 Stuyvesantweg,Frans Hamelijnck,3181,,01-12-2024,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,25-12-2024,-76,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,25-12-2024,-76,Nee,Review,Gereed,Review,Gereed,Review,,,Gereed,,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,25-12-2024,-76,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,25-12-2024,-76,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP6-w,MSR07 Stuyvesantweg,MSR08 De Meenthe,Frans Hamelijnck,2511,,01-12-2024,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,,,Gereed,,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP7-w,MSR08 De Meenthe,MSR09 Nijksweg,Frans Hamelijnck,2810,,01-12-2024,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,25-12-2024,-76,Nee,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,25-12-2024,-76,Nee,Loopt,Review,Loopt,Review,Loopt,,,Review,,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Nee,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,25-12-2024,-76,Nee,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,25-12-2024,-76,Nee,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,Loopt,Review,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP8-w,MSR09 Nijksweg,Eindmof,Frans Hamelijnck,3297,,01-12-2024,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,,,Loopt,,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP9-w,MSR03 Kooiweg,MSR12 Heerenveenseweg,Frans Hamelijnck,3573,,01-12-2024,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,25-12-2024,-76,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,25-12-2024,-76,Nee,Review,Gereed,Review,Gereed,Review,,,Gereed,,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,25-12-2024,-76,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,25-12-2024,-76,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP10-w,MSR12 Heerenveenseweg,MSR11 Rijksweg A32,Frans Hamelijnck,1007,,01-12-2024,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,,,Loopt,,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP11-o,OSO1 Wolvega,MSR11 Heerenveenseweg 173,Dennis Verkoeijen,4465,,01-12-2024,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,,,Loopt,,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP12-o,MSR11 Heerenveenseweg 173,MSR13 Ruskemadeweg,Frans Hamelijnck,4970,,01-12-2024,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,25-12-2024,-76,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,25-12-2024,-76,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,,,Gereed,,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,25-12-2024,-76,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,25-12-2024,-76,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP13-o,MSR13 Ruskemadeweg,MSR14 Stellingenweg,Dennis Verkoeijen,5071,,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,Wolvega Oost,,WP13-o2,MSR14 Stellingenweg,MSR55 Grotekamp,Frans Hamelijnck,,10kv,01-12-2024,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,,,Gereed,,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP14-o,MSR16 Steggerdaweg,MSR17 Pepergaweg,Dennis Verkoeijen,1885,,01-12-2024,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,,,Gereed,,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-1,,WP15-o,MSR17 Pepergaweg,Pepergaweg eindmof,Dennis Verkoeijen,2145,,01-12-2024,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,,,Loopt,,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP16-c,OSO1 Wolvega,MSR25 Schipsloot,Dennis Verkoeijen,719,,01-12-2024,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,,,Loopt,,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,25-12-2024,-76,Nee,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP17-c,MSR25 Schipsloot,MSR26 Oppers 102,Dennis Verkoeijen,2423,,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,Wolvega Centrum,,WP17-c2,MSR25 Schipsloot,MSR65 Schuttevaerstraat,Dennis Verkoeijen,,10kv,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP18-c,MSR26 Oppers 102,MSR18 De Meenthe,Dennis Verkoeijen,2156,,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP19-c,MSR18 De Meenthe,MSR19 Koolwitje,Dennis Verkoeijen,1852,,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP20-c,MSR19 Koolwitje,,Dennis Verkoeijen,891,,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,APD-2,,WP21-c,MSR20 Atlanta,OS01 Wolvega,Dennis Verkoeijen,2401,,01-12-2024,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,,,Gereed,,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,25-12-2024,-76,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,Wolvega Centrum,,WP21-c2,MSR20 Atlanta,MSR30 Stellingerweg,Dennis Verkoeijen,0,10kv,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,Wolvega Centrum,,WP17-c3,MSR26 Oppers 102,MSR67 Carbonstraat,Dennis Verkoeijen,,10kv,01-12-2024,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,25-12-2024,-76,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,25-12-2024,-76,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,,,Geblokkeerd,,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,25-12-2024,-76,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,25-12-2024,-76,Nee,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,Wolvega Centrum,,WP23-c,MSR69 Oppers 58,MSR70 Zilverlaan,Dennis Verkoeijen,,10kv,01-12-2024,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,25-12-2024,-76,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,25-12-2024,-76,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,,,Gereed,,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,25-12-2024,-76,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,25-12-2024,-76,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Wolvega,Wolvega Centrum,,WP22-c,OS01 Wolvega,MSR84 Hoofdstraat,Dennis Verkoeijen,,10kv,01-12-2024,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,25-12-2024,-76,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Luinjeberd,APD-1,,WP1,AC5,DR-01,Gabor Misic,3342,,30-01-2026,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,27-02-2026,-7,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,27-02-2026,-7,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,,,Geblokkeerd,,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,27-02-2026,-7,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,27-02-2026,-7,Nee,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,Loopt,Geblokkeerd,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Luinjeberd,APD-2,,WP2,DR-01,DR-07,Gabor Misic,4103,,30-01-2026,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Luinjeberd,APD-2,,WP3,DR-07,DR-02,Gabor Misic,3951,,30-01-2026,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,27-02-2026,-7,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,27-02-2026,-7,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,,,Gereed,,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,27-02-2026,-7,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,27-02-2026,-7,Nee,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,Loopt,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Luinjeberd,APD-1,,WP4,DR-02,MSR 1 001 402,Thierry Papenhuijzen,3188,,30-01-2026,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Luinjeberd,APD-1,,WP5,MSR 1 001 402,DR-03,Thierry Papenhuijzen,3897,,30-01-2026,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,27-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Luinjeberd,APD-2,,WP6,DR-03,DR-04,Thierry Papenhuijzen,2668,,30-01-2026,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,27-02-2026,-7,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,27-02-2026,-7,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,,,Gereed,,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,27-02-2026,-7,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,27-02-2026,-7,Nee,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,Geblokkeerd,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Luinjeberd,APD-3,,WP7,DR-03,DR-04,Thierry Papenhuijzen,2669,,31-01-2026,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,28-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,28-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,28-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,28-02-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Luinjeberd,APD-4,,WP8,DR-03,DR-04,Thierry Papenhuijzen,2670,,01-02-2026,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,01-03-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,01-03-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,,,Gereed,,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,01-03-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,01-03-2026,-7,Nee,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-placeholder,placeholder,Luinjeberd,APD-2,,WP9,DR-05,AC5,Gabor Misic,2126,,30-01-2026,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,28-01-1900,?,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,28-01-1900,?,Nee,Review,Gereed,Review,Gereed,Review,,,Gereed,,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,28-01-1900,?,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,28-01-1900,?,Nee,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,Review,Gereed,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,`;
 
-let ROWS = [];
-let currentFase = 'alle';
-let sortCol = -1, sortDir = 1;
+var ROWS = [];        // array of arrays [col0, col1, ..., col173]
+var DB_ROWS = [];     // raw DB rows [{id, row_idx, cel_data, ...}]
+var currentFase = 'alle';
+var currentMode = 'viewer';
+var currentUser = '';
+var sortCol = -1, sortDir = 1;
+var pickerTarget = null;
+var realtimeChannel = null;
 
-function parseCSV(csv) {
-  return csv.trim().split('\n').map(line => line.split(','));
+// ══ LOGIN ══
+function doLogin() {
+  const eng = document.getElementById('loginEngineer').value;
+  const role = document.getElementById('loginRole').value;
+  if (!eng) {
+    showLoginError('Kies je naam om verder te gaan.');
+    return;
+  }
+  currentUser = eng === '__viewer__' ? 'Viewer' : eng;
+  currentMode = (eng === '__viewer__') ? 'viewer' : role;
+  startApp();
 }
 
-function badgeCls(v) {
-  if (v==='Gereed') return 'G';
-  if (v==='Loopt') return 'L';
-  if (v==='Review') return 'R';
-  if (v==='Geblokkeerd') return 'B';
-  if (v==='Nog te starten') return 'N';
-  return '';
+function doLogout() {
+  if (realtimeChannel) {
+    realtimeChannel.close();
+    realtimeChannel = null;
+  }
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginEngineer').value = '';
+  document.getElementById('loginRole').value = 'viewer';
+  ROWS = []; DB_ROWS = [];
 }
 
-function faseCls(f) {
-  const map = {
-    'Analyse':'fl-analyse','VO-Fase':'fl-vo','DO-Fase':'fl-do',
-    'Onderzoeksfase':'fl-onderzoek','UO-Fase':'fl-uo','Natuurtoets':'fl-natuur',
-    'Archeologie':'fl-archeologie','Bodem':'fl-bodem','NGE/OO':'fl-nge','Geotechnisch':'fl-geo'
-  };
-  return map[f] || '';
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
+// ══ APP START ══
+async function startApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // Set user info in header
+  const initials = currentUser.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userName').textContent = currentUser;
+
+  // Set mode badge
+  const badge = document.getElementById('modeBadge');
+  const lbl   = document.getElementById('modeLabel');
+  badge.className = 'mode-badge ' + currentMode;
+  lbl.textContent = currentMode === 'viewer' ? 'Viewer' : 'Bewerker';
+
+  // Show/hide editor notice & export
+  document.getElementById('editorNotice').style.display = currentMode === 'editor' ? 'flex' : 'none';
+  document.getElementById('exportGroup').style.display  = currentMode === 'viewer' ? 'flex' : 'none';
+
+  // Load data
+  await loadData();
+
+  // Subscribe to realtime updates
+  subscribeRealtime();
+}
+
+// ══ DATA LOADING ══
+async function loadData() {
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('tableCard').style.display = 'none';
+
+  try {
+    const data = await supa.get('/rest/v1/werkpakketten?select=*&order=row_idx.asc');
+    DB_ROWS = data;
+    buildROWS(data);
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('tableCard').style.display = 'block';
+    render();
+    setRtStatus(true);
+  } catch(e) {
+    document.getElementById('loadingState').textContent = 'Fout bij laden: ' + e.message;
+    setRtStatus(false);
+  }
+}
+
+function buildROWS(dbData) {
+  ROWS = dbData.map(function(row) {
+    var arr = new Array(174).fill('');
+    var cd = row.cel_data || {};
+    Object.keys(cd).forEach(function(k) { arr[parseInt(k)] = cd[k] || ''; });
+    return arr;
+  });
+}
+
+// ══ REALTIME ══
+function subscribeRealtime() {
+  if (realtimeChannel) realtimeChannel.close();
+
+  // Use Supabase Realtime v2 REST long-poll as simple polling fallback
+  // since we don't have the full JS client loaded
+  var pollInterval = setInterval(async function() {
+    try {
+      const data = await supa.get('/rest/v1/werkpakketten?select=row_idx,cel_data,updated_by,updated_at&order=row_idx.asc');
+      var changed = false;
+      data.forEach(function(row, i) {
+        if (DB_ROWS[i] && JSON.stringify(DB_ROWS[i].cel_data) !== JSON.stringify(row.cel_data)) {
+          DB_ROWS[i] = Object.assign(DB_ROWS[i], row);
+          changed = true;
+        }
+      });
+      if (changed) {
+        buildROWS(DB_ROWS);
+        render();
+        showToast('↻ Data bijgewerkt door een andere gebruiker', 'success');
+      }
+      setRtStatus(true);
+    } catch(e) {
+      setRtStatus(false);
+    }
+  }, 5000); // poll every 5 seconds
+
+  realtimeChannel = { close: function() { clearInterval(pollInterval); } };
+}
+
+function setRtStatus(online) {
+  const dot = document.getElementById('rtDot');
+  const lbl = document.getElementById('rtStatus');
+  dot.className = 'rt-dot' + (online ? '' : ' rt-offline');
+  lbl.textContent = online ? 'live' : 'offline';
+}
+
+// ══ STATUS PICKER ══
+function openStatusPicker(e, rowIdx, colIdx) {
+  if (currentMode !== 'editor') return;
+  e.stopPropagation();
+  pickerTarget = { rowIdx, colIdx };
+  const picker = document.getElementById('statusPicker');
+  const cur = ROWS[rowIdx][colIdx];
+  picker.querySelectorAll('.status-option[data-val]').forEach(function(opt) {
+    opt.classList.toggle('active', opt.getAttribute('data-val') === cur);
+  });
+  const rect = e.currentTarget.getBoundingClientRect();
+  var left = rect.left;
+  if (left + 170 > window.innerWidth) left = window.innerWidth - 175;
+  picker.style.top  = (rect.bottom + 6) + 'px';
+  picker.style.left = left + 'px';
+  picker.classList.add('open');
+  setTimeout(function() { document.addEventListener('click', closeOnOutside, { once: true }); }, 0);
+}
+
+function closeOnOutside(e) {
+  if (!document.getElementById('statusPicker').contains(e.target)) closeStatusPicker();
+}
+
+function closeStatusPicker() {
+  document.getElementById('statusPicker').classList.remove('open');
+  pickerTarget = null;
+}
+
+async function applyStatus(newVal) {
+  if (!pickerTarget) return;
+  const ri = pickerTarget.rowIdx;
+  const ci = pickerTarget.colIdx;
+  closeStatusPicker();
+
+  // Update local state immediately (optimistic)
+  ROWS[ri][ci] = newVal;
+  render();
+
+  // Save to Supabase
+  try {
+    const dbRow = DB_ROWS[ri];
+    const newCelData = Object.assign({}, dbRow.cel_data || {});
+    newCelData[String(ci)] = newVal;
+
+    await supa.patch(
+      '/rest/v1/werkpakketten?row_idx=eq.' + dbRow.row_idx,
+      { cel_data: newCelData, updated_by: currentUser, updated_at: new Date().toISOString() }
+    );
+
+    // Update local DB row too
+    DB_ROWS[ri].cel_data = newCelData;
+    showToast('✓ Opgeslagen', 'success');
+  } catch(e) {
+    // Revert on failure
+    ROWS[ri][ci] = DB_ROWS[ri].cel_data[String(ci)] || '';
+    render();
+    showToast('✗ Opslaan mislukt: ' + e.message, 'error');
+  }
+}
+
+// ══ TOAST ══
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type||'') + ' show';
+  setTimeout(function() { t.className = 'toast ' + (type||''); }, 2500);
+}
+
+// ══ RENDER ══
 function visibleCols() {
   if (currentFase === 'alle') {
     return COLS.filter(c => c.f==='' || ['Analyse','VO-Fase','DO-Fase','Onderzoeksfase','UO-Fase'].includes(c.f));
@@ -976,37 +1117,41 @@ function visibleCols() {
 
 function filterRows() {
   const search = document.getElementById('search').value.toLowerCase();
-  const loc = document.getElementById('locFilter').value;
+  const loc    = document.getElementById('locFilter').value;
   const status = document.getElementById('statusFilter').value;
-  const eng = document.getElementById('engFilter').value;
-  const vcols = visibleCols();
+  const eng    = document.getElementById('engFilter').value;
+  const vcols  = visibleCols();
 
-  return ROWS.filter(r => {
+  return ROWS.filter(function(r) {
     if (search && ![r[2],r[8],r[5],r[6],r[7]].some(v=>(v||'').toLowerCase().includes(search))) return false;
     if (loc && r[2] !== loc) return false;
     if (eng && r[8] !== eng) return false;
     if (status) {
-      const hasStatus = vcols.filter(c=>c.f!=='').some(c=>r[c.i]===status);
-      if (!hasStatus) return false;
+      if (!vcols.filter(c=>c.f!=='').some(c=>r[c.i]===status)) return false;
     }
     return true;
   });
 }
 
-function dominantStatus(row, vcols) {
+function badgeCls(v) {
+  if(v==='Gereed') return 'G';
+  if(v==='Loopt') return 'L';
+  if(v==='Review') return 'R';
+  if(v==='Geblokkeerd') return 'B';
+  if(v==='Nog te starten') return 'N';
+  return '';
+}
+
+function dominantStatus(r, vcols) {
   const order = ['Geblokkeerd','Review','Loopt','Nog te starten','Gereed'];
-  const taskCols = vcols.filter(c=>c.f!=='');
-  for (const s of order) {
-    if (taskCols.some(c=>row[c.i]===s)) return s;
-  }
+  const tc = vcols.filter(c=>c.f!=='');
+  for (const s of order) { if (tc.some(c=>r[c.i]===s)) return s; }
   return '';
 }
 
 function updateKPIs(rows, vcols) {
   let g=0,l=0,rv=0,gb=0;
-  var rowMap = rows.map(function(r) { return ROWS.indexOf(r); });
-  rows.forEach(function(r, ri) {
-    var actualRowIdx = rowMap[ri] !== -1 ? rowMap[ri] : ri;
+  rows.forEach(function(r) {
     const d = dominantStatus(r, vcols);
     if(d==='Gereed') g++;
     else if(d==='Loopt') l++;
@@ -1014,14 +1159,97 @@ function updateKPIs(rows, vcols) {
     else if(d==='Geblokkeerd') gb++;
   });
   const n = rows.length;
-  document.getElementById('kpi-total').textContent = n;
-  document.getElementById('kpi-gereed').textContent = g;
-  document.getElementById('kpi-gereed-pct').textContent = n ? Math.round(g/n*100)+'% van gefilterd' : '';
-  document.getElementById('kpi-loopt').textContent = l;
-  document.getElementById('kpi-review').textContent = rv;
+  document.getElementById('kpi-total').textContent     = n;
+  document.getElementById('kpi-gereed').textContent    = g;
+  document.getElementById('kpi-gereed-pct').textContent= n ? Math.round(g/n*100)+'% van totaal' : '';
+  document.getElementById('kpi-loopt').textContent     = l;
+  document.getElementById('kpi-review').textContent    = rv;
   document.getElementById('kpi-geblokkeerd').textContent = gb;
-  document.getElementById('hdr-count').textContent = n + ' werkpakketten';
-  document.getElementById('row-count').textContent = n + ' rijen';
+  document.getElementById('hdr-count').textContent     = n + ' werkpakketten';
+  document.getElementById('row-count').textContent     = n + ' rijen';
+}
+
+function render() {
+  const vcols = visibleCols();
+  let rows = filterRows();
+
+  if (sortCol >= 0 && sortCol < vcols.length) {
+    const ci = vcols[sortCol].i;
+    rows.sort((a,b) => { const av=a[ci]||'',bv=b[ci]||''; return av<bv?-sortDir:av>bv?sortDir:0; });
+  }
+
+  updateKPIs(rows, vcols);
+
+  // Fase header groups
+  const groups = [];
+  let lastF = null;
+  vcols.forEach(function(c,ci) {
+    if (c.f !== lastF) { groups.push({f:c.f, count:1}); lastF=c.f; }
+    else groups[groups.length-1].count++;
+  });
+
+  let html = '<thead>';
+  html += '<tr class="fase-hdr-row">';
+  groups.forEach(function(g) {
+    const label = g.f || 'Projectinfo';
+    const s = FASE_STYLE[g.f];
+    const style = s ? 'color:'+s.color+';background:'+s.bg+';border-bottom:2px solid '+s.color : 'color:var(--text-faint);background:var(--surface2)';
+    html += '<th colspan="'+g.count+'" style="'+style+'">'+label+'</th>';
+  });
+  html += '</tr><tr class="col-hdr-row">';
+  vcols.forEach(function(c,ci) {
+    const arrow = sortCol===ci ? (sortDir===1?' ▲':' ▼') : '';
+    const fs = FASE_STYLE[c.f];
+    const isFirst = ci===0 || vcols[ci-1].f !== c.f;
+    const bl = isFirst && fs ? 'border-left:2px solid '+fs.color : '';
+    html += '<th onclick="sortBy('+ci+')" title="'+c.n+'" style="'+bl+'">'+c.n+(arrow?'<span class="sort-arrow">'+arrow+'</span>':'')+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  if (rows.length === 0) {
+    html += '<tr><td colspan="'+vcols.length+'"><div class="empty-state"><strong>Geen resultaten</strong>Pas de filters aan.</div></td></tr>';
+  } else {
+    rows.forEach(function(r, ri) {
+      const actualIdx = ROWS.indexOf(r);
+      html += '<tr>';
+      vcols.forEach(function(c, ci) {
+        const val = r[c.i] || '';
+        const isBase = c.f === '';
+        const fs = FASE_STYLE[c.f];
+        const isFirst = ci===0 || vcols[ci-1].f !== c.f;
+        const bl = isFirst && fs ? 'border-left:2px solid '+fs.color : '';
+        const cls = isBase ? 'col-base' : (c.i===5 ? 'col-wp' : '');
+        const bc = badgeCls(val);
+        let cell;
+        if (bc) {
+          cell = '<span class="badge '+bc+'">'+val+'</span>';
+        } else if (c.n.indexOf('Weken resterend') !== -1 && val !== '') {
+          const wn = parseInt(val);
+          if (!isNaN(wn) && Math.abs(wn) < 1000) {
+            const wc = wn<0?'wk-over':wn<=4?'wk-warn':'wk-ok';
+            cell = '<span class="'+wc+'">'+wn+'w</span>';
+          } else { cell = val; }
+        } else { cell = val; }
+
+        const isStatus = bc !== '';
+        var clickAttr = '';
+        var editCls = '';
+        if (currentMode === 'editor' && isStatus) {
+          clickAttr = ' onclick="openStatusPicker(event,'+actualIdx+','+c.i+')"';
+          editCls = ' editable';
+        }
+        html += '<td class="'+cls+editCls+'" style="'+bl+'" title="'+val+'"'+clickAttr+'>'+cell+'</td>';
+      });
+      html += '</tr>';
+    });
+  }
+  html += '</tbody>';
+  document.getElementById('tbl').innerHTML = html;
+}
+
+function sortBy(ci) {
+  if (sortCol===ci) sortDir*=-1; else { sortCol=ci; sortDir=1; }
+  render();
 }
 
 function setFase(f, btn) {
@@ -1032,528 +1260,52 @@ function setFase(f, btn) {
   render();
 }
 
-function render() {
-  const vcols = visibleCols();
-  let rows = filterRows();
-
-  if (sortCol >= 0 && sortCol < vcols.length) {
-    const ci = vcols[sortCol].i;
-    rows.sort((a,b) => {
-      const av = a[ci]||'', bv = b[ci]||'';
-      return av < bv ? -sortDir : av > bv ? sortDir : 0;
-    });
-  }
-
-  updateKPIs(rows, vcols);
-
-  // Build fase header groups
-  const groups = [];
-  let lastF = null;
-  vcols.forEach(function(c,ci) {
-    if (c.f !== lastF) { groups.push({f:c.f, count:1}); lastF=c.f; }
-    else groups[groups.length-1].count++;
-  });
-
-  let html = '<thead>';
-  // Fase header row
-  html += '<tr class="fase-hdr-row">';
-  groups.forEach(function(g) {
-    var label = g.f || 'Projectinfo';
-    var s = FASE_STYLE[g.f];
-    var style = s ? 'color:' + s.color + ';background:' + s.bg + ';border-bottom:2px solid ' + s.color : 'color:var(--text-faint);background:var(--surface2)';
-    html += '<th colspan="' + g.count + '" style="' + style + '">' + label + '</th>';
-  });
-  html += '</tr>';
-
-  // Column header row
-  html += '<tr class="col-hdr-row">';
-  vcols.forEach(function(c,ci) {
-    var arrow = sortCol===ci ? (sortDir===1 ? ' ▲' : ' ▼') : '';
-    var fs = FASE_STYLE[c.f];
-    var isFirst = ci===0 || vcols[ci-1].f !== c.f;
-    var bl = isFirst && fs ? 'border-left:2px solid ' + fs.color : '';
-    html += '<th onclick="sortBy(' + ci + ')" title="' + c.n + '" style="' + bl + '">' + c.n + (arrow ? '<span class="sort-arrow">' + arrow + '</span>' : '') + '</th>';
-  });
-  html += '</tr></thead>';
-
-  // Body
-  html += '<tbody>';
-  if (rows.length === 0) {
-    html += '<tr><td colspan="' + vcols.length + '"><div class="empty-state"><strong>Geen resultaten</strong>Pas de filters aan om werkpakketten te zien.</div></td></tr>';
-  } else {
-    rows.forEach(function(r, ri) {
-      var actualRowIdx = ROWS.indexOf(r);
-      if (actualRowIdx === -1) actualRowIdx = ri;
-      html += '<tr>';
-      vcols.forEach(function(c, ci) {
-        var val = r[c.i] || '';
-        var isBase = c.f === '';
-        var fs = FASE_STYLE[c.f];
-        var isFirst = ci === 0 || vcols[ci-1].f !== c.f;
-        var bl = isFirst && fs ? 'border-left:2px solid ' + fs.color : '';
-        var cls = isBase ? 'col-base' : (c.i === 5 ? 'col-wp' : '');
-
-        var bc = badgeCls(val);
-        var cell;
-        if (bc) {
-          cell = '<span class="badge ' + bc + '">' + val + '</span>';
-        } else if (c.n.indexOf('Weken resterend') !== -1 && val !== '') {
-          var wn = parseInt(val);
-          if (!isNaN(wn) && Math.abs(wn) < 1000) {
-            var wc = wn < 0 ? 'wk-over' : wn <= 4 ? 'wk-warn' : 'wk-ok';
-            cell = '<span class="' + wc + '">' + wn + 'w</span>';
-          } else { cell = val; }
-        } else {
-          cell = val;
-        }
-
-        var isStatus = bc !== '';
-        var chKey = actualRowIdx + '-' + c.i;
-        var isChanged = pendingChanges[chKey] !== undefined;
-        var clickAttr = '';
-        if (currentMode === 'editor' && isStatus) {
-          clickAttr = ' onclick="openStatusPicker(event,' + actualRowIdx + ',' + c.i + ')"';
-        }
-        var extraCls = (currentMode === 'editor' && isStatus ? ' editable' : '') + (isChanged ? ' changed-cell' : '');
-        html += '<td class="' + cls + extraCls + '" style="' + bl + '" title="' + val + '"' + clickAttr + '>' + cell + '</td>';
-      });
-      html += '</tr>';
-    });
-  }
-  html += '</tbody>';
-
-  document.getElementById('tbl').innerHTML = html;
-}
-
-
+// ══ EXPORT ══
 function getExportData() {
   const vcols = visibleCols();
   let rows = filterRows();
   if (sortCol >= 0 && sortCol < vcols.length) {
     const ci = vcols[sortCol].i;
-    rows.sort((a,b) => { const av=a[ci]||'',bv=b[ci]||''; return av<bv?-sortDir:av>bv?sortDir:0; });
+    rows.sort((a,b)=>{ const av=a[ci]||'',bv=b[ci]||''; return av<bv?-sortDir:av>bv?sortDir:0; });
   }
-  const faseRow = vcols.map(c => c.f ? c.f : 'Projectinfo');
-  const colRow  = vcols.map(c => c.n);
-  const dataRows = rows.map(r => vcols.map(c => r[c.i] || ''));
-  return { faseRow, colRow, dataRows, vcols };
+  return {
+    faseRow:  vcols.map(c=>c.f||'Projectinfo'),
+    colRow:   vcols.map(c=>c.n),
+    dataRows: rows.map(r=>vcols.map(c=>r[c.i]||'')),
+    vcols
+  };
 }
 
 function exportCSV() {
   const { faseRow, colRow, dataRows } = getExportData();
-  const esc = v => '"' + String(v).replace(/"/g, '""') + '"';
-  const sep = ',';
-  const nl  = '\r\n';
-  const bom = '\uFEFF';
-  const lines = [
-    faseRow.map(esc).join(sep),
-    colRow.map(esc).join(sep),
-  ].concat(dataRows.map(row => row.map(esc).join(sep)));
-  const blob = new Blob([bom + lines.join(nl)], { type: 'text/csv;charset=utf-8;' });
-  const fase = currentFase === 'alle' ? 'alle-fases' : currentFase.toLowerCase().replace('/', '-');
-  const date = new Date().toISOString().slice(0, 10);
-  triggerDownload(blob, 'engineeringsplanning_TPA_' + fase + '_' + date + '.csv');
+  const esc = v => '"'+String(v).replace(/"/g,'""')+'"';
+  const lines = [faseRow.map(esc).join(','), colRow.map(esc).join(',')]
+    .concat(dataRows.map(row=>row.map(esc).join(',')));
+  const blob = new Blob(['﻿'+lines.join('
+')], {type:'text/csv;charset=utf-8;'});
+  const date = new Date().toISOString().slice(0,10);
+  triggerDownload(blob, 'engineeringsplanning_TPA_'+date+'.csv');
 }
 
 function exportXLSX() {
-  if (typeof XLSX === 'undefined') {
-    alert('Excel bibliotheek laadt nog, probeer over een seconde opnieuw.');
-    return;
-  }
+  if (typeof XLSX === 'undefined') { alert('Even wachten...'); return; }
   const { faseRow, colRow, dataRows, vcols } = getExportData();
   const wb = XLSX.utils.book_new();
-  const wsData = [faseRow, colRow].concat(dataRows);
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-  // Column widths
-  ws['!cols'] = vcols.map(c => ({ wch: Math.min(Math.max(c.n.length + 2, 10), 30) }));
-
-  // Freeze panes: first 2 header rows + first 6 project info columns
-  ws['!freeze'] = { xSplit: 6, ySplit: 2 };
-
-  var FASE_FILL = {
-    'Projectinfo':    'F0EFE9',
-    'Analyse':        'DAEAF7',
-    'VO-Fase':        'D5F0E7',
-    'DO-Fase':        'FCF0D0',
-    'Onderzoeksfase': 'EAE6FB',
-    'UO-Fase':        'FAE0E0',
-    'Natuurtoets':    'E2F4D5',
-    'Archeologie':    'FAE0F0',
-    'Bodem':          'E8E8E5',
-    'NGE/OO':         'FAE5D5',
-    'Geotechnisch':   'D5EFF5'
-  };
-
-  // Style fase header row (row 0)
-  faseRow.forEach(function(fase, ci) {
-    var ref = XLSX.utils.encode_cell({ r: 0, c: ci });
-    if (!ws[ref]) { ws[ref] = { v: fase, t: 's' }; }
-    ws[ref].s = {
-      fill: { patternType: 'solid', fgColor: { rgb: FASE_FILL[fase] || 'F5F4F0' } },
-      font: { bold: true, sz: 9, color: { rgb: '333333' } },
-      alignment: { horizontal: 'center' },
-      border: { bottom: { style: 'thin', color: { rgb: 'AAAAAA' } } }
-    };
-  });
-
-  // Style column header row (row 1)
-  colRow.forEach(function(name, ci) {
-    var ref = XLSX.utils.encode_cell({ r: 1, c: ci });
-    if (!ws[ref]) { ws[ref] = { v: name, t: 's' }; }
-    ws[ref].s = {
-      fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFF' } },
-      font: { bold: true, sz: 10, color: { rgb: '1A1917' } },
-      border: { bottom: { style: 'medium', color: { rgb: '333333' } } }
-    };
-  });
-
-  // Status badge colors for data cells
-  var STATUS_FILL = {
-    'Gereed':         { bg: 'D4EDDA', fg: '1E5C37' },
-    'Loopt':          { bg: 'CCE0F5', fg: '0D3D6B' },
-    'Review':         { bg: 'FDE9C0', fg: '6B4400' },
-    'Geblokkeerd':    { bg: 'F9D0D0', fg: '8B1A1A' },
-    'Nog te starten': { bg: 'E8E8E5', fg: '444240' }
-  };
-
-  dataRows.forEach(function(row, ri) {
-    var even = ri % 2 === 0;
-    row.forEach(function(val, ci) {
-      var ref = XLSX.utils.encode_cell({ r: ri + 2, c: ci });
-      if (!ws[ref]) { return; }
-      var sc = STATUS_FILL[val];
-      if (sc) {
-        ws[ref].s = {
-          fill: { patternType: 'solid', fgColor: { rgb: sc.bg } },
-          font: { color: { rgb: sc.fg }, sz: 10 },
-          alignment: { horizontal: 'center' }
-        };
-      } else {
-        ws[ref].s = {
-          fill: { patternType: 'solid', fgColor: { rgb: even ? 'FAFAF8' : 'FFFFFF' } },
-          font: { sz: 10 }
-        };
-      }
-    });
-  });
-
-  var fase = currentFase === 'alle' ? 'Alle fases' : currentFase;
-  var date = new Date().toISOString().slice(0, 10);
-  var sheetName = fase.slice(0, 31);
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
-  // Legend sheet
-  var legendData = [
-    ['Status', 'Betekenis'],
-    ['Gereed', 'Taak volledig afgerond'],
-    ['Loopt', 'Taak actief in uitvoering'],
-    ['Review', 'Wacht op beoordeling of goedkeuring'],
-    ['Geblokkeerd', 'Wacht op externe actie of beslissing'],
-    ['Nog te starten', 'Taak staat in de planning, nog niet begonnen'],
-    ['', ''],
-    ['Weken resterend', 'Kleurcodering'],
-    ['Negatief (bijv. -22w)', 'Plandatum overschreden (rood)'],
-    ['0 tot 4 weken', 'Bijna op de plandatum (oranje)'],
-    ['Meer dan 4 weken', 'Op schema (groen)']
-  ];
-  var wsLeg = XLSX.utils.aoa_to_sheet(legendData);
-  wsLeg['!cols'] = [{ wch: 28 }, { wch: 45 }];
-  [0, 7].forEach(function(ri) {
-    ['A', 'B'].forEach(function(col) {
-      var ref = col + (ri + 1);
-      if (wsLeg[ref]) {
-        wsLeg[ref].s = {
-          font: { bold: true, sz: 10 },
-          fill: { patternType: 'solid', fgColor: { rgb: 'F0EFE9' } }
-        };
-      }
-    });
-  });
-  XLSX.utils.book_append_sheet(wb, wsLeg, 'Legenda');
-
-  XLSX.writeFile(wb, 'engineeringsplanning_TPA_' + fase.replace('/', '-') + '_' + date + '.xlsx');
+  const ws = XLSX.utils.aoa_to_sheet([faseRow, colRow].concat(dataRows));
+  ws['!cols'] = vcols.map(c=>({wch:Math.min(Math.max(c.n.length+2,10),30)}));
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.utils.book_append_sheet(wb, ws, 'Data');
+  XLSX.writeFile(wb, 'engineeringsplanning_TPA_'+date+'.xlsx');
 }
 
 function triggerDownload(blob, filename) {
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click();
   document.body.removeChild(a);
-  setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
-
-
-// ══ MODE & LANDING ══
-var currentMode = 'viewer';
-var pendingChanges = {};
-var pickerTarget = null;
-
-function enterMode(mode) {
-  currentMode = mode;
-  document.getElementById('landing').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  var badge = document.getElementById('modeBadge');
-  var label = document.getElementById('modeLabel');
-  badge.className = 'mode-badge ' + mode;
-  label.textContent = mode === 'viewer' ? 'Viewer' : 'Bewerker';
-  document.getElementById('editorNotice').style.display = mode === 'editor' ? 'flex' : 'none';
-  var eg = document.querySelector('.export-group');
-  if (eg) eg.style.display = mode === 'editor' ? 'none' : 'flex';
-  var app = document.getElementById('app');
-  app.className = mode === 'editor' ? 'mode-editor' : '';
-  // Show/hide settings button based on whether token is saved
-  var settingsBtn = document.getElementById('btnGhSettings');
-  if (settingsBtn) {
-    var hasToken = !!localStorage.getItem('gh_token');
-    settingsBtn.title = hasToken ? '⚙ GitHub (token opgeslagen)' : '⚙ GitHub instellen (vereist)';
-    settingsBtn.style.borderColor = hasToken ? 'rgba(122,200,160,0.4)' : 'rgba(255,180,100,0.6)';
-    settingsBtn.style.color = hasToken ? 'rgba(122,200,160,0.8)' : 'rgba(255,200,100,0.9)';
-  }
-  render();
-}
-
-function goBack() {
-  if (Object.keys(pendingChanges).length > 0) {
-    if (!confirm('Je hebt onopgeslagen wijzigingen. Toch terug?')) return;
-    ROWS = parseCSV(RAW_CSV);
-    pendingChanges = {};
-  }
-  hideSaveBar();
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('landing').style.display = 'flex';
-}
-
-function openStatusPicker(e, rowIdx, colIdx) {
-  e.stopPropagation();
-  pickerTarget = { rowIdx: rowIdx, colIdx: colIdx };
-  var picker = document.getElementById('statusPicker');
-  var cur = ROWS[rowIdx][colIdx];
-  picker.querySelectorAll('.status-option[data-val]').forEach(function(opt) {
-    opt.classList.toggle('active', opt.getAttribute('data-val') === cur);
-  });
-  var rect = e.currentTarget.getBoundingClientRect();
-  var top = rect.bottom + 6;
-  var left = rect.left;
-  if (left + 170 > window.innerWidth) left = window.innerWidth - 175;
-  picker.style.top = top + 'px';
-  picker.style.left = left + 'px';
-  picker.classList.add('open');
-  setTimeout(function() {
-    document.addEventListener('click', closeOnOutside, { once: true });
-  }, 0);
-}
-
-function closeOnOutside(e) {
-  var picker = document.getElementById('statusPicker');
-  if (!picker.contains(e.target)) closeStatusPicker();
-}
-
-function closeStatusPicker() {
-  document.getElementById('statusPicker').classList.remove('open');
-  pickerTarget = null;
-}
-
-function applyStatus(newVal) {
-  if (!pickerTarget) return;
-  var ri = pickerTarget.rowIdx;
-  var ci = pickerTarget.colIdx;
-  ROWS[ri][ci] = newVal;
-  pendingChanges[ri + '-' + ci] = newVal;
-  closeStatusPicker();
-  render();
-  updateSaveBar();
-}
-
-function updateSaveBar() {
-  var n = Object.keys(pendingChanges).length;
-  document.getElementById('saveBarCount').textContent = n + (n === 1 ? ' wijziging' : ' wijzigingen');
-  document.getElementById('saveBar').classList.toggle('visible', n > 0);
-}
-
-function hideSaveBar() {
-  document.getElementById('saveBar').classList.remove('visible');
-}
-
-function discardChanges() {
-  var n = Object.keys(pendingChanges).length;
-  if (!confirm('Alle ' + n + ' wijzigingen verwerpen?')) return;
-  ROWS = parseCSV(RAW_CSV);
-  pendingChanges = {};
-  hideSaveBar();
-  render();
-}
-
-function saveChanges() {
-  exportXLSX();
-}
-
-// ══ GITHUB SETTINGS ══
-var ghSettings = {
-  token:  localStorage.getItem('gh_token')  || '',
-  repo:   localStorage.getItem('gh_repo')   || 'Thierry1996NL/engineeringsplanning_TPA',
-  path:   localStorage.getItem('gh_path')   || 'engineeringsplanning_TPA/index.html',
-  branch: localStorage.getItem('gh_branch') || 'main'
-};
-
-function openGithubModal() {
-  document.getElementById('ghToken').value = ghSettings.token || '';
-  document.getElementById('ghRepo').value = ghSettings.repo || '';
-  document.getElementById('ghPath').value = ghSettings.path || 'engineeringsplanning_tpa.html';
-  document.getElementById('ghBranch').value = ghSettings.branch || 'main';
-  document.getElementById('githubModal').classList.add('open');
-}
-
-function closeGithubModal() {
-  document.getElementById('githubModal').classList.remove('open');
-}
-
-function saveGithubSettings() {
-  ghSettings.token  = document.getElementById('ghToken').value.trim();
-  ghSettings.repo   = document.getElementById('ghRepo').value.trim();
-  ghSettings.path   = document.getElementById('ghPath').value.trim() || 'engineeringsplanning_TPA/index.html';
-  ghSettings.branch = document.getElementById('ghBranch').value.trim() || 'main';
-  // Persist to localStorage so user never has to fill this in again on this device
-  localStorage.setItem('gh_token',  ghSettings.token);
-  localStorage.setItem('gh_repo',   ghSettings.repo);
-  localStorage.setItem('gh_path',   ghSettings.path);
-  localStorage.setItem('gh_branch', ghSettings.branch);
-  closeGithubModal();
-  if (ghSettings.token && ghSettings.repo) {
-    showSaveStatus('success', '✓ Instellingen opgeslagen op dit apparaat');
-    setTimeout(clearSaveStatus, 2500);
-  }
-}
-
-function showSaveStatus(type, msg) {
-  var el = document.getElementById('saveStatus');
-  el.className = 'save-status ' + type;
-  el.textContent = msg;
-}
-
-function clearSaveStatus() {
-  var el = document.getElementById('saveStatus');
-  el.className = 'save-status';
-}
-
-async function pushToGithub() {
-  // Reload settings from localStorage
-  ghSettings.token  = localStorage.getItem('gh_token')  || ghSettings.token;
-  ghSettings.repo   = localStorage.getItem('gh_repo')   || ghSettings.repo;
-  ghSettings.path   = localStorage.getItem('gh_path')   || ghSettings.path;
-  ghSettings.branch = localStorage.getItem('gh_branch') || ghSettings.branch;
-
-  if (!ghSettings.token || !ghSettings.repo) {
-    openGithubModal();
-    return;
-  }
-
-  var btn = document.getElementById('btnGhSave');
-  btn.disabled = true;
-  showSaveStatus('saving', '↻ Bezig met uploaden...');
-
-  try {
-    var apiBase = 'https://api.github.com/repos/' + ghSettings.repo + '/contents/' + ghSettings.path;
-    var headers = {
-      'Authorization': 'token ' + ghSettings.token,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
-    };
-
-    // Always fetch the CURRENT sha fresh from GitHub — never use a cached value
-    var sha = null;
-    var shaRes = await fetch(apiBase + '?ref=' + ghSettings.branch, { headers: headers });
-    if (shaRes.ok) {
-      var shaData = await shaRes.json();
-      sha = shaData.sha;
-    } else if (shaRes.status !== 404) {
-      var errText = await shaRes.text().catch(function() { return shaRes.status; });
-      throw new Error('Kan SHA niet ophalen: ' + shaRes.status + ' — ' + errText);
-    }
-
-    // Build updated HTML with current data baked in
-    var updatedHtml = buildUpdatedHtml();
-    var encoded = btoa(unescape(encodeURIComponent(updatedHtml)));
-
-    // Push to GitHub
-    var n = Object.keys(pendingChanges).length;
-    var body = {
-      message: 'Update engineeringsplanning: ' + n + ' statuswijziging' + (n === 1 ? '' : 'en') + ' (' + new Date().toLocaleDateString('nl-NL') + ')',
-      content: encoded,
-      branch: ghSettings.branch
-    };
-    if (sha) body.sha = sha;
-
-    var pushRes = await fetch(apiBase, {
-      method: 'PUT',
-      headers: headers,
-      body: JSON.stringify(body)
-    });
-
-    if (!pushRes.ok) {
-      var errData = await pushRes.json().catch(function() { return {}; });
-      throw new Error(errData.message || 'Upload mislukt (' + pushRes.status + ')');
-    }
-
-    // Success
-    pendingChanges = {};
-    hideSaveBar();
-    render();
-    showSaveStatus('success', '✓ Opgeslagen op GitHub');
-    document.getElementById('saveBar').classList.add('visible');
-    setTimeout(function() {
-      hideSaveBar();
-      clearSaveStatus();
-    }, 3000);
-
-  } catch (err) {
-    showSaveStatus('error', '✗ ' + err.message);
-    document.getElementById('saveBar').classList.add('visible');
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-
-function buildUpdatedHtml() {
-  // Take the current page HTML and replace RAW_CSV with updated data
-  var html = document.documentElement.outerHTML;
-
-  // Build new CSV from current ROWS
-  var lines = ROWS.map(function(row) {
-    return row.join(',');
-  });
-  var newCsv = lines.join('\n');
-
-  // Find and replace the RAW_CSV content between backticks
-  var csvStart = html.indexOf('const RAW_CSV = `') + 'const RAW_CSV = `'.length;
-  var csvEnd   = html.indexOf('`;', csvStart);
-  if (csvStart < 0 || csvEnd < 0) {
-    throw new Error('Kan RAW_CSV niet vinden in de HTML');
-  }
-
-  return html.substring(0, csvStart) + newCsv + html.substring(csvEnd);
-}
-
-
-// Init
-ROWS = parseCSV(RAW_CSV);
-
-// Populate engineer filter
-const engs = [...new Set(ROWS.map(r=>r[8]).filter(Boolean))].sort();
-const sel = document.getElementById('engFilter');
-engs.forEach(e => {
-  const o = document.createElement('option');
-  o.value = e; o.textContent = e;
-  sel.appendChild(o);
-});
-
-render();
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 </body>
 </html>
