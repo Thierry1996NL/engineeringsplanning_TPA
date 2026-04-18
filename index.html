@@ -1440,7 +1440,7 @@ function clearSaveStatus() {
 }
 
 async function pushToGithub() {
-  // Reload from localStorage in case user just saved settings
+  // Reload settings from localStorage
   ghSettings.token  = localStorage.getItem('gh_token')  || ghSettings.token;
   ghSettings.repo   = localStorage.getItem('gh_repo')   || ghSettings.repo;
   ghSettings.path   = localStorage.getItem('gh_path')   || ghSettings.path;
@@ -1456,7 +1456,6 @@ async function pushToGithub() {
   showSaveStatus('saving', '↻ Bezig met uploaden...');
 
   try {
-    // 1. Get current file SHA (needed for update)
     var apiBase = 'https://api.github.com/repos/' + ghSettings.repo + '/contents/' + ghSettings.path;
     var headers = {
       'Authorization': 'token ' + ghSettings.token,
@@ -1464,23 +1463,22 @@ async function pushToGithub() {
       'Content-Type': 'application/json'
     };
 
-    var shaRes = await fetch(apiBase + '?ref=' + ghSettings.branch, { headers: headers });
-    if (!shaRes.ok && shaRes.status !== 404) {
-      throw new Error('Kan bestand niet ophalen (' + shaRes.status + ')');
-    }
+    // Always fetch the CURRENT sha fresh from GitHub — never use a cached value
     var sha = null;
+    var shaRes = await fetch(apiBase + '?ref=' + ghSettings.branch, { headers: headers });
     if (shaRes.ok) {
       var shaData = await shaRes.json();
       sha = shaData.sha;
+    } else if (shaRes.status !== 404) {
+      var errText = await shaRes.text().catch(function() { return shaRes.status; });
+      throw new Error('Kan SHA niet ophalen: ' + shaRes.status + ' — ' + errText);
     }
 
-    // 2. Build updated HTML with current ROWS baked in
+    // Build updated HTML with current data baked in
     var updatedHtml = buildUpdatedHtml();
-
-    // 3. Base64 encode
     var encoded = btoa(unescape(encodeURIComponent(updatedHtml)));
 
-    // 4. Push to GitHub
+    // Push to GitHub
     var n = Object.keys(pendingChanges).length;
     var body = {
       message: 'Update engineeringsplanning: ' + n + ' statuswijziging' + (n === 1 ? '' : 'en') + ' (' + new Date().toLocaleDateString('nl-NL') + ')',
@@ -1504,7 +1502,6 @@ async function pushToGithub() {
     pendingChanges = {};
     hideSaveBar();
     render();
-    // Briefly show success toast
     showSaveStatus('success', '✓ Opgeslagen op GitHub');
     document.getElementById('saveBar').classList.add('visible');
     setTimeout(function() {
@@ -1519,6 +1516,7 @@ async function pushToGithub() {
     btn.disabled = false;
   }
 }
+
 
 function buildUpdatedHtml() {
   // Take the current page HTML and replace RAW_CSV with updated data
