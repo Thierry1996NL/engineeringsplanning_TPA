@@ -2,6 +2,9 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Engineeringsplanning — TPA</title>
 
@@ -36,17 +39,17 @@
     --sh-lg:0 20px 60px rgba(0,0,0,0.10),0 8px 20px rgba(0,0,0,0.06);
   }}}}
 
-  body { font-family:'DM Sans',system-ui,sans-serif; background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  body { font-family:'Inter',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
 
   /* HEADER */
   .site-header { background:rgba(255,255,255,0.72); backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px); color:var(--text); padding:0 1.5rem; display:flex; align-items:center; justify-content:space-between; height:44px; position:sticky; top:0; z-index:100; border-bottom:1px solid rgba(0,0,0,0.08); }
-  .site-header .logo { font-size:13px; font-weight:600; letter-spacing:-.01em; color:var(--text); display:flex; align-items:center; gap:8px; }
+  .site-header .logo { font-size:13px; font-weight:600; letter-spacing:-.01em; color:var(--text); display:flex; align-items:center; gap:8px; font-family:'Poppins',sans-serif; }
   .logo-icon { width:18px; height:18px; background:var(--accent); border-radius:5px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .hdr-user { display:flex; align-items:center; gap:5px; }
   .user-avatar { width:26px; height:26px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color:#fff; flex-shrink:0; }
   .hdr-live { display:flex; align-items:center; gap:3px; }
   .hdr-sep { width:1px; height:16px; background:rgba(255,255,255,0.1); }
-  .btn-back { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:400; padding:4px 11px; border-radius:20px; border:1px solid var(--border-md); background:rgba(0,0,0,0.04); color:var(--text-2); cursor:pointer; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; transition:all .12s; }
+  .btn-back { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:400; padding:4px 11px; border-radius:20px; border:1px solid var(--border-md); background:rgba(0,0,0,0.04); color:var(--text-2); cursor:pointer; font-family:'Inter',system-ui,-apple-system,sans-serif; transition:all .12s; }
   .btn-back:hover { background:rgba(0,0,0,0.07); color:var(--text); }
   .mode-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; margin-right:.875rem; letter-spacing:.03em; }
   .mode-badge .dot { width:5px; height:5px; border-radius:50%; }
@@ -76,18 +79,18 @@
   .controls-bar { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:.5rem .875rem; margin-bottom:.625rem; display:flex; flex-direction:column; gap:.5rem; }
   .fase-row { display:flex; gap:3px; flex-wrap:wrap; align-items:center; }
   .fase-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-right:5px; }
-  .tab { padding:3px 10px; font-size:10px; font-weight:500; border:1px solid var(--border-md); border-radius:20px; background:transparent; color:var(--text-2); cursor:pointer; transition:all .1s; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; white-space:nowrap; }
+  .tab { padding:3px 10px; font-size:10px; font-weight:500; border:1px solid var(--border-md); border-radius:20px; background:transparent; color:var(--text-2); cursor:pointer; transition:all .1s; font-family:'Inter',system-ui,-apple-system,sans-serif; white-space:nowrap; }
   .tab:hover { background:var(--surface2); color:var(--text); border-color:var(--border-strong); }
   .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
   .filter-row { display:flex; gap:5px; align-items:center; flex-wrap:wrap; }
-  .search-box { flex:1; min-width:180px; padding:5px 10px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:12px; border:1px solid var(--border-md); border-radius:var(--r); background:var(--surface2); color:var(--text); outline:none; transition:all .1s; }
+  .search-box { flex:1; min-width:180px; padding:5px 10px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:12px; border:1px solid var(--border-md); border-radius:var(--r); background:var(--surface2); color:var(--text); outline:none; transition:all .1s; }
   .search-box:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px var(--accent-2); }
   .search-box::placeholder { color:var(--text-3); }
-  select { padding:5px 26px 5px 10px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:12px; border:1px solid var(--border-md); border-radius:var(--r); background:var(--surface2); color:var(--text); outline:none; cursor:pointer; appearance:none; transition:all .1s; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8FAA' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; }
+  select { padding:5px 26px 5px 10px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:12px; border:1px solid var(--border-md); border-radius:var(--r); background:var(--surface2); color:var(--text); outline:none; cursor:pointer; appearance:none; transition:all .1s; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8FAA' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; }
   select:focus { border-color:var(--accent); background-color:#fff; box-shadow:0 0 0 3px var(--accent-2); }
-  .row-count { font-size:10px; font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace; color:var(--text-3); white-space:nowrap; margin-left:auto; }
+  .row-count { font-size:10px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-variant-numeric:tabular-nums; color:var(--text-3); white-space:nowrap; margin-left:auto; }
   .export-group { display:flex; gap:4px; }
-  .btn-export { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:11px; font-weight:600; border-radius:var(--r); cursor:pointer; border:1px solid var(--border-md); transition:all .1s; white-space:nowrap; }
+  .btn-export { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:11px; font-weight:600; border-radius:var(--r); cursor:pointer; border:1px solid var(--border-md); transition:all .1s; white-space:nowrap; }
   .btn-export.csv { background:var(--surface2); color:var(--text-2); }
   .btn-export.csv:hover { background:var(--surface3); color:var(--text); }
   .btn-export.xlsx { background:var(--g-fg); color:#fff; border-color:var(--g-fg); }
@@ -106,16 +109,16 @@
   table { border-collapse:collapse; min-width:100%; font-size:11px; }
   thead { position:sticky; top:0; z-index:10; }
   .fase-hdr-row th { padding:3px 8px; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; text-align:center; border-bottom:1px solid rgba(0,0,0,.05); white-space:nowrap; }
-  .col-hdr-row th { padding:4px 8px; font-size:10px; font-weight:600; text-align:left; color:var(--text-2); border-bottom:1px solid var(--border-md); background:var(--surface2); white-space:nowrap; min-width:90px; cursor:default; user-select:none; transition:background .08s; }
+  .col-hdr-row th { padding:5px 8px; font-size:11px; font-weight:500; text-align:left; color:var(--text-2); border-bottom:1px solid var(--border-md); background:var(--surface2); font-family:'Inter',system-ui,-apple-system,sans-serif; letter-spacing:-.01em; white-space:nowrap; min-width:90px; cursor:default; user-select:none; transition:background .08s; }
   .col-hdr-row th:hover { background:var(--surface3); color:var(--text); }
   .sort-arrow { opacity:.45; font-size:8px; margin-left:2px; }
   tbody tr { border-bottom:1px solid var(--border); transition:background .07s; cursor:pointer; }
   tbody tr:last-child { border-bottom:none; }
-  tbody tr:hover td { background:#E4ECFF; }
+  tbody tr:hover td { background:var(--surface2); }
   tbody tr:hover td.col-base { color:var(--accent); }
-  td { padding:4px 8px; vertical-align:middle; color:var(--text); white-space:nowrap; max-width:200px; overflow:hidden; text-overflow:ellipsis; }
-  td.col-base { font-weight:600; font-size:11px; min-width:90px; }
-  td.col-wp { font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:10px; color:var(--text-3); }
+  td { padding:5px 8px; vertical-align:middle; color:var(--text); white-space:nowrap; max-width:200px; overflow:hidden; text-overflow:ellipsis; font-size:12px; font-family:'Inter',system-ui,-apple-system,sans-serif; }
+  td.col-base { font-weight:500; font-size:12px; min-width:90px; font-family:'Inter',system-ui,-apple-system,sans-serif; }
+  td.col-wp { font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:12px; color:var(--text-3); }
 
   /* BADGES */
   .badge { display:inline-flex; align-items:center; gap:3px; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; white-space:nowrap; letter-spacing:.04em; }
@@ -125,13 +128,13 @@
   .R { background:var(--r-bg); color:var(--r-fg); } .R::before { background:var(--r-fg); }
   .B { background:var(--b-bg); color:var(--b-fg); } .B::before { background:var(--b-fg); }
   .N { background:var(--n-bg); color:var(--n-fg); } .N::before { background:var(--n-fg); }
-  .wk-over { color:var(--b-fg); font-weight:700; font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:10px; }
-  .wk-warn { color:var(--r-fg); font-weight:600; font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:10px; }
-  .wk-ok   { color:var(--g-fg); font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:10px; }
+  .wk-over { color:var(--b-fg); font-weight:700; font-family:'Inter',system-ui,-apple-system,sans-serif; font-variant-numeric:tabular-nums; font-size:10px; }
+  .wk-warn { color:var(--r-fg); font-weight:600; font-family:'Inter',system-ui,-apple-system,sans-serif; font-variant-numeric:tabular-nums; font-size:10px; }
+  .wk-ok   { color:var(--g-fg); font-family:'Inter',system-ui,-apple-system,sans-serif; font-variant-numeric:tabular-nums; font-size:10px; }
   .janee-ja  { display:inline-block; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; background:var(--g-bg); color:var(--g-fg); }
   .janee-nee { display:inline-block; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; background:var(--b-bg); color:var(--b-fg); }
   .janee-leeg{ display:inline-block; font-size:9px; padding:2px 7px; border-radius:20px; background:var(--n-bg); color:var(--text-3); }
-  .date-val { font-size:10px; font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace; color:var(--text-2); }
+  .date-val { font-size:10px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-variant-numeric:tabular-nums; color:var(--text-2); }
   .opmerking-tekst { display:inline-block; font-size:10px; color:var(--text); background:#FFFBEB; border-radius:3px; padding:2px 6px; border-left:2px solid #D4880A; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .opmerking-leeg { font-size:10px; font-style:italic; color:var(--text-3); }
   .cell-changed .badge { outline:2px solid #D4880A; outline-offset:1px; }
@@ -163,10 +166,10 @@
   .date-popup { position:fixed; background:var(--surface); border:1px solid var(--border-md); border-radius:var(--r-lg); box-shadow:var(--sh-lg); z-index:500; min-width:210px; padding:.75rem; display:none; flex-direction:column; gap:.5rem; }
   .date-popup.open { display:flex; animation:popIn .1s ease; }
   .date-popup-header { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); }
-  .date-popup input[type="date"] { padding:5px 9px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:12px; border:1px solid var(--border-md); border-radius:var(--r); background:var(--surface2); color:var(--text); outline:none; width:100%; transition:all .1s; }
+  .date-popup input[type="date"] { padding:5px 9px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:12px; border:1px solid var(--border-md); border-radius:var(--r); background:var(--surface2); color:var(--text); outline:none; width:100%; transition:all .1s; }
   .date-popup input[type="date"]:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px var(--accent-2); }
   .date-popup-actions { display:flex; gap:4px; justify-content:flex-end; }
-  .date-popup-actions button { padding:4px 10px; font-size:11px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-weight:500; border-radius:var(--r); cursor:pointer; border:1px solid var(--border-md); transition:all .1s; }
+  .date-popup-actions button { padding:4px 10px; font-size:11px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-weight:500; border-radius:var(--r); cursor:pointer; border:1px solid var(--border-md); transition:all .1s; }
   .btn-date-cancel { background:transparent; color:var(--text-2); }
   .btn-date-cancel:hover { background:var(--surface2); }
   .btn-date-save { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
@@ -183,13 +186,13 @@
   .opm-close { background:none; border:none; cursor:pointer; color:var(--text-3); font-size:14px; padding:3px 6px; border-radius:5px; transition:all .1s; line-height:1; }
   .opm-close:hover { background:var(--surface2); color:var(--text); }
   .opm-modal-body { padding:.875rem 1.125rem; }
-  .opm-textarea { width:100%; min-height:88px; max-height:200px; padding:8px 10px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:12px; border:1px solid var(--border-md); border-radius:var(--r-md); background:var(--surface2); color:var(--text); outline:none; resize:vertical; line-height:1.55; transition:all .1s; }
+  .opm-textarea { width:100%; min-height:88px; max-height:200px; padding:8px 10px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:12px; border:1px solid var(--border-md); border-radius:var(--r-md); background:var(--surface2); color:var(--text); outline:none; resize:vertical; line-height:1.55; transition:all .1s; }
   .opm-textarea:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px var(--accent-2); }
   .opm-modal-footer { padding:.625rem 1.125rem; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:5px; align-items:center; }
-  .opm-char-count { font-size:10px; color:var(--text-3); margin-right:auto; font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace; }
-  .btn-opm-cancel { padding:5px 12px; font-size:12px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; border:1px solid var(--border-md); border-radius:var(--r); background:transparent; color:var(--text-2); cursor:pointer; transition:all .1s; }
+  .opm-char-count { font-size:10px; color:var(--text-3); margin-right:auto; font-family:'Inter',system-ui,-apple-system,sans-serif; font-variant-numeric:tabular-nums; }
+  .btn-opm-cancel { padding:5px 12px; font-size:12px; font-family:'Inter',system-ui,-apple-system,sans-serif; border:1px solid var(--border-md); border-radius:var(--r); background:transparent; color:var(--text-2); cursor:pointer; transition:all .1s; }
   .btn-opm-cancel:hover { background:var(--surface2); }
-  .btn-opm-save { padding:5px 14px; font-size:12px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-weight:600; border:none; border-radius:var(--r); background:var(--navy); color:#fff; cursor:pointer; transition:all .1s; }
+  .btn-opm-save { padding:5px 14px; font-size:12px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-weight:600; border:none; border-radius:var(--r); background:var(--navy); color:#fff; cursor:pointer; transition:all .1s; }
   .btn-opm-save:hover { background:var(--navy-3); }
   .toast { position:fixed; bottom:1.25rem; left:50%; transform:translateX(-50%) translateY(60px); background:var(--navy); color:#fff; border-radius:var(--r-lg); padding:.5rem 1rem; font-size:12px; font-weight:500; z-index:300; transition:transform .22s cubic-bezier(.34,1.56,.64,1); pointer-events:none; white-space:nowrap; display:flex; align-items:center; gap:6px; border:1px solid rgba(255,255,255,0.07); box-shadow:var(--sh-lg); }
   .toast.show { transform:translateX(-50%) translateY(0); }
@@ -207,10 +210,10 @@
   .login-sub { font-size:12px; color:rgba(255,255,255,0.28); margin-bottom:1.625rem; }
   .login-field { display:flex; flex-direction:column; gap:4px; margin-bottom:.75rem; }
   .login-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:rgba(255,255,255,0.28); }
-  .login-input { padding:8px 11px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:13px; border:1px solid rgba(255,255,255,0.09); border-radius:var(--r-md); background:rgba(255,255,255,0.05); color:#fff; outline:none; width:100%; transition:all .1s; }
+  .login-input { padding:8px 11px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:13px; border:1px solid rgba(255,255,255,0.09); border-radius:var(--r-md); background:rgba(255,255,255,0.05); color:#fff; outline:none; width:100%; transition:all .1s; }
   .login-input:focus { border-color:var(--accent); background:rgba(255,255,255,0.08); box-shadow:0 0 0 3px rgba(0,87,255,0.22); }
   .login-input option { background:#1C2138; color:#fff; }
-  .login-btn { width:100%; padding:11px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:14px; font-weight:500; border:none; border-radius:var(--r-xl); background:var(--accent); color:#fff; cursor:pointer; transition:all .15s; margin-top:.5rem; letter-spacing:-.01em; }
+  .login-btn { width:100%; padding:11px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:14px; font-weight:500; border:none; border-radius:var(--r-xl); background:var(--accent); color:#fff; cursor:pointer; transition:all .15s; margin-top:.5rem; letter-spacing:-.01em; }
   .login-btn:hover { background:#0077ED; box-shadow:0 4px 16px rgba(0,113,227,0.35); }
   .login-btn:active { transform:scale(0.99); box-shadow:none; }
   .login-error { font-size:11px; color:#FF8070; background:rgba(184,21,24,0.15); border-radius:var(--r); padding:6px 10px; margin-top:.5rem; display:none; border:1px solid rgba(184,21,24,0.2); }
@@ -237,7 +240,7 @@
   .text-popup.open { display:flex; animation:popIn .1s ease; }
   .text-popup-header { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); }
   .text-popup input,.text-popup select.tp-select {
-    padding:5px 9px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:12px;
+    padding:5px 9px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:12px;
     border:1px solid var(--border-md); border-radius:var(--r); background:var(--surface2);
     color:var(--text); outline:none; width:100%; transition:all .1s;
   }
@@ -245,7 +248,7 @@
     border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px var(--accent-2);
   }
   .text-popup-actions { display:flex; gap:4px; justify-content:flex-end; }
-  .text-popup-actions button { padding:4px 10px; font-size:11px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-weight:500; border-radius:var(--r); cursor:pointer; border:1px solid var(--border-md); transition:all .1s; }
+  .text-popup-actions button { padding:4px 10px; font-size:11px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-weight:500; border-radius:var(--r); cursor:pointer; border:1px solid var(--border-md); transition:all .1s; }
   .btn-text-cancel { background:transparent; color:var(--text-2); }
   .btn-text-cancel:hover { background:var(--surface2); }
   .btn-text-save { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
@@ -257,7 +260,7 @@
   /* ══ ADVANCED FILTER PANEL ══ */
   .filter-panel-btn {
     display:inline-flex; align-items:center; gap:4px; padding:4px 10px;
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:11px; font-weight:600;
+    font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:11px; font-weight:600;
     border:1px solid var(--border-md); border-radius:var(--r);
     background:transparent; color:var(--text-2); cursor:pointer; transition:all .1s;
     white-space:nowrap;
@@ -286,7 +289,7 @@
     letter-spacing:.07em; color:var(--text-3);
   }
   .filter-item select, .filter-item input.filter-input {
-    padding:4px 8px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:11px;
+    padding:4px 8px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:11px;
     border:1px solid var(--border-md); border-radius:var(--r);
     background:var(--surface2); color:var(--text); outline:none;
     transition:border-color .1s; width:100%;
@@ -337,7 +340,7 @@
   .cfp-close { background:none; border:none; cursor:pointer; color:var(--text-3); font-size:13px; padding:2px 5px; border-radius:4px; line-height:1; }
   .cfp-close:hover { background:var(--surface2); }
   .cfp-search {
-    margin:.375rem .5rem .25rem; padding:5px 8px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
+    margin:.375rem .5rem .25rem; padding:5px 8px; font-family:'Inter',system-ui,-apple-system,sans-serif;
     font-size:11px; border:1px solid var(--border-md); border-radius:var(--r);
     background:var(--surface2); color:var(--text); outline:none; width:calc(100% - 1rem);
   }
@@ -360,7 +363,7 @@
     display:flex; justify-content:flex-end; gap:5px;
   }
   .cfp-footer button {
-    padding:4px 10px; font-size:11px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
+    padding:4px 10px; font-size:11px; font-family:'Inter',system-ui,-apple-system,sans-serif;
     border-radius:var(--r); cursor:pointer; border:1px solid var(--border-md); transition:all .1s;
   }
   .cfp-cancel { background:transparent; color:var(--text-2); }
@@ -430,18 +433,18 @@
   .proj-field-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-2); }
   .proj-field-label span { color:var(--b-fg); margin-left:2px; }
   .proj-input, .proj-select {
-    padding:7px 10px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:13px;
+    padding:7px 10px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:13px;
     border:1px solid var(--border-md); border-radius:var(--r-md);
     background:var(--surface2); color:var(--text); outline:none; transition:all .1s; width:100%;
   }
   .proj-input:focus, .proj-select:focus { border-color:var(--accent); background:#fff; box-shadow:0 0 0 3px var(--accent-2); }
   .proj-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 1rem; }
   .proj-grid .proj-field.full { grid-column:1/-1; }
-  .btn-proj-cancel { padding:6px 14px; font-size:12px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; border:1px solid var(--border-md); border-radius:var(--r); background:transparent; color:var(--text-2); cursor:pointer; transition:all .1s; }
+  .btn-proj-cancel { padding:6px 14px; font-size:12px; font-family:'Inter',system-ui,-apple-system,sans-serif; border:1px solid var(--border-md); border-radius:var(--r); background:transparent; color:var(--text-2); cursor:pointer; transition:all .1s; }
   .btn-proj-cancel:hover { background:var(--surface2); }
-  .btn-proj-save { padding:6px 16px; font-size:12px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-weight:700; border:none; border-radius:var(--r); background:var(--accent); color:#fff; cursor:pointer; transition:all .1s; }
+  .btn-proj-save { padding:6px 16px; font-size:12px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-weight:700; border:none; border-radius:var(--r); background:var(--accent); color:#fff; cursor:pointer; transition:all .1s; }
   .btn-proj-save:hover { background:#0044CC; }
-  .btn-proj-delete { padding:6px 14px; font-size:12px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-weight:600; border:none; border-radius:var(--r); background:var(--b-bg); color:var(--b-fg); cursor:pointer; transition:all .1s; margin-right:auto; }
+  .btn-proj-delete { padding:6px 14px; font-size:12px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-weight:600; border:none; border-radius:var(--r); background:var(--b-bg); color:var(--b-fg); cursor:pointer; transition:all .1s; margin-right:auto; }
   .btn-proj-delete:hover { background:var(--b-fg); color:#fff; }
 
   /* Add/delete buttons in header */
@@ -449,7 +452,7 @@
     display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:500;
     padding:5px 13px; border-radius:20px; border:none;
     background:var(--accent); color:#fff; cursor:pointer; transition:all .12s; margin-left:.5rem;
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
     box-shadow:0 1px 4px rgba(0,113,227,0.3);
   }
   .btn-add-project:hover { background:#0077ED; box-shadow:0 2px 8px rgba(0,113,227,0.4); }
@@ -478,7 +481,7 @@
   }
   .stat-item { display:flex; align-items:baseline; gap:5px; }
   .stat-num {
-    font-size:20px; font-weight:300; font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    font-size:20px; font-weight:300; font-family:'Inter',system-ui,-apple-system,sans-serif; font-variant-numeric:tabular-nums;
     color:var(--text); line-height:1;
   }
   .stat-num.k-gereed     { color:var(--g-fg); }
@@ -490,7 +493,7 @@
   .stat-pct { font-size:11px; color:var(--text-3); margin-left:auto; white-space:nowrap; }
   .btn-analyse {
     display:inline-flex; align-items:center; gap:4px; padding:5px 13px;
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:12px; font-weight:400;
+    font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:12px; font-weight:400;
     border:none; border-radius:20px;
     background:rgba(0,0,0,0.05); color:var(--text-2); cursor:pointer; transition:all .12s;
     white-space:nowrap;
@@ -509,12 +512,12 @@
   }
   .ts-item { display:flex; align-items:center; gap:5px; }
   .ts-dot  { width:7px; height:7px; border-radius:2px; flex-shrink:0; }
-  .ts-num  { font-size:18px; font-weight:300; font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace; line-height:1; color:var(--text); }
+  .ts-num  { font-size:20px; font-weight:300; font-family:'Inter',system-ui,-apple-system,sans-serif; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; letter-spacing:-.03em; }
   .ts-num.ts-g { color:var(--g-fg); }
   .ts-num.ts-l { color:var(--l-fg); }
   .ts-num.ts-r { color:var(--r-fg); }
   .ts-num.ts-b { color:var(--b-fg); }
-  .ts-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); }
+  .ts-label { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); font-family:'Inter',system-ui,-apple-system,sans-serif; }
   .ts-total .ts-num { font-size:22px; font-weight:300; }
   .ts-total .ts-label { font-size:11px; }
   .ts-sep { width:1px; height:18px; background:var(--border-md); }
@@ -534,8 +537,8 @@
 
   /* ── FASE GROUPS ── */
   .fase-group-label {
-    font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
-    color:var(--text-3); white-space:nowrap; align-self:center; padding:0 4px;
+    font-size:8.5px; font-weight:600; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--text-3); white-space:nowrap; align-self:center; padding:0 4px; font-family:'Poppins',sans-serif;
   }
   .fase-group-sep { width:1px; height:16px; background:var(--border-strong); align-self:center; flex-shrink:0; margin:0 2px; }
   .tab-groen, .tab-oranje { }
@@ -546,7 +549,7 @@
     display:inline-flex; align-items:center; gap:4px; padding:3px 9px;
     font-size:10px; font-weight:600; border:1px solid var(--border-md);
     border-radius:20px; background:transparent; color:var(--text-2);
-    cursor:pointer; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; transition:all .1s;
+    cursor:pointer; font-family:'Inter',system-ui,-apple-system,sans-serif; transition:all .1s;
     white-space:nowrap; margin-left:auto;
   }
   .btn-filter-toggle:hover { background:var(--surface2); }
@@ -594,7 +597,7 @@
   .fi-check.fi-all { color:var(--text-3); font-style:italic; border-bottom:1px solid var(--border); padding-bottom:3px; margin-bottom:1px; }
   .fi-check input[type="checkbox"] { accent-color:var(--accent); width:12px; height:12px; cursor:pointer; flex-shrink:0; }
   .fi-input {
-    padding:4px 7px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:11px;
+    padding:4px 7px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:11px;
     border:1px solid var(--border-md); border-radius:var(--r); background:var(--surface);
     color:var(--text); outline:none; width:100%; transition:border-color .1s;
   }
@@ -604,7 +607,7 @@
   .btn-filter-reset {
     display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:600;
     color:var(--b-fg); background:var(--b-bg); border:1px solid rgba(184,21,24,0.2);
-    border-radius:var(--r); padding:3px 8px; cursor:pointer; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
+    border-radius:var(--r); padding:3px 8px; cursor:pointer; font-family:'Inter',system-ui,-apple-system,sans-serif;
     transition:all .1s;
   }
   .btn-filter-reset:hover { background:var(--b-fg); color:#fff; }
@@ -616,7 +619,7 @@
   }
   .role-btn {
     flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
-    padding:9px 14px; font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif; font-size:13px; font-weight:400;
+    padding:9px 14px; font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:13px; font-weight:400;
     border:none; border-radius:var(--r-lg);
     background:rgba(0,0,0,0.05); color:var(--text-2);
     cursor:pointer; transition:all .12s;
@@ -741,6 +744,12 @@
         <button class="tab tab-oranje" onclick="setFase('Bodem',this)">Bodem</button>
         <button class="tab tab-oranje" onclick="setFase('NGE/OO',this)">NGE/OO</button>
         <button class="tab tab-oranje" onclick="setFase('Geotechnisch',this)">Geotechnisch</button>
+        <span class="fase-group-sep"></span>
+        <span class="fase-group-label">Vergunningen</span>
+        <button class="tab" onclick="setFase('Vergunningen',this)">Vergunningen</button>
+        <span class="fase-group-sep"></span>
+        <span class="fase-group-label">Sleufloze technieken</span>
+        <button class="tab" onclick="setFase('Sleufloze technieken',this)">Sleufloze technieken</button>
         <button class="btn-filter-toggle" id="filterToggleBtn" onclick="toggleInlineFilter()" title="Filters">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           Filter
@@ -1094,7 +1103,15 @@ var COLS = [
   {i:220,f:"Geotechnisch",n:"Thermische weerstand: opmerkingen"},
   {i:171,f:"Geotechnisch",n:"Grondwateronderzoek uitgezet"},{i:172,f:"Geotechnisch",n:"Grondwater: datum"},
   {i:173,f:"Geotechnisch",n:"Grondwater: gereed"},
-  {i:221,f:"Geotechnisch",n:"Grondwater: opmerkingen"}
+  {i:221,f:"Geotechnisch",n:"Grondwater: opmerkingen"},
+  {i:300,f:"Vergunningen",n:"Concept n.t.b. (1)"},
+  {i:301,f:"Vergunningen",n:"Concept n.t.b. (2)"},
+  {i:302,f:"Vergunningen",n:"Concept n.t.b. (3)"},
+  {i:400,f:"Vergunningen",n:"[Vergunningen] Opmerkingen"},
+  {i:310,f:"Sleufloze technieken",n:"Concept n.t.b. (1)"},
+  {i:311,f:"Sleufloze technieken",n:"Concept n.t.b. (2)"},
+  {i:312,f:"Sleufloze technieken",n:"Concept n.t.b. (3)"},
+  {i:401,f:"Sleufloze technieken",n:"[Sleufloze technieken] Opmerkingen"}
 ];
 
 
@@ -1104,6 +1121,8 @@ var FASE_STYLE = {
   'DO-Fase':      {color:'var(--fase-do)',        bg:'var(--fase-do-bg)',        cls:'fl-do'},
   'Onderzoeksfase':{color:'var(--fase-onderzoek)',bg:'var(--fase-onderzoek-bg)',cls:'fl-onderzoek'},
   'UO-Fase':      {color:'var(--fase-uo)',        bg:'var(--fase-uo-bg)',        cls:'fl-uo'},
+  'Vergunningen': {color:'var(--fase-verg)',      bg:'var(--fase-verg-bg)',      cls:'fl-verg'},
+  'Sleufloze technieken': {color:'var(--fase-sleuf)', bg:'var(--fase-sleuf-bg)', cls:'fl-sleuf'},
   'Natuurtoets':  {color:'var(--fase-natuur)',    bg:'var(--fase-natuur-bg)',    cls:'fl-natuur'},
   'Archeologie':  {color:'var(--fase-archeologie)',bg:'var(--fase-archeologie-bg)',cls:'fl-archeologie'},
   'Bodem':        {color:'var(--fase-bodem)',     bg:'var(--fase-bodem-bg)',     cls:'fl-bodem'},
@@ -1139,12 +1158,12 @@ var DATE_WEEK_PAIRS   = [[24,25],[35,36],[58,59],[95,96],[106,107],[123,124]];
 var PLANDATUM_COLS    = [127,130,133,136,139,142,145,148,151,154,157,160,163,166,169,172];
 var DATE_COL_INDICES  = [24,35,58,95,106,123,127,130,133,136,139,142,145,148,151,154,157,160,163,166,169,172];
 var JANEE_COL_INDICES = [26,37,60,97,108,125,128,131,134,137,140,143,146,149,152,155,158,161,164,167,170,173];
-var VIRT_COLS         = [200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221];
+var VIRT_COLS         = [200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,400,401];
 var TEXT_COL_INDICES  = [0,1,2,3,4,5,6,7,8,9,10,11];
 var ENGINEER_OPTIONS  = ['Peter Teeninga','Lucas van der Cammen','Frans Hamelijnck','Dennis Verkoeijen','Gabor Misic','Thierry Papenhuijzen'];
 
-var OPM_VIRT_MAP = {200:'Analyse',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-Fase',205:'UO-Fase',206:'Natuurtoets',207:'Natuurtoets',208:'Natuurtoets',209:'Natuurtoets',210:'Archeologie',211:'Archeologie',212:'Archeologie',213:'Bodem',214:'Bodem',215:'Bodem',216:'NGE/OO',217:'NGE/OO',218:'NGE/OO',219:'Geotechnisch',220:'Geotechnisch',221:'Geotechnisch'};
-var OPM_SUB_LABELS = {200:'Analyse-fase',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-vergunningen',205:'UO-Fase',206:'Ecologische quickscan',207:'Ecologisch vervolgonderzoek',208:'Natura 2000 / AERIUS',209:'Natuurtoets / voortoets',210:'Bureauonderzoek',211:'Inventariserend veldonderzoek',212:'Proefsleuvenonderzoek',213:'Historisch bodemonderzoek',214:'Verkennend bodemonderzoek',215:'Nader onderzoek / sanering',216:'Explosieven quickscan',217:'NGE detectieonderzoek',218:'NGE begeleiding graafwerk',219:'Geotechnisch onderzoek',220:'Thermische grondweerstand',221:'Grondwateronderzoek'};
+var OPM_VIRT_MAP = {200:'Analyse',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-Fase',205:'UO-Fase',206:'Natuurtoets',207:'Natuurtoets',208:'Natuurtoets',209:'Natuurtoets',210:'Archeologie',211:'Archeologie',212:'Archeologie',213:'Bodem',214:'Bodem',215:'Bodem',216:'NGE/OO',217:'NGE/OO',218:'NGE/OO',219:'Geotechnisch',220:'Geotechnisch',221:'Geotechnisch',400:'Vergunningen',401:'Sleufloze technieken'};
+var OPM_SUB_LABELS = {200:'Analyse-fase',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-vergunningen',205:'UO-Fase',206:'Ecologische quickscan',207:'Ecologisch vervolgonderzoek',208:'Natura 2000 / AERIUS',209:'Natuurtoets / voortoets',210:'Bureauonderzoek',211:'Inventariserend veldonderzoek',212:'Proefsleuvenonderzoek',213:'Historisch bodemonderzoek',214:'Verkennend bodemonderzoek',215:'Nader onderzoek / sanering',216:'Explosieven quickscan',217:'NGE detectieonderzoek',218:'NGE begeleiding graafwerk',219:'Geotechnisch onderzoek',220:'Thermische grondweerstand',221:'Grondwateronderzoek',400:'Vergunningen opmerkingen',401:'Sleufloze technieken opmerkingen'};
 
 
 // ══ COLUMN FILTERS ══
@@ -2138,7 +2157,7 @@ function visibleCols() {
   if (currentFase === 'alle') {
     return COLS.filter(function(col) {
       return col.f === '' || ['Analyse','VO-Fase','DO-Fase','Onderzoeksfase','UO-Fase'].indexOf(col.f) >= 0;
-    });
+    }); // nieuwe fases Vergunningen en Sleufloze technieken alleen via tab
   }
   return COLS.filter(function(col) { return col.f === '' || col.f === currentFase; });
 }
