@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analyse — TPA Engineeringsplanning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#F0F4FF; --surface:#fff; --surface2:#EBF0FF; --surface3:#DCE5FF;
+    --border:rgba(0,60,200,0.08); --border-md:rgba(0,60,200,0.13);
+    --text:#0A0F2E; --text-2:#3A4270; --text-3:#7A84B0;
+    --accent:#0057FF; --accent-2:rgba(0,87,255,0.10);
+    --navy:#0A0F2E; --navy-2:#131830; --navy-3:#1D2440;
+    --g-fg:#006B47; --g-bg:#E6F5EE;
+    --l-fg:#004FCC; --l-bg:#E8EFFF;
+    --r-fg:#7A4800; --r-bg:#FFF2DC;
+    --b-fg:#B81518; --b-bg:#FFE8E8;
+    --n-fg:#44496A; --n-bg:#EAECF1;
+    --r:5px; --r-md:7px; --r-lg:10px; --r-xl:14px;
+    --sh-sm:0 1px 3px rgba(10,15,35,0.06),0 1px 2px rgba(10,15,35,0.04);
+    --sh-md:0 4px 16px rgba(10,15,35,0.08),0 2px 6px rgba(10,15,35,0.05);
+  }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:13px; min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+  .page-header {
+    background:var(--navy); color:#fff; padding:0 1.25rem; display:flex;
+    align-items:center; justify-content:space-between; height:44px;
+    position:sticky; top:0; z-index:100; border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .page-header .logo { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,0.9); display:flex; align-items:center; gap:8px; }
+  .logo-icon { width:18px; height:18px; background:var(--accent); border-radius:4px; display:flex; align-items:center; justify-content:center; }
+  .btn-back-detail { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:500; padding:3px 9px; border-radius:var(--r); border:1px solid rgba(255,255,255,0.10); background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.5); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .12s; }
+  .btn-back-detail:hover { background:rgba(255,255,255,0.09); color:rgba(255,255,255,0.8); }
+
+  .main { max-width:1200px; margin:0 auto; padding:1.25rem 1.5rem 3rem; }
+
+  h2 { font-size:18px; font-weight:500; color:var(--text); margin-bottom:1rem; }
+
+  /* KPI CARDS */
+  .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:1.5rem; }
+  .kpi-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+    padding:1rem 1.125rem; position:relative; overflow:hidden; box-shadow:var(--sh-sm);
+  }
+  .kpi-bar { position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--border-md); border-radius:var(--r-lg) 0 0 var(--r-lg); }
+  .kpi-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-bottom:6px; }
+  .kpi-number { font-size:28px; font-weight:300; font-family:'DM Mono',monospace; line-height:1; color:var(--text); }
+  .kpi-sub { font-size:10px; color:var(--text-3); margin-top:4px; }
+  .kpi-card.k-gereed .kpi-bar,.kpi-card.k-gereed .kpi-number { background:var(--g-fg); color:var(--g-fg); }
+  .kpi-card.k-loopt  .kpi-bar,.kpi-card.k-loopt  .kpi-number { background:var(--l-fg); color:var(--l-fg); }
+  .kpi-card.k-review .kpi-bar,.kpi-card.k-review .kpi-number { background:var(--r-fg); color:var(--r-fg); }
+  .kpi-card.k-geblokkeerd .kpi-bar,.kpi-card.k-geblokkeerd .kpi-number { background:var(--b-fg); color:var(--b-fg); }
+
+  /* PROGRESS BARS */
+  .section-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:1.25rem 1.5rem; margin-bottom:1rem; box-shadow:var(--sh-sm); }
+  .section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-bottom:1rem; }
+  .bar-row { display:flex; align-items:center; gap:.75rem; margin-bottom:.625rem; }
+  .bar-label { font-size:12px; color:var(--text-2); width:160px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar-track { flex:1; height:12px; background:var(--surface2); border-radius:6px; overflow:hidden; position:relative; }
+  .bar-fill { height:100%; border-radius:6px; transition:width .4s ease; }
+  .bar-fill.g { background:var(--g-fg); }
+  .bar-fill.l { background:var(--l-fg); }
+  .bar-fill.r { background:var(--r-fg); }
+  .bar-fill.b { background:var(--b-fg); }
+  .bar-fill.n { background:var(--n-fg); }
+  .bar-val { font-size:11px; font-family:'DM Mono',monospace; color:var(--text-2); width:40px; text-align:right; flex-shrink:0; }
+  .bar-pct { font-size:10px; color:var(--text-3); width:36px; text-align:right; flex-shrink:0; }
+
+  /* STATUS BREAKDOWN STACKED BAR */
+  .stacked-row { display:flex; align-items:center; gap:.75rem; margin-bottom:.625rem; }
+  .stacked-label { font-size:11px; color:var(--text-2); width:130px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stacked-bar { flex:1; height:14px; border-radius:6px; overflow:hidden; display:flex; }
+  .stacked-seg { height:100%; transition:width .4s ease; }
+  .stacked-count { font-size:10px; font-family:'DM Mono',monospace; color:var(--text-3); width:30px; text-align:right; flex-shrink:0; }
+
+  /* ENGINEER TABLE */
+  .eng-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .eng-table th { padding:6px 10px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); border-bottom:1px solid var(--border-md); }
+  .eng-table td { padding:7px 10px; border-bottom:1px solid var(--border); color:var(--text-2); }
+  .eng-table tr:last-child td { border-bottom:none; }
+  .eng-table td:first-child { font-weight:500; color:var(--text); }
+  .pct-badge { display:inline-block; padding:1px 7px; border-radius:20px; font-size:10px; font-weight:700; }
+
+  .spinner { width:24px; height:24px; border:2px solid var(--border-md); border-top-color:var(--accent); border-radius:50%; animation:spin .55s linear infinite; margin:2rem auto; }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media(max-width:768px){ .kpi-grid{grid-template-columns:repeat(2,1fr);} }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="logo">
+    <span class="logo-icon"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="3.5" height="3.5" rx="1" fill="white"/><rect x="5.5" y="1" width="3.5" height="3.5" rx="1" fill="white" opacity=".55"/><rect x="1" y="5.5" width="3.5" height="3.5" rx="1" fill="white" opacity=".55"/><rect x="5.5" y="5.5" width="3.5" height="3.5" rx="1" fill="white" opacity=".28"/></svg></span>
+    TPA &middot; Analyse
+  </div>
+  <button class="btn-back-detail" onclick="window.close()">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Terug
+  </button>
+</header>
+
+<main class="main" id="mainContent">
+  <div class="spinner"></div>
+</main>
+
+<script>
+var SUPA_URL = 'https://yuyogdqobekvsvjgwllf.supabase.co';
+var SUPA_KEY = 'sb_publishable_Etgi3cTtObxJbAvf2WR-mw_dFajr5Qr';
+
+var STATUS_COLS = [12,13,14,15,16,17,18,19,20,21,22,23,27,28,29,30,31,32,33,34,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,98,99,100,101,102,103,104,105,109,110,111,112,113,114,115,116,117,118,119,120,121,122,126,129,132,135,138,141,144,147,150,153,156,159,162,165,168,171];
+
+var FASE_STATUS_COLS = {
+  'Analyse':       [12,13,14,15,16,17,18,19,20,21,22,23],
+  'VO-Fase':       [27,28,29,30,31,32,33,34],
+  'DO-Fase':       [38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,98,99,100,101,102,103,104,105],
+  'Onderzoeksfase':[61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94],
+  'UO-Fase':       [109,110,111,112,113,114,115,116,117,118,119,120,121,122],
+  'Natuurtoets':   [126,129,132,135],
+  'Archeologie':   [138,141,144],
+  'Bodem':         [147,150,153],
+  'NGE/OO':        [156,159,162],
+  'Geotechnisch':  [165,168,171]
+};
+
+function supaGet(path) {
+  return fetch(SUPA_URL + path, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+  }).then(function(r) { return r.json(); });
+}
+
+function esc(v) {
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+window.addEventListener('load', function() {
+  supaGet('/rest/v1/werkpakketten?select=engineer,cel_data&order=row_idx.asc')
+    .then(function(data) {
+      renderAnalyse(data);
+    })
+    .catch(function(e) {
+      document.getElementById('mainContent').innerHTML = '<p style="color:#b53030;padding:2rem">Laden mislukt: ' + esc(e.message) + '</p>';
+    });
+});
+
+function getStatusCounts(rows, cols) {
+  var counts = { 'Gereed':0, 'Loopt':0, 'Review':0, 'Geblokkeerd':0, 'Nog te starten':0, 'Leeg':0 };
+  rows.forEach(function(row) {
+    var cd = row.cel_data || {};
+    cols.forEach(function(ci) {
+      var v = cd[String(ci)] || '';
+      if (counts[v] !== undefined) counts[v]++;
+      else counts['Leeg']++;
+    });
+  });
+  return counts;
+}
+
+function statusColor(s) {
+  if (s==='Gereed')        return 'var(--g-fg)';
+  if (s==='Loopt')         return 'var(--l-fg)';
+  if (s==='Review')        return 'var(--r-fg)';
+  if (s==='Geblokkeerd')   return 'var(--b-fg)';
+  if (s==='Nog te starten') return 'var(--n-fg)';
+  return 'var(--border-md)';
+}
+
+function renderAnalyse(data) {
+  var n = data.length;
+  if (!n) { document.getElementById('mainContent').innerHTML = '<p style="padding:2rem;color:var(--text-3)">Geen data gevonden.</p>'; return; }
+
+  // ── Overall status counts ──
+  var total = getStatusCounts(data, STATUS_COLS);
+  var totalTasks = STATUS_COLS.length * n;
+  var g = total['Gereed'], l = total['Loopt'], rv = total['Review'], gb = total['Geblokkeerd'], nt = total['Nog te starten'];
+
+  var html = '';
+
+  // KPI cards
+  html += '<div class="kpi-grid">';
+  html += '<div class="kpi-card"><div class="kpi-bar"></div><div class="kpi-label">Werkpakketten</div><div class="kpi-number">'+n+'</div><div class="kpi-sub">totaal</div></div>';
+  html += '<div class="kpi-card k-gereed"><div class="kpi-bar"></div><div class="kpi-label">Gereed</div><div class="kpi-number">'+g+'</div><div class="kpi-sub">taken</div></div>';
+  html += '<div class="kpi-card k-loopt"><div class="kpi-bar"></div><div class="kpi-label">Loopt</div><div class="kpi-number">'+l+'</div><div class="kpi-sub">taken</div></div>';
+  html += '<div class="kpi-card k-review"><div class="kpi-bar"></div><div class="kpi-label">Review</div><div class="kpi-number">'+rv+'</div><div class="kpi-sub">taken</div></div>';
+  html += '<div class="kpi-card k-geblokkeerd"><div class="kpi-bar"></div><div class="kpi-label">Geblokkeerd</div><div class="kpi-number">'+gb+'</div><div class="kpi-sub">taken</div></div>';
+  html += '</div>';
+
+  // ── Voortgang per fase ──
+  html += '<div class="section-card"><div class="section-title">Voortgang per fase</div>';
+  Object.keys(FASE_STATUS_COLS).forEach(function(fase) {
+    var cols = FASE_STATUS_COLS[fase];
+    var counts = getStatusCounts(data, cols);
+    var tot = cols.length * n;
+    if (!tot) return;
+    var pct = Math.round(counts['Gereed'] / tot * 100);
+    html += '<div class="bar-row">';
+    html += '<div class="bar-label" title="'+esc(fase)+'">'+esc(fase)+'</div>';
+    html += '<div class="bar-track"><div class="bar-fill g" style="width:'+pct+'%"></div></div>';
+    html += '<div class="bar-val">'+counts['Gereed']+'/'+tot+'</div>';
+    html += '<div class="bar-pct">'+pct+'%</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // ── Status verdeling per fase (stacked bar) ──
+  html += '<div class="section-card"><div class="section-title">Statusverdeling per fase</div>';
+  var statuses = ['Gereed','Loopt','Review','Geblokkeerd','Nog te starten'];
+  Object.keys(FASE_STATUS_COLS).forEach(function(fase) {
+    var cols = FASE_STATUS_COLS[fase];
+    var counts = getStatusCounts(data, cols);
+    var tot = cols.length * n;
+    if (!tot) return;
+    html += '<div class="stacked-row">';
+    html += '<div class="stacked-label" title="'+esc(fase)+'">'+esc(fase)+'</div>';
+    html += '<div class="stacked-bar">';
+    statuses.forEach(function(s) {
+      var pct = tot > 0 ? (counts[s]/tot*100) : 0;
+      if (pct > 0) html += '<div class="stacked-seg" style="width:'+pct+'%;background:'+statusColor(s)+'" title="'+esc(s)+': '+counts[s]+'"></div>';
+    });
+    html += '</div>';
+    html += '<div class="stacked-count">'+tot+'</div>';
+    html += '</div>';
+  });
+  // Legend
+  html += '<div style="display:flex;gap:12px;margin-top:.75rem;flex-wrap:wrap">';
+  statuses.forEach(function(s) {
+    html += '<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-2)">'
+      + '<span style="width:8px;height:8px;border-radius:2px;background:'+statusColor(s)+';display:inline-block"></span>'+esc(s)+'</span>';
+  });
+  html += '</div></div>';
+
+  // ── Per engineer ──
+  html += '<div class="section-card"><div class="section-title">Voortgang per engineer</div>';
+  var byEng = {};
+  data.forEach(function(row) {
+    var eng = (row.cel_data && row.cel_data['8']) || 'Onbekend';
+    if (!byEng[eng]) byEng[eng] = [];
+    byEng[eng].push(row);
+  });
+  html += '<table class="eng-table"><thead><tr><th>Engineer</th><th>Projecten</th><th>Gereed</th><th>Loopt</th><th>Review</th><th>Geblokkeerd</th><th>% Gereed</th></tr></thead><tbody>';
+  Object.keys(byEng).sort().forEach(function(eng) {
+    var rows = byEng[eng];
+    var c = getStatusCounts(rows, STATUS_COLS);
+    var tot = STATUS_COLS.length * rows.length;
+    var pct = tot > 0 ? Math.round(c['Gereed']/tot*100) : 0;
+    var pctColor = pct>=75?'var(--g-fg)':pct>=40?'var(--r-fg)':'var(--b-fg)';
+    var pctBg    = pct>=75?'var(--g-bg)':pct>=40?'var(--r-bg)':'var(--b-bg)';
+    html += '<tr>'
+      + '<td>'+esc(eng)+'</td>'
+      + '<td>'+rows.length+'</td>'
+      + '<td style="color:var(--g-fg);font-weight:500">'+c['Gereed']+'</td>'
+      + '<td style="color:var(--l-fg)">'+c['Loopt']+'</td>'
+      + '<td style="color:var(--r-fg)">'+c['Review']+'</td>'
+      + '<td style="color:var(--b-fg)">'+c['Geblokkeerd']+'</td>'
+      + '<td><span class="pct-badge" style="background:'+pctBg+';color:'+pctColor+'">'+pct+'%</span></td>'
+      + '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+</script>
+</body>
+</html>
