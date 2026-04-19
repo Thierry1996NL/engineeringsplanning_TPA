@@ -669,15 +669,37 @@ function applyDetailFilters() {
 // ══ EXPORT ══
 function getDetailExportData() {
   var rows = [];
+
+  // ── Projectinformatie bovenaan ──
+  var infoFields = [
+    [0,'Projectnummer intern'],[1,'Projectnummer extern'],[2,'Projectnaam'],
+    [3,'APD Bouwdeel'],[4,'Liander Tracédeel'],[5,'WP nummer'],
+    [6,'Tracé start'],[7,'Tracé eind'],[8,'Engineer'],
+    [9,'Lengte nieuw (m)'],[10,'Lengte verwijderen (m)'],[11,'Overdracht VO aannemer']
+  ];
+  rows.push(['', '', '']); // lege scheidingsregel
+  rows.push(['PROJECTINFORMATIE', '', '']);
+  infoFields.forEach(function(f) {
+    rows.push(['Projectinfo', f[1], ROW_DATA[f[0]] || '']);
+  });
+  rows.push(['', '', '']); // lege scheidingsregel
+
+  // ── Fase velden ──
   document.querySelectorAll('.fase-section').forEach(function(sec) {
     if (sec.style.display === 'none') return;
     var fase = sec.getAttribute('data-fase') || '';
+    var faseRows = [];
     sec.querySelectorAll('.field-row:not(.df-hidden)').forEach(function(row) {
-      var label  = row.querySelector('.field-label') ? row.querySelector('.field-label').textContent : '';
-      var valEl  = row.querySelector('.field-val');
-      var val    = valEl ? valEl.textContent.trim() : '';
-      rows.push([fase, label, val]);
+      var label = row.querySelector('.field-label') ? row.querySelector('.field-label').textContent : '';
+      var valEl = row.querySelector('.field-val');
+      var val   = valEl ? valEl.textContent.trim() : '';
+      faseRows.push([fase, label, val]);
     });
+    if (faseRows.length) {
+      rows.push([fase.toUpperCase(), '', '']);
+      faseRows.forEach(function(r) { rows.push(r); });
+      rows.push(['', '', '']);
+    }
   });
   return rows;
 }
@@ -702,8 +724,9 @@ function exportDetailXLSX() {
   var fase = currentDetailFase === 'alle' ? 'alle-fases' : currentDetailFase;
   var data = getDetailExportData();
   var wb = XLSX.utils.book_new();
-  var ws = XLSX.utils.aoa_to_sheet([['Fase','Veld','Waarde']].concat(data));
-  ws['!cols'] = [{wch:18},{wch:36},{wch:24}];
+  var wsData = [['Fase','Veld','Waarde']].concat(data);
+  var ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:22},{wch:38},{wch:28}];
   XLSX.utils.book_append_sheet(wb, ws, fase.substring(0,31));
   XLSX.writeFile(wb, naam + '_' + fase + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
 }
