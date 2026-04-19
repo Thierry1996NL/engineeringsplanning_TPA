@@ -802,6 +802,20 @@
 
         </div>
       </div>
+      <div class="top-tools">
+        <input class="search-box" type="text" id="search" placeholder="&#128269; Zoeken..." oninput="debouncedRender()">
+        <span class="row-count" id="row-count"></span>
+        <div class="export-group" id="exportGroup" style="display:none">
+          <button class="btn-export csv" onclick="exportCSV()">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 12v2h12v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>CSV
+          </button>
+          <button class="btn-export xlsx" onclick="exportXLSX()">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 12v2h12v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Excel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 
   <div id="editorNotice" class="editor-notice" style="display:none">
@@ -997,6 +1011,8 @@ function esc(v) {
 
 // ══ SUPABASE — Promise-based, no async/await ══
 function supaReq(method, path, body) {
+  var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var timer = controller ? setTimeout(function() { controller.abort(); }, 15000) : null;
   return fetch(SUPA_URL + path, {
     method: method,
     headers: {
@@ -1005,14 +1021,20 @@ function supaReq(method, path, body) {
       'Content-Type': 'application/json',
       'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal'
     },
-    body: body ? JSON.stringify(body) : undefined
+    body: body ? JSON.stringify(body) : undefined,
+    signal: controller ? controller.signal : undefined
   }).then(function(r) {
+    if (timer) clearTimeout(timer);
     if (!r.ok) {
       return r.json().catch(function() { return {}; }).then(function(e) {
         throw new Error(e.message || 'HTTP ' + r.status);
       });
     }
     return (method === 'PATCH' || method === 'DELETE') ? null : r.json();
+  }).catch(function(err) {
+    if (timer) clearTimeout(timer);
+    if (err.name === 'AbortError') throw new Error('Verbinding time-out. Controleer je internetverbinding.');
+    throw err;
   });
 }
 function supaGet(path)         { return supaReq('GET',   path); }
@@ -1518,6 +1540,9 @@ function loadData() {
   document.getElementById('tableCard').style.display = 'none';
   return supaGet('/rest/v1/werkpakketten?select=*&order=row_idx.asc')
     .then(function(data) {
+      if (!Array.isArray(data)) {
+        throw new Error(data && data.message ? data.message : 'Onverwacht antwoord: ' + JSON.stringify(data).slice(0,80));
+      }
       DB_ROWS = data;
       buildROWS(data);
       document.getElementById('loadingState').style.display = 'none';
