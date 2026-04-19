@@ -11,11 +11,11 @@
 
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root {
-    --bg:#EDEEF2; --surface:#FFFFFF; --surface2:#F4F5F8; --surface3:#EAECF1;
-    --border:rgba(10,15,35,0.07); --border-md:rgba(10,15,35,0.11); --border-strong:rgba(10,15,35,0.16);
-    --text:#080D1F; --text-2:#44496A; --text-3:#8A8FAA;
+    --bg:#F0F4FF; --surface:#FFFFFF; --surface2:#EBF0FF; --surface3:#DCE5FF;
+    --border:rgba(0,60,200,0.08); --border-md:rgba(0,60,200,0.13); --border-strong:rgba(0,60,200,0.20);
+    --text:#0A0F2E; --text-2:#3A4270; --text-3:#7A84B0;
     --accent:#0057FF; --accent-2:rgba(0,87,255,0.10);
-    --navy:#080D1F; --navy-2:#111628; --navy-3:#1C2138; --navy-4:#262D48;
+    --navy:#0A0F2E; --navy-2:#131830; --navy-3:#1D2440; --navy-4:#273054;
     --g-fg:#006B47; --g-bg:#E6F5EE; --g-mid:#C8E8D8;
     --l-fg:#004FCC; --l-bg:#E8EFFF; --l-mid:#C0D4FF;
     --r-fg:#7A4800; --r-bg:#FFF2DC; --r-mid:#FFE0A0;
@@ -160,14 +160,21 @@
 <body>
 
 <header class="page-header">
-  <div style="display:flex;align-items:center;gap:10px">
-    <span class="logo-icon"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="3.5" height="3.5" rx="1" fill="white"/><rect x="5.5" y="1" width="3.5" height="3.5" rx="1" fill="white" opacity=".55"/><rect x="1" y="5.5" width="3.5" height="3.5" rx="1" fill="white" opacity=".55"/><rect x="5.5" y="5.5" width="3.5" height="3.5" rx="1" fill="white" opacity=".28"/></svg></span>
-    <div>
-    <div class="project-name" id="pageTitle">Project laden...</div>
+  <div style="display:flex;align-items:center;gap:10px;min-width:0">
+    <button class="btn-back-detail" onclick="goBack()" title="Terug naar dashboard">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Terug
+    </button>
+    <span style="color:rgba(255,255,255,0.2);font-size:12px">|</span>
+    <span class="logo-icon" style="flex-shrink:0"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="3.5" height="3.5" rx="1" fill="white"/><rect x="5.5" y="1" width="3.5" height="3.5" rx="1" fill="white" opacity=".55"/><rect x="1" y="5.5" width="3.5" height="3.5" rx="1" fill="white" opacity=".55"/><rect x="5.5" y="5.5" width="3.5" height="3.5" rx="1" fill="white" opacity=".28"/></svg></span>
+    <div class="project-name" id="pageTitle" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Project laden...</div>
   </div>
-  <div style="display:flex;align-items:center;gap:.75rem">
+  <div style="display:flex;align-items:center;gap:.75rem;flex-shrink:0">
     <span class="meta" id="pageWP"></span>
-    <button class="btn-back-detail" onclick="window.close()">&#10005; Sluiten</button>
+    <button class="btn-back-detail" onclick="window.close()" title="Tabblad sluiten">
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Sluiten
+    </button>
   </div>
 </header>
 
@@ -225,6 +232,18 @@
 <div class="toast" id="toast"></div>
 
 <script>
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else if (window.opener) {
+    window.opener.focus();
+    window.close();
+  } else {
+    window.close();
+  }
+}
+
+
 const SUPA_URL = 'https://yuyogdqobekvsvjgwllf.supabase.co';
 const SUPA_KEY = 'sb_publishable_Etgi3cTtObxJbAvf2WR-mw_dFajr5Qr';
 
