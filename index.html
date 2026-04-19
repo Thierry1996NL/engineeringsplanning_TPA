@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Engineeringsplanning — TPA</title>
+<title>Dashboard Engineering — TPA</title>
 
 <style>
 
@@ -48,25 +48,25 @@
   .hdr-user { display:flex; align-items:center; gap:5px; }
   .user-avatar { width:26px; height:26px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color:#fff; flex-shrink:0; }
   .hdr-live { display:flex; align-items:center; gap:3px; }
-  .hdr-sep { width:1px; height:16px; background:rgba(255,255,255,0.1); }
+  .hdr-sep { width:1px; height:16px; background:var(--border-md); }
   .btn-back { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:400; padding:4px 11px; border-radius:20px; border:1px solid var(--border-md); background:rgba(0,0,0,0.04); color:var(--text-2); cursor:pointer; font-family:'Inter',system-ui,-apple-system,sans-serif; transition:all .12s; }
   .btn-back:hover { background:rgba(0,0,0,0.07); color:var(--text); }
   .mode-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; margin-right:.875rem; letter-spacing:.03em; }
   .mode-badge .dot { width:5px; height:5px; border-radius:50%; }
-  .mode-badge.viewer { background:rgba(0,87,255,0.2); color:#80AAFF; }
+  .mode-badge.viewer { background:var(--accent-2); color:var(--accent); border-color:rgba(0,113,227,0.2); }
   .mode-badge.viewer .dot { background:#80AAFF; }
-  .mode-badge.editor { background:rgba(0,107,71,0.22); color:#4DC499; }
+  .mode-badge.editor { background:var(--g-bg); color:var(--g-fg); border-color:rgba(26,127,60,0.2); }
   .mode-badge.editor .dot { background:#4DC499; }
   .online-users { display:flex; gap:2px; align-items:center; margin-right:.875rem; }
-  .online-pip { width:22px; height:22px; border-radius:6px; background:var(--navy-3); border:1px solid rgba(255,255,255,0.09); display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:700; color:rgba(255,255,255,0.58); cursor:default; position:relative; }
+  .online-pip { width:22px; height:22px; border-radius:6px; background:var(--accent); border:1px solid rgba(0,113,227,0.2); display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:700; color:#fff; cursor:default; position:relative; }
   .online-pip:hover .pip-tooltip { display:block; }
   .pip-tooltip { display:none; position:absolute; top:28px; left:50%; transform:translateX(-50%); background:var(--navy-2); color:#fff; font-size:10px; padding:3px 8px; border-radius:5px; white-space:nowrap; z-index:50; pointer-events:none; border:1px solid rgba(255,255,255,0.08); box-shadow:var(--sh-md); }
   .rt-dot { width:5px; height:5px; border-radius:50%; background:#4DC499; display:inline-block; margin-right:4px; animation:rtpulse 2.5s ease-in-out infinite; }
   @keyframes rtpulse { 0%,100%{opacity:1} 50%{opacity:.2} }
   .rt-offline { background:var(--b-fg); animation:none; }
-  .saving-indicator { display:none; align-items:center; gap:4px; font-size:10px; color:rgba(255,255,255,0.28); margin-right:.625rem; }
+  .saving-indicator { display:none; align-items:center; gap:4px; font-size:10px; color:var(--text-3); margin-right:.625rem; }
   .saving-indicator.show { display:flex; }
-  .saving-dot { width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,0.32); animation:savepulse .5s ease-in-out infinite alternate; }
+  .saving-dot { width:4px; height:4px; border-radius:50%; background:var(--accent); animation:savepulse .5s ease-in-out infinite alternate; }
   @keyframes savepulse { to{opacity:.08} }
 
   /* LAYOUT */
@@ -647,8 +647,8 @@
       <strong>Let op:</strong> Open de app via <a href="https://thierry1996nl.github.io/engineeringsplanning_TPA/" style="color:#E8670C">GitHub Pages</a>, niet als lokaal bestand.
     </div>
     <div class="login-logo">
-        <span class="login-logo-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="1.2" fill="white"/><rect x="7" y="1" width="4" height="4" rx="1.2" fill="white" opacity=".55"/><rect x="1" y="7" width="4" height="4" rx="1.2" fill="white" opacity=".55"/><rect x="7" y="7" width="4" height="4" rx="1.2" fill="white" opacity=".28"/></svg></span>
-        TPA · Engineeringsplanning
+        <span class="login-logo-mark"><svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 13a3 3 0 100-6 3 3 0 000 6z" stroke="white" stroke-width="1.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        Dashboard Engineering
       </div>
     <h1 class="login-title">Welkom terug</h1>
     <p class="login-sub">Selecteer je naam om verder te gaan</p>
@@ -688,8 +688,8 @@
 <div id="app" style="display:none">
 <header class="site-header">
   <div class="logo">
-    <span class="logo-icon"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="3.5" height="3.5" rx="1" fill="white"/><rect x="5.5" y="1" width="3.5" height="3.5" rx="1" fill="white" opacity=".55"/><rect x="1" y="5.5" width="3.5" height="3.5" rx="1" fill="white" opacity=".55"/><rect x="5.5" y="5.5" width="3.5" height="3.5" rx="1" fill="white" opacity=".28"/></svg></span>
-    TPA · Engineeringsplanning
+    <span class="logo-icon"><svg width="11" height="11" viewBox="0 0 20 20" fill="none"><path d="M10 13a3 3 0 100-6 3 3 0 000 6z" stroke="white" stroke-width="1.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+    Dashboard Engineering
   </div>
   <div style="display:flex;align-items:center;gap:.625rem">
     <span class="saving-indicator" id="savingIndicator"><span class="saving-dot"></span>opslaan...</span>
