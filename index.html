@@ -118,15 +118,15 @@
   table { border-collapse:collapse; min-width:100%; font-size:11px; }
   thead { position:sticky; top:0; z-index:10; }
   .fase-hdr-row th { padding:3px 8px; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; text-align:center; border-bottom:1px solid rgba(0,0,0,.05); white-space:nowrap; }
-  .col-hdr-row th { padding:4px 8px; font-size:10px; font-weight:600; text-align:left; color:var(--text-2); border-bottom:1px solid var(--border-md); background:var(--surface2); white-space:nowrap; max-width:140px; overflow:hidden; text-overflow:ellipsis; cursor:pointer; user-select:none; transition:background .08s; }
+  .col-hdr-row th { padding:4px 8px; font-size:10px; font-weight:600; text-align:left; color:var(--text-2); border-bottom:1px solid var(--border-md); background:var(--surface2); white-space:nowrap; min-width:90px; cursor:default; user-select:none; transition:background .08s; }
   .col-hdr-row th:hover { background:var(--surface3); color:var(--text); }
   .sort-arrow { opacity:.45; font-size:8px; margin-left:2px; }
   tbody tr { border-bottom:1px solid var(--border); transition:background .07s; cursor:pointer; }
   tbody tr:last-child { border-bottom:none; }
   tbody tr:hover td { background:#E4ECFF; }
   tbody tr:hover td.col-base { color:var(--accent); }
-  td { padding:4px 8px; vertical-align:middle; color:var(--text); white-space:nowrap; max-width:160px; overflow:hidden; text-overflow:ellipsis; }
-  td.col-base { font-weight:600; font-size:11px; }
+  td { padding:4px 8px; vertical-align:middle; color:var(--text); white-space:nowrap; max-width:200px; overflow:hidden; text-overflow:ellipsis; }
+  td.col-base { font-weight:600; font-size:11px; min-width:90px; }
   td.col-wp { font-family:'DM Mono',monospace; font-size:10px; color:var(--text-3); }
 
   /* BADGES */
@@ -333,10 +333,85 @@
   .btn-clear-all:hover { background:var(--surface2); color:var(--b-fg); }
 
 
-</style>
-</head>
-<body>
 
+  /* ── COLUMN FILTER DROPDOWN ── */
+  .col-filter-popup {
+    position:fixed; background:var(--surface); border:1px solid var(--border-md);
+    border-radius:var(--r-lg); box-shadow:var(--sh-lg); z-index:600;
+    min-width:200px; max-width:280px; display:none; flex-direction:column;
+  }
+  .col-filter-popup.open { display:flex; }
+  .cfp-header {
+    padding:.5rem .75rem .375rem; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+  }
+  .cfp-title { font-size:11px; font-weight:600; color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cfp-close { background:none; border:none; cursor:pointer; color:var(--text-3); font-size:13px; padding:2px 5px; border-radius:4px; line-height:1; }
+  .cfp-close:hover { background:var(--surface2); }
+  .cfp-search {
+    margin:.375rem .5rem .25rem; padding:5px 8px; font-family:'DM Sans',sans-serif;
+    font-size:11px; border:1px solid var(--border-md); border-radius:var(--r);
+    background:var(--surface2); color:var(--text); outline:none; width:calc(100% - 1rem);
+  }
+  .cfp-search:focus { border-color:var(--accent); background:#fff; }
+  .cfp-list {
+    max-height:220px; overflow-y:auto; padding:.25rem 0;
+  }
+  .cfp-list::-webkit-scrollbar { width:4px; }
+  .cfp-list::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:2px; }
+  .cfp-item {
+    display:flex; align-items:center; gap:7px; padding:4px 10px;
+    cursor:pointer; font-size:11px; color:var(--text); transition:background .07s;
+  }
+  .cfp-item:hover { background:var(--surface2); }
+  .cfp-item input[type="checkbox"] { width:13px; height:13px; cursor:pointer; flex-shrink:0; accent-color:var(--accent); }
+  .cfp-item.select-all { border-bottom:1px solid var(--border); margin-bottom:2px; color:var(--text-2); font-weight:500; }
+  .cfp-footer {
+    padding:.375rem .5rem; border-top:1px solid var(--border);
+    display:flex; justify-content:flex-end; gap:5px;
+  }
+  .cfp-footer button {
+    padding:4px 10px; font-size:11px; font-family:'DM Sans',sans-serif;
+    border-radius:var(--r); cursor:pointer; border:1px solid var(--border-md); transition:all .1s;
+  }
+  .cfp-cancel { background:transparent; color:var(--text-2); }
+  .cfp-cancel:hover { background:var(--surface2); }
+  .cfp-apply { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+  .cfp-apply:hover { background:#0044CC; }
+
+  /* Column header with filter indicator */
+  .col-hdr-row th { position:relative; }
+  .col-hdr-row th.has-filter { color:var(--accent); }
+  .col-hdr-row th.has-filter::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+    background:var(--accent); border-radius:1px;
+  }
+  .col-hdr-row th .filter-arrow {
+    display:inline-block; font-size:8px; opacity:.35; margin-left:2px;
+    cursor:pointer; padding:1px 3px; border-radius:3px; transition:all .1s;
+  }
+  .col-hdr-row th:hover .filter-arrow { opacity:.7; background:var(--surface3); }
+  .col-hdr-row th.has-filter .filter-arrow { opacity:1; color:var(--accent); background:var(--accent-2); }
+
+  /* Active filter chips */
+  .active-chips { display:flex; gap:4px; flex-wrap:wrap; align-items:center; flex:1; min-width:0; }
+  .chip {
+    display:inline-flex; align-items:center; gap:3px;
+    background:var(--accent-2); border:1px solid rgba(0,87,255,0.25);
+    color:var(--accent); border-radius:20px; padding:2px 6px 2px 8px;
+    font-size:10px; font-weight:600; white-space:nowrap; max-width:180px;
+  }
+  .chip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .chip button { background:none; border:none; cursor:pointer; color:var(--accent); font-size:11px; line-height:1; padding:0 1px; opacity:.7; }
+  .chip button:hover { opacity:1; }
+  .btn-clear-filters {
+    font-size:11px; font-weight:600; color:var(--text-3); background:none;
+    border:1px solid var(--border-md); border-radius:var(--r); cursor:pointer;
+    padding:3px 8px; white-space:nowrap; transition:all .1s; flex-shrink:0;
+  }
+  .btn-clear-filters:hover { background:var(--b-bg); color:var(--b-fg); border-color:var(--b-fg); }
+
+</style>
 </head>
 <body>
 
@@ -369,7 +444,7 @@
         <option value="editor">Bewerker — statussen aanpassen</option>
       </select>
     </div>
-    <button class="login-btn" onclick="doLogin()">Verder →</button>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Verder →</button>
     <div class="login-error" id="loginError"></div>
   </div>
 </div>
@@ -431,10 +506,9 @@
     <div class="filter-row">
       <input class="search-box" type="text" id="search" placeholder="&#128269;  Zoek op naam, nummer, engineer..." oninput="debouncedRender()">
       <span class="row-count" id="row-count"></span>
-      <button class="filter-panel-btn" id="filterPanelBtn" onclick="toggleFilterPanel()">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        Filters
-        <span class="fp-count" id="filterCount" style="display:none">0</span>
+      <div class="active-chips" id="activeChips"></div>
+      <button class="btn-clear-filters" id="btnClearFilters" onclick="clearAllFilters()" style="display:none">
+        &#10005; Wis filters
       </button>
       <div class="export-group" id="exportGroup">
         <button class="btn-export csv" onclick="exportCSV()">
@@ -443,17 +517,6 @@
         <button class="btn-export xlsx" onclick="exportXLSX()">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 12v2h12v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Excel
         </button>
-      </div>
-    </div>
-
-    <!-- Advanced filter panel -->
-    <div class="filter-panel" id="filterPanel">
-      <div class="filter-grid" id="filterGrid">
-        <!-- dynamically populated after data loads -->
-      </div>
-      <div class="filter-clear-row">
-        <div class="filter-active-chips" id="filterChips"></div>
-        <button class="btn-clear-all" onclick="clearAllFilters()">&#10005; Alles wissen</button>
       </div>
     </div>
   </div>
@@ -543,6 +606,20 @@
 
 <div class="toast" id="toast"></div>
 
+
+<!-- Column Filter Popup -->
+<div class="col-filter-popup" id="colFilterPopup">
+  <div class="cfp-header">
+    <span class="cfp-title" id="cfpTitle">Filter</span>
+    <button class="cfp-close" onclick="closeColFilter()">&#10005;</button>
+  </div>
+  <input class="cfp-search" type="text" id="cfpSearch" placeholder="Zoeken..." oninput="cfpFilterList(this.value)">
+  <div class="cfp-list" id="cfpList"></div>
+  <div class="cfp-footer">
+    <button class="cfp-cancel" onclick="closeColFilter()">Annuleren</button>
+    <button class="cfp-apply" onclick="applyColFilter()">Toepassen</button>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -733,8 +810,11 @@ var pollTimer       = null;
 var isSaving        = false;
 var debounceTimer   = null;
 var toastTimer      = null;
-var activeFilters   = {};
+var activeFilters   = {};  // colIdx -> { selected: {val:true,...}, allSelected: bool }
 var activeStatusFilter = '';
+var cfpColIdx = -1;      // currently open column filter
+var cfpAllValues = [];   // all unique values for current col
+var cfpTempSelected = {}; // temp selection while popup is open
 
 var DATE_WEEK_PAIRS   = [[24,25],[35,36],[58,59],[95,96],[106,107],[123,124]];
 var PLANDATUM_COLS    = [127,130,133,136,139,142,145,148,151,154,157,160,163,166,169,172];
@@ -747,20 +827,193 @@ var ENGINEER_OPTIONS  = ['Peter Teeninga','Lucas van der Cammen','Frans Hamelijn
 var OPM_VIRT_MAP = {200:'Analyse',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-Fase',205:'UO-Fase',206:'Natuurtoets',207:'Natuurtoets',208:'Natuurtoets',209:'Natuurtoets',210:'Archeologie',211:'Archeologie',212:'Archeologie',213:'Bodem',214:'Bodem',215:'Bodem',216:'NGE/OO',217:'NGE/OO',218:'NGE/OO',219:'Geotechnisch',220:'Geotechnisch',221:'Geotechnisch'};
 var OPM_SUB_LABELS = {200:'Analyse-fase',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-vergunningen',205:'UO-Fase',206:'Ecologische quickscan',207:'Ecologisch vervolgonderzoek',208:'Natura 2000 / AERIUS',209:'Natuurtoets / voortoets',210:'Bureauonderzoek',211:'Inventariserend veldonderzoek',212:'Proefsleuvenonderzoek',213:'Historisch bodemonderzoek',214:'Verkennend bodemonderzoek',215:'Nader onderzoek / sanering',216:'Explosieven quickscan',217:'NGE detectieonderzoek',218:'NGE begeleiding graafwerk',219:'Geotechnisch onderzoek',220:'Thermische grondweerstand',221:'Grondwateronderzoek'};
 
-var FILTER_COLS = [
-  {i:2,  n:'Projectnaam',       type:'select'},
-  {i:3,  n:'APD Bouwdeel',      type:'select'},
-  {i:4,  n:'Trac\u00e9deel',    type:'select'},
-  {i:5,  n:'WP nummer',         type:'text'},
-  {i:6,  n:'Trac\u00e9 start',  type:'text'},
-  {i:7,  n:'Trac\u00e9 eind',   type:'text'},
-  {i:8,  n:'Engineer',          type:'select'},
-  {i:0,  n:'Projectnr. intern', type:'text'},
-  {i:1,  n:'Projectnr. extern', type:'text'},
-  {i:9,  n:'Lengte nieuw (m)',  type:'text'},
-  {i:10, n:'Lengte verwijderen',type:'text'},
-  {i:11, n:'VO aannemer',       type:'text'},
-];
+
+// ══ COLUMN FILTERS (Excel-style) ══
+
+function getColValues(colIdx) {
+  var vals = {};
+  ROWS.forEach(function(r) {
+    var v = (r[colIdx]||'').trim();
+    if (v) vals[v] = true;
+  });
+  return Object.keys(vals).sort();
+}
+
+function openColFilterByEl(e, el) {
+  var ci = parseInt(el.getAttribute('data-colidx'));
+  var colObj = null;
+  for (var i = 0; i < COLS.length; i++) { if (COLS[i].i === ci) { colObj = COLS[i]; break; } }
+  openColFilter(e, ci, colObj ? colObj.n : 'Kolom '+ci);
+}
+function openColFilter(e, colIdx, colName) {
+  e.stopPropagation();
+  cfpColIdx = colIdx;
+  cfpAllValues = getColValues(colIdx);
+
+  var cur = activeFilters[colIdx];
+  cfpTempSelected = {};
+  if (cur && !cur.allSelected) {
+    cfpTempSelected = Object.assign({}, cur.selected);
+  } else {
+    // all selected by default
+    cfpAllValues.forEach(function(v) { cfpTempSelected[v] = true; });
+  }
+
+  document.getElementById('cfpTitle').textContent = colName;
+  document.getElementById('cfpSearch').value = '';
+  cfpRenderList('');
+
+  var popup = document.getElementById('colFilterPopup');
+  popup.style.display = 'flex'; // measure actual size
+  var popW = popup.offsetWidth  || 240;
+  var popH = popup.offsetHeight || 300;
+  popup.style.display = '';
+  var rect = e.currentTarget.getBoundingClientRect();
+  var left = rect.left;
+  var top  = rect.bottom + 4;
+  // Clamp horizontally — prefer right-align if near right edge
+  if (left + popW > window.innerWidth - 8)  left = Math.max(8, window.innerWidth - popW - 8);
+  if (left < 8) left = 8;
+  // Clamp vertically — show above if not enough space below
+  if (top + popH > window.innerHeight - 8)  top = Math.max(8, rect.top - popH - 4);
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
+  popup.classList.add('open');
+  document.getElementById('cfpSearch').focus();
+  // Use a small delay AND mark that we just opened to avoid self-closing
+  window._cfpJustOpened = true;
+  setTimeout(function() {
+    window._cfpJustOpened = false;
+    document.addEventListener('click', closeColFilterOutside);
+  }, 200);
+}
+
+function closeColFilterOutside(e) {
+  if (window._cfpJustOpened) return;
+  var popup = document.getElementById('colFilterPopup');
+  if (!popup.contains(e.target)) {
+    closeColFilter();
+    document.removeEventListener('click', closeColFilterOutside);
+  }
+}
+
+function closeColFilter() {
+  document.getElementById('colFilterPopup').classList.remove('open');
+  cfpColIdx = -1;
+  document.removeEventListener('click', closeColFilterOutside);
+}
+
+function cfpFilterList(search) {
+  cfpRenderList(search.toLowerCase());
+}
+
+function cfpRenderList(search) {
+  var vals = search
+    ? cfpAllValues.filter(function(v) { return v.toLowerCase().indexOf(search) >= 0; })
+    : cfpAllValues;
+
+  var allChecked = vals.every(function(v) { return cfpTempSelected[v]; });
+  var html = '<div class="cfp-item select-all" onclick="cfpToggleAll()">'
+    + '<input type="checkbox" '+(allChecked?'checked':'')+' onclick="event.stopPropagation()">'
+    + '(Alles selecteren)</div>';
+
+  vals.forEach(function(v) {
+    var checked = cfpTempSelected[v] ? 'checked' : '';
+    var label   = v || '(leeg)';
+    html += '<div class="cfp-item" data-val="'+esc(v)+'" onclick="cfpToggleByEl(this)">'
+      + '<input type="checkbox" '+checked+' onclick="event.stopPropagation()">'
+      + '<span>'+esc(label)+'</span></div>';
+  });
+
+  document.getElementById('cfpList').innerHTML = html;
+}
+
+
+function cfpToggleByEl(el) {
+  var val = el.getAttribute('data-val');
+  // Unescape HTML entities back to original value
+  var txt = document.createElement('textarea');
+  txt.innerHTML = val;
+  var rawVal = txt.value;
+  cfpTempSelected[rawVal] = !cfpTempSelected[rawVal];
+  cfpRenderList(document.getElementById('cfpSearch').value.toLowerCase());
+}
+function cfpToggle(val) {
+  cfpTempSelected[val] = !cfpTempSelected[val];
+  cfpRenderList(document.getElementById('cfpSearch').value.toLowerCase());
+}
+
+function applyColFilter() {
+  if (cfpColIdx < 0) return;
+  var allSelected = cfpAllValues.every(function(v) { return cfpTempSelected[v]; });
+  var noneSelected = cfpAllValues.every(function(v) { return !cfpTempSelected[v]; });
+
+  if (allSelected || noneSelected) {
+    delete activeFilters[cfpColIdx];
+  } else {
+    activeFilters[cfpColIdx] = {
+      selected: Object.assign({}, cfpTempSelected),
+      allSelected: false
+    };
+  }
+  closeColFilter();
+  updateChips();
+  render();
+}
+
+function clearColFilter(colIdx) {
+  delete activeFilters[colIdx];
+  updateChips();
+  render();
+}
+
+function clearAllFilters() {
+  activeFilters = {};
+  activeStatusFilter = '';
+  document.getElementById('search').value = '';
+  updateChips();
+  render();
+}
+
+function updateChips() {
+  var chips = '';
+  var count = Object.keys(activeFilters).length;
+  var searchVal = document.getElementById('search') ? document.getElementById('search').value : '';
+  if (searchVal) count++;
+
+  Object.keys(activeFilters).forEach(function(ci) {
+    var flt = activeFilters[ci];
+    var colObj = null;
+    for (var i = 0; i < COLS.length; i++) { if (COLS[i].i === parseInt(ci)) { colObj = COLS[i]; break; } }
+    var name = colObj ? colObj.n : 'Kolom '+ci;
+    var selected = Object.keys(flt.selected).filter(function(v) { return flt.selected[v]; });
+    var label = selected.length === 1 ? selected[0] : selected.length + ' waarden';
+    chips += '<span class="chip"><span>'+esc(name)+': '+esc(label)+'</span>'
+      + '<button class="chip-del" data-delci="'+ci+'" title="Verwijder">✕</button></span>';
+  });
+
+  document.getElementById('activeChips').innerHTML = chips;
+
+  // Attach delete handlers (avoid inline onclick with quotes)
+  document.querySelectorAll('.chip-del').forEach(function(btn) {
+    btn.onclick = function() {
+      var ci = parseInt(this.getAttribute('data-delci'));
+      clearColFilter(ci);
+    };
+  });
+
+  var clearBtn = document.getElementById('btnClearFilters');
+  if (clearBtn) clearBtn.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+
+// Legacy stubs (keep filterRows working)
+function buildFilterPanel() { updateChips(); }
+function toggleFilterPanel() {}
+function setFilter() {}
+function setStatusFilter(v) { activeStatusFilter = v; render(); }
+function updateFilterChips() { updateChips(); }
+
 
 // ══ DATE HELPERS ══
 function parseDatum(str) {
@@ -1335,14 +1588,10 @@ function filterRows() {
     var fkeys = Object.keys(activeFilters);
     for (var fi = 0; fi < fkeys.length; fi++) {
       var ci  = parseInt(fkeys[fi]);
-      var val = activeFilters[ci];
-      if (!val) continue;
-      var cellVal   = (r[ci]||'').toLowerCase();
-      var filterVal = val.toLowerCase();
-      var fc = null;
-      for (var fci = 0; fci < FILTER_COLS.length; fci++) { if (FILTER_COLS[fci].i === ci) { fc = FILTER_COLS[fci]; break; } }
-      if (fc && fc.type === 'select') { if (cellVal !== filterVal) return false; }
-      else { if (cellVal.indexOf(filterVal) < 0) return false; }
+      var flt = activeFilters[ci];
+      if (!flt || flt.allSelected) continue;
+      var cellVal = (r[ci]||'').trim();
+      if (!flt.selected[cellVal]) return false;
     }
     return true;
   });
@@ -1401,7 +1650,13 @@ function render() {
     var fs = FASE_STYLE[col.f];
     var isFirst = ci===0 || vcols[ci-1].f !== col.f;
     var bl = isFirst && fs ? 'border-left:2px solid '+fs.color : '';
-    html += '<th onclick="sortBy('+ci+')" title="'+esc(col.n)+'" style="'+bl+'">'+esc(col.n)+(arrow?'<span class="sort-arrow">'+arrow+'</span>':'')+'</th>';
+    var hasFilter = activeFilters[col.i] && !activeFilters[col.i].allSelected;
+    var filterCls = hasFilter ? ' has-filter' : '';
+    var minW = Math.max(80, col.n.length * 7) + 'px';
+    html += '<th class="'+filterCls+'" style="'+bl+';min-width:'+minW+'" title="'+esc(col.n)+'">'
+      + '<span onclick="sortBy('+ci+')" style="cursor:pointer">'+esc(col.n)+(arrow?'<span class="sort-arrow">'+arrow+'</span>':'')+'</span>'
+      + ' <span class="filter-arrow" data-colidx="'+col.i+'" onclick="openColFilterByEl(event,this)" title="Filter op '+esc(col.n)+'">&#9660;</span>'
+      + '</th>';
   });
   html += '</tr></thead><tbody>';
   if (!rows.length) {
