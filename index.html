@@ -77,7 +77,11 @@
 
   /* CONTROLS */
   .controls-bar { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:.5rem .875rem; margin-bottom:.625rem; display:flex; flex-direction:column; gap:.5rem; }
-  .fase-row { display:flex; gap:3px; flex-wrap:wrap; align-items:center; }
+  .fase-rows { display:flex; flex-direction:column; gap:0; }
+  .fase-row { display:flex; gap:3px; align-items:center; padding:3px 0; border-bottom:1px solid var(--border); }
+  .fase-row:last-child { border-bottom:none; }
+  .fase-row-top { padding:4px 0; }
+  .fase-row-last { border-bottom:none; }
   .fase-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-right:5px; }
   .tab { padding:3px 10px; font-size:10px; font-weight:500; border:1px solid var(--border-md); border-radius:20px; background:transparent; color:var(--text-2); cursor:pointer; transition:all .1s; font-family:'Inter',system-ui,-apple-system,sans-serif; white-space:nowrap; }
   .tab:hover { background:var(--surface2); color:var(--text); border-color:var(--border-strong); }
@@ -491,14 +495,14 @@
   .stat-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3); }
   .stat-divider { width:1px; height:20px; background:var(--border-md); flex-shrink:0; }
   .stat-pct { font-size:11px; color:var(--text-3); margin-left:auto; white-space:nowrap; }
-  .btn-analyse {
+  .btn-analyse, .btn-hdd {
     display:inline-flex; align-items:center; gap:4px; padding:5px 13px;
     font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:12px; font-weight:400;
     border:none; border-radius:20px;
     background:rgba(0,0,0,0.05); color:var(--text-2); cursor:pointer; transition:all .12s;
     white-space:nowrap;
   }
-  .btn-analyse:hover { background:rgba(0,0,0,0.09); color:var(--text); }
+  .btn-analyse:hover, .btn-hdd:hover { background:rgba(0,0,0,0.09); color:var(--text); }
 
 
   /* ══ TOP BAR ══ */
@@ -538,9 +542,10 @@
   /* ── FASE GROUPS ── */
   .fase-group-label {
     font-size:8.5px; font-weight:600; text-transform:uppercase; letter-spacing:.1em;
-    color:var(--text-3); white-space:nowrap; align-self:center; padding:0 4px; font-family:'Poppins',sans-serif;
+    color:var(--text-3); white-space:nowrap; align-self:center;
+    font-family:'Poppins',sans-serif; width:160px; flex-shrink:0; padding-right:8px;
   }
-  .fase-group-sep { width:1px; height:16px; background:var(--border-strong); align-self:center; flex-shrink:0; margin:0 2px; }
+  .fase-group-sep { display:none; }
   .tab-groen, .tab-oranje { }
   .tab-groen.active, .tab-oranje.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 
@@ -638,6 +643,9 @@
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
+    <div id="localWarning" style="display:none;background:#FFF3E0;border:1px solid #E8870C;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#7A3800;line-height:1.5">
+      <strong>Let op:</strong> Open de app via <a href="https://thierry1996nl.github.io/engineeringsplanning_TPA/" style="color:#E8670C">GitHub Pages</a>, niet als lokaal bestand.
+    </div>
     <div class="login-logo">
         <span class="login-logo-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="1.2" fill="white"/><rect x="7" y="1" width="4" height="4" rx="1.2" fill="white" opacity=".55"/><rect x="1" y="7" width="4" height="4" rx="1.2" fill="white" opacity=".55"/><rect x="7" y="7" width="4" height="4" rx="1.2" fill="white" opacity=".28"/></svg></span>
         TPA · Engineeringsplanning
@@ -713,6 +721,10 @@
       </div>
       <span class="ts-pct" id="row-count" style="color:var(--text-3);font-size:10px"></span>
       <div style="margin-left:auto;display:flex;align-items:center;gap:.5rem">
+        <button class="btn-hdd" onclick="">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          HDD Dashboard
+        </button>
         <button class="btn-analyse" onclick="openAnalysePage()">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 12V8M6 12V5M10 12V3M14 12V7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           Analyse
@@ -729,57 +741,42 @@
 
     <!-- Fase tabs + search + filters in één balk -->
     <div class="top-controls">
-      <div class="fase-row">
-        <button class="tab active" onclick="setFase('alle',this)">Alle fases</button>
-        <span class="fase-group-label fase-group-groen">Fasering</span>
-        <button class="tab tab-groen" onclick="setFase('Analyse',this)">Analyse</button>
-        <button class="tab tab-groen" onclick="setFase('VO-Fase',this)">VO-Fase</button>
-        <button class="tab tab-groen" onclick="setFase('DO-Fase',this)">DO-Fase</button>
-        <button class="tab tab-groen" onclick="setFase('Onderzoeksfase',this)">Onderzoeksfase</button>
-        <button class="tab tab-groen" onclick="setFase('UO-Fase',this)">UO-Fase</button>
-        <span class="fase-group-sep"></span>
-        <span class="fase-group-label fase-group-oranje">Omgevingsmanagement</span>
-        <button class="tab tab-oranje" onclick="setFase('Natuurtoets',this)">Natuurtoets</button>
-        <button class="tab tab-oranje" onclick="setFase('Archeologie',this)">Archeologie</button>
-        <button class="tab tab-oranje" onclick="setFase('Bodem',this)">Bodem</button>
-        <button class="tab tab-oranje" onclick="setFase('NGE/OO',this)">NGE/OO</button>
-        <button class="tab tab-oranje" onclick="setFase('Geotechnisch',this)">Geotechnisch</button>
-        <span class="fase-group-sep"></span>
-        <span class="fase-group-label">Vergunningen</span>
-        <button class="tab" onclick="setFase('Vergunningen',this)">Vergunningen</button>
-        <span class="fase-group-sep"></span>
-        <span class="fase-group-label">Sleufloze technieken</span>
-        <button class="tab" onclick="setFase('Sleufloze technieken',this)">Sleufloze technieken</button>
-        <button class="btn-filter-toggle" id="filterToggleBtn" onclick="toggleInlineFilter()" title="Filters">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Filter
-          <span class="filter-badge" id="filterBadge" style="display:none">0</span>
-        </button>
-      </div>
-      <div class="inline-filter" id="inlineFilter" style="display:none">
-        <div id="filterGrid" class="filter-grid-inline"></div>
-        <div class="filter-clear-row" style="margin-top:.5rem">
-          <div class="active-chips" id="activeChips"></div>
-          <button class="btn-filter-reset" onclick="clearAllFilters()">&#10005; Filters resetten</button>
+      <div class="fase-rows">
+        <!-- Rij 1: Alle fases knop -->
+        <div class="fase-row fase-row-top">
+          <button class="tab active" onclick="setFase('alle',this)">Alle fases</button>
+        </div>
+        <!-- Rij 2: Fasering -->
+        <div class="fase-row">
+          <span class="fase-group-label">Fasering</span>
+          <button class="tab" onclick="setFase('Analyse',this)">Analyse</button>
+          <button class="tab" onclick="setFase('VO-Fase',this)">VO-Fase</button>
+          <button class="tab" onclick="setFase('DO-Fase',this)">DO-Fase</button>
+          <button class="tab" onclick="setFase('Onderzoeksfase',this)">Onderzoeksfase</button>
+          <button class="tab" onclick="setFase('UO-Fase',this)">UO-Fase</button>
+        </div>
+        <!-- Rij 3: Omgevingsmanagement -->
+        <div class="fase-row">
+          <span class="fase-group-label">Omgevingsmanagement</span>
+          <button class="tab" onclick="setFase('Natuurtoets',this)">Natuurtoets</button>
+          <button class="tab" onclick="setFase('Archeologie',this)">Archeologie</button>
+          <button class="tab" onclick="setFase('Bodem',this)">Bodem</button>
+          <button class="tab" onclick="setFase('NGE/OO',this)">NGE/OO</button>
+          <button class="tab" onclick="setFase('Geotechnisch',this)">Geotechnisch</button>
+        </div>
+        <!-- Rij 4: Vergunningen -->
+        <div class="fase-row">
+          <span class="fase-group-label">Vergunningen</span>
+          <button class="tab" onclick="setFase('Vergunningen',this)">Vergunningen</button>
+        </div>
+        <!-- Rij 5: Sleufloze technieken -->
+        <div class="fase-row fase-row-last">
+          <span class="fase-group-label">Sleufloze technieken</span>
+          <button class="tab" onclick="setFase('Sleufloze technieken',this)">Sleufloze technieken</button>
+
         </div>
       </div>
-      <div class="top-tools">
-        <input class="search-box" type="text" id="search" placeholder="&#128269; Zoeken..." oninput="debouncedRender()">
 
-        <span class="row-count" id="row-count"></span>
-
-        <div class="export-group" id="exportGroup">
-          <button class="btn-export csv" onclick="exportCSV()">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 12v2h12v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>CSV
-          </button>
-          <button class="btn-export xlsx" onclick="exportXLSX()">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 12v2h12v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Excel
-          </button>
-        </div>
-      </div>
-    </div>
-
-  </div>
 
   <div id="editorNotice" class="editor-notice" style="display:none">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#2d7a4f" stroke-width="1.2"/><path d="M8 5v4M8 10.5v.5" stroke="#2d7a4f" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -855,6 +852,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="activeChips" style="display:none"></div>
 
 
 <!-- Column Filter Popup -->
@@ -952,6 +950,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ══ CONFIG ══
+if (window.location.protocol === 'file:') {
+  var w = document.getElementById('localWarning');
+  if (w) w.style.display = 'block';
+}
+
 var SUPA_URL = 'https://yuyogdqobekvsvjgwllf.supabase.co';
 var SUPA_KEY = 'sb_publishable_Etgi3cTtObxJbAvf2WR-mw_dFajr5Qr';
 var POLL_MS  = 5000;
@@ -1326,8 +1329,7 @@ function clearAllFilters() {
   document.getElementById('search').value = '';
   updateChips();
   render();
-  if (document.getElementById('inlineFilter') &&
-      document.getElementById('inlineFilter').style.display !== 'none') buildFilterPanel();
+
 }
 
 function updateChips() {
@@ -1361,8 +1363,7 @@ function updateChips() {
   var badge = document.getElementById('filterBadge');
   var toggleBtn = document.getElementById('filterToggleBtn');
   if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'inline' : 'none'; }
-  if (toggleBtn) toggleBtn.classList.toggle('active', count > 0 ||
-    (document.getElementById('inlineFilter') && document.getElementById('inlineFilter').style.display !== 'none'));
+  if (toggleBtn) toggleBtn.classList.toggle('active', count > 0);
 }
 
 
@@ -1431,6 +1432,10 @@ function setRole(role) {
 }
 
 function doLogin() {
+  if (window.location.protocol === 'file:') {
+    showLoginError('Open de app via GitHub Pages, niet als lokaal bestand. Ga naar: thierry1996nl.github.io/engineeringsplanning_TPA/');
+    return;
+  }
   var eng  = document.getElementById('loginEngineer').value;
   var role = document.getElementById('loginRole').value;
   if (!eng) { showLoginError('Kies je naam om verder te gaan.'); return; }
@@ -1849,7 +1854,7 @@ function saveOpmerking() {
 function buildFilterPanel() {
   if (!ROWS.length) return;
   var grid = document.getElementById('filterGrid');
-  if (!grid) return;
+  if (!grid) { updateChips(); return; }
 
   var filterDefs = [
     {i:2,  n:'Projectnaam',       type:'select'},
@@ -1953,13 +1958,7 @@ function buildFilterPanel() {
   updateChips();
 }
 
-function toggleFilterPanel() {
-  var panel = document.getElementById('filterPanel');
-  var btn   = document.getElementById('filterPanelBtn');
-  var isOpen = panel.classList.toggle('open');
-  btn.classList.toggle('active', isOpen);
-  if (isOpen) buildFilterPanel();
-}
+function toggleFilterPanel() {}
 function setFilter(colIdx, val) {
   if (val) activeFilters[colIdx] = val; else delete activeFilters[colIdx];
   updateFilterChips(); render();
@@ -1971,15 +1970,9 @@ function clearAllFilters() {
   buildFilterPanel(); render();
 }
 function clearFilter(colIdx) {
-  if (colIdx === 'status') {
-    activeStatusFilter = '';
-    var el = document.getElementById('statusFilterAdv');
-    if (el) el.value = '';
-  } else {
-    delete activeFilters[colIdx];
-    if (document.getElementById('filterPanel').classList.contains('open')) buildFilterPanel();
-  }
-  updateFilterChips(); render();
+  if (colIdx === 'status') { activeStatusFilter = ''; }
+  else { delete activeFilters[colIdx]; }
+  updateChips(); render();
 }
 function updateFilterChips() {
   var chips = '', count = 0;
@@ -1996,16 +1989,8 @@ function updateFilterChips() {
   });
   var searchVal = document.getElementById('search') ? document.getElementById('search').value : '';
   if (searchVal) count++;
-  document.getElementById('filterChips').innerHTML = chips;
-  var countEl = document.getElementById('filterCount');
-  if (count > 0) {
-    countEl.textContent = count; countEl.style.display = 'inline';
-    document.getElementById('filterPanelBtn').classList.add('active');
-  } else {
-    countEl.style.display = 'none';
-    if (!document.getElementById('filterPanel').classList.contains('open'))
-      document.getElementById('filterPanelBtn').classList.remove('active');
-  }
+  var legacyChips = document.getElementById('filterChips');
+  if (legacyChips) legacyChips.innerHTML = chips;
 }
 
 // ══ PROJECT CRUD ══
@@ -2142,14 +2127,7 @@ function openAnalysePage() {
 }
 
 
-function toggleInlineFilter() {
-  var panel = document.getElementById('inlineFilter');
-  var btn   = document.getElementById('filterToggleBtn');
-  var open  = panel.style.display === 'none' || panel.style.display === '';
-  panel.style.display = open ? 'block' : 'none';
-  btn.classList.toggle('active', open);
-  if (open) buildFilterPanel();
-}
+function toggleInlineFilter() {}
 
 
 // ══ RENDER HELPERS ══
