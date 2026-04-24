@@ -1678,10 +1678,65 @@ function startApp() {
   document.getElementById('modeLabel').textContent  = currentMode === 'viewer' ? 'Viewer' : 'Bewerker';
   document.getElementById('editorNotice').style.display = currentMode === 'editor' ? 'flex' : 'none';
   document.getElementById('exportGroup').style.display  = currentMode === 'viewer' ? 'flex' : 'none';
-  return loadData().then(function() {
+  return loadRoleLists().then(function() {
+    return loadData();
+  }).then(function() {
     return loadOpmerkingen();
   }).then(function() {
     startPolling();
+  });
+}
+
+// ══ ROLE LIST PERSISTENCE ══
+var CONFIG_ROW_IDX = 9999;
+
+function loadRoleLists() {
+  return supaGet('/rest/v1/werkpakketten?row_idx=eq.' + CONFIG_ROW_IDX + '&select=cel_data')
+    .then(function(data) {
+      if (Array.isArray(data) && data.length > 0) {
+        var cd = data[0].cel_data || {};
+        var stored = cd['__roles__'];
+        if (stored) {
+          try {
+            var parsed = typeof stored === 'string' ? JSON.parse(stored) : stored;
+            ROLE_LISTS.engineer         = parsed.engineer         || [];
+            ROLE_LISTS.projectleider    = parsed.projectleider    || [];
+            ROLE_LISTS.uitvoerder       = parsed.uitvoerder       || [];
+            ROLE_LISTS.werkvoorbereider = parsed.werkvoorbereider || [];
+          } catch(e) {}
+        }
+      }
+    })
+    .catch(function() {});
+}
+
+function saveRoleLists() {
+  var payload = {
+    engineer:         ROLE_LISTS.engineer,
+    projectleider:    ROLE_LISTS.projectleider,
+    uitvoerder:       ROLE_LISTS.uitvoerder,
+    werkvoorbereider: ROLE_LISTS.werkvoorbereider
+  };
+  var celData = { '__roles__': JSON.stringify(payload) };
+  // Upsert: try patch first, then insert if not exists
+  return supaPatch('/rest/v1/werkpakketten?row_idx=eq.' + CONFIG_ROW_IDX, {
+    cel_data: celData,
+    updated_by: currentUser,
+    updated_at: new Date().toISOString()
+  }).then(function() {
+    // Check if row exists, if patch affected 0 rows we need to insert
+  }).catch(function() {
+    // Row doesn't exist yet — create it
+    return supaPost('/rest/v1/werkpakketten', {
+      row_idx:     CONFIG_ROW_IDX,
+      projectnaam: '__config__',
+      werkpakket:  '__roles__',
+      engineer:    '',
+      gearchiveerd: false,
+      cel_data:    celData,
+      updated_by:  currentUser,
+      updated_at:  new Date().toISOString()
+    });
   });
 }
 
@@ -1689,14 +1744,15 @@ function startApp() {
 function loadData() {
   document.getElementById('loadingState').style.display = 'block';
   document.getElementById('tableCard').style.display = 'none';
-  return supaGet('/rest/v1/werkpakketten?select=*&order=row_idx.asc')
+  // Exclude config row from main data
+  return supaGet('/rest/v1/werkpakketten?select=*&order=row_idx.asc&row_idx=neq.' + CONFIG_ROW_IDX)
     .then(function(data) {
       if (!Array.isArray(data)) {
         throw new Error(data && data.message ? data.message : 'Onverwacht antwoord: ' + JSON.stringify(data).slice(0,80));
       }
       DB_ROWS = data;
       buildROWS(data);
-      buildEngineerOptionsFromDB();
+      mergeDBEngineersIntoRoleLists();
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('tableCard').style.display = 'block';
       render();
@@ -1712,33 +1768,27 @@ function loadData() {
     });
 }
 
-function buildROWS(dbData) {
-  ROWS = dbData.map(function(row) {
-    var arr = new Array(182).fill('');
-    var cd = row.cel_data || {};
-    Object.keys(cd).forEach(function(k) { var idx=parseInt(k); if(idx<182) arr[idx] = cd[k] || ''; });
-    arr._gearchiveerd = row.gearchiveerd || false;
-    return arr;
-  });
-}
-
-function buildEngineerOptionsFromDB() {
-  var seen = {};
-  // Scan all role columns: Engineer(8), Projectleider(179), Uitvoerder(180), Werkvoorbereider(181)
-  var roleCols = ['8','179','180','181'];
+function mergeDBEngineersIntoRoleLists() {
+  // Merge people found in DB into lists (so assigned people always appear)
+  var map = { '8':'engineer', '179':'projectleider', '180':'uitvoerder', '181':'werkvoorbereider' };
   DB_ROWS.forEach(function(row) {
-    roleCols.forEach(function(k) {
-      var val = (row.cel_data && row.cel_data[k]) || '';
-      if (val.trim()) seen[val.trim()] = true;
+    var cd = row.cel_data || {};
+    Object.keys(map).forEach(function(col) {
+      var val = (cd[col]||'').trim();
+      if (val && ROLE_LISTS[map[col]].indexOf(val) < 0) {
+        ROLE_LISTS[map[col]].push(val);
+      }
     });
-    // Also check top-level engineer field
-    if (row.engineer && row.engineer.trim()) seen[row.engineer.trim()] = true;
+    var eng = (row.engineer||'').trim();
+    if (eng && ROLE_LISTS.engineer.indexOf(eng) < 0) ROLE_LISTS.engineer.push(eng);
   });
-  // Preserve any manually added engineers from this session
-  ENGINEER_OPTIONS.forEach(function(e) { if (e) seen[e] = true; });
-  ENGINEER_OPTIONS = Object.keys(seen).sort();
+  Object.keys(ROLE_LISTS).forEach(function(k){ ROLE_LISTS[k].sort(); });
+  var all = {};
+  Object.keys(ROLE_LISTS).forEach(function(k){ ROLE_LISTS[k].forEach(function(n){all[n]=true;}); });
+  ENGINEER_OPTIONS = Object.keys(all).sort();
   refreshProjectModalSelect();
 }
+
 
 function loadOpmerkingen() {
   return supaGet('/rest/v1/opmerkingen?select=row_idx,fase,tekst')
@@ -2704,32 +2754,12 @@ var ROLE_DEFS = [
   { key:'werkvoorbereider',label:'Werkvoorbereider', col:'181', color:'#6F35CE' }
 ];
 
-var ROLE_LISTS      = { engineer:[], projectleider:[], uitvoerder:[], werkvoorbereider:[] };
-var activeRoleTab   = 'engineer';
+var ROLE_LISTS    = { engineer:[], projectleider:[], uitvoerder:[], werkvoorbereider:[] };
+var activeRoleTab = 'engineer';
 
 function getRoleByCol(col) {
   for (var i=0; i<ROLE_DEFS.length; i++) { if (ROLE_DEFS[i].col===String(col)) return ROLE_DEFS[i]; }
   return ROLE_DEFS[0];
-}
-
-function buildEngineerOptionsFromDB() {
-  var seen = { engineer:{}, projectleider:{}, uitvoerder:{}, werkvoorbereider:{} };
-  DB_ROWS.forEach(function(row) {
-    var cd = row.cel_data || {};
-    if ((cd['8']  ||'').trim()) seen.engineer[cd['8'].trim()]         = true;
-    if ((cd['179']||'').trim()) seen.projectleider[cd['179'].trim()]  = true;
-    if ((cd['180']||'').trim()) seen.uitvoerder[cd['180'].trim()]     = true;
-    if ((cd['181']||'').trim()) seen.werkvoorbereider[cd['181'].trim()]= true;
-    if ((row.engineer||'').trim()) seen.engineer[row.engineer.trim()] = true;
-  });
-  ROLE_LISTS.engineer         = Object.keys(seen.engineer).sort();
-  ROLE_LISTS.projectleider    = Object.keys(seen.projectleider).sort();
-  ROLE_LISTS.uitvoerder       = Object.keys(seen.uitvoerder).sort();
-  ROLE_LISTS.werkvoorbereider = Object.keys(seen.werkvoorbereider).sort();
-  var all = {};
-  Object.keys(seen).forEach(function(k){ Object.keys(seen[k]).forEach(function(n){ all[n]=true; }); });
-  ENGINEER_OPTIONS = Object.keys(all).sort();
-  refreshProjectModalSelect();
 }
 
 function openRollenModal() {
@@ -2814,6 +2844,7 @@ function deleteEngineer(name, col) {
   Object.keys(ROLE_LISTS).forEach(function(k){ ROLE_LISTS[k].forEach(function(n){all[n]=true;}); });
   ENGINEER_OPTIONS = Object.keys(all).sort();
   refreshProjectModalSelect(); renderEngList();
+  saveRoleLists();
   var affected = DB_ROWS.filter(function(r){ return r.cel_data && r.cel_data[col]===name; });
   if (!affected.length) { showToast('✓ Persoon verwijderd','success'); render(); return; }
   showSaving(true);
@@ -2842,6 +2873,7 @@ function addEngineer() {
   input.value=''; renderEngList();
   var label = ROLE_DEFS.filter(function(r){return r.key===activeRoleTab;})[0].label;
   showToast('✓ '+name+' toegevoegd als '+label,'success');
+  saveRoleLists();
   loadData();
 }
 
