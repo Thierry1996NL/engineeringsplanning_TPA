@@ -1906,21 +1906,25 @@ function openTextPicker(e, rowIdx, colIdx) {
   var inp = document.getElementById('textInput');
   if (colIdx === 8) {
     inp.style.display = 'none';
-    var sel = document.getElementById('textSelect');
-    if (!sel) {
-      sel = document.createElement('select');
-      sel.id = 'textSelect'; sel.className = 'tp-select';
-      ENGINEER_OPTIONS.forEach(function(eng) {
-        var opt = document.createElement('option');
-        opt.value = eng; opt.textContent = eng; sel.appendChild(opt);
-      });
-      inp.parentNode.insertBefore(sel, inp.nextSibling);
-    }
+    // Always rebuild from current ENGINEER_OPTIONS
+    var existSel = document.getElementById('textSelect');
+    if (existSel) existSel.parentNode.removeChild(existSel);
+    var sel = document.createElement('select');
+    sel.id = 'textSelect'; sel.className = 'tp-select';
+    var emptyOpt = document.createElement('option');
+    emptyOpt.value = ''; emptyOpt.textContent = '— Kies een engineer —';
+    sel.appendChild(emptyOpt);
+    ENGINEER_OPTIONS.forEach(function(eng) {
+      var opt = document.createElement('option');
+      opt.value = eng; opt.textContent = eng;
+      sel.appendChild(opt);
+    });
+    inp.parentNode.insertBefore(sel, inp.nextSibling);
     sel.style.display = ''; sel.value = cur;
   } else {
     inp.style.display = ''; inp.value = cur;
-    var existSel = document.getElementById('textSelect');
-    if (existSel) existSel.style.display = 'none';
+    var existSel2 = document.getElementById('textSelect');
+    if (existSel2) existSel2.style.display = 'none';
   }
   var popup = document.getElementById('textPicker');
   positionEl(popup, e, 280, 130);
@@ -2168,6 +2172,9 @@ function openProjectModal(rowIdx) {
   document.getElementById('projModalTitle').textContent = isNew ? 'Nieuw project' : 'Project bewerken';
   document.getElementById('projModalSub').textContent   = isNew ? 'Vul de projectinformatie in' : 'Pas de projectinformatie aan';
   document.getElementById('btnDeleteProject').style.display = isNew ? 'none' : 'inline-flex';
+
+  // Always rebuild engineer select from current ENGINEER_OPTIONS
+  refreshProjectModalSelect();
 
   // Populate fields
   var row = isNew ? new Array(174).fill('') : ROWS[rowIdx];
