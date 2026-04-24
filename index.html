@@ -1768,6 +1768,19 @@ function loadData() {
     });
 }
 
+function buildROWS(dbData) {
+  ROWS = dbData.map(function(row) {
+    var arr = new Array(182).fill('');
+    var cd = row.cel_data || {};
+    Object.keys(cd).forEach(function(k) {
+      var idx = parseInt(k);
+      if (!isNaN(idx) && idx < 182) arr[idx] = cd[k] || '';
+    });
+    arr._gearchiveerd = row.gearchiveerd || false;
+    return arr;
+  });
+}
+
 function mergeDBEngineersIntoRoleLists() {
   // Merge people found in DB into lists (so assigned people always appear)
   var map = { '8':'engineer', '179':'projectleider', '180':'uitvoerder', '181':'werkvoorbereider' };
