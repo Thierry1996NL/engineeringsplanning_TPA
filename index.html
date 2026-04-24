@@ -1039,12 +1039,24 @@
           <label class="proj-field-label">Engineer <span>*</span></label>
           <select class="proj-select" id="pf8">
             <option value="">— Kies een engineer —</option>
-            <option>Peter Teeninga</option>
-            <option>Lucas van der Cammen</option>
-            <option>Frans Hamelijnck</option>
-            <option>Dennis Verkoeijen</option>
-            <option>Gabor Misic</option>
-            <option>Thierry Papenhuijzen</option>
+          </select>
+        </div>
+        <div class="proj-field">
+          <label class="proj-field-label">Projectleider</label>
+          <select class="proj-select" id="pf179">
+            <option value="">— Kies een persoon —</option>
+          </select>
+        </div>
+        <div class="proj-field">
+          <label class="proj-field-label">Uitvoerder</label>
+          <select class="proj-select" id="pf180">
+            <option value="">— Kies een persoon —</option>
+          </select>
+        </div>
+        <div class="proj-field">
+          <label class="proj-field-label">Werkvoorbereider</label>
+          <select class="proj-select" id="pf181">
+            <option value="">— Kies een persoon —</option>
           </select>
         </div>
         <div class="proj-field">
@@ -1080,7 +1092,7 @@
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:-2px;margin-right:5px"><circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M1 14c0-2.8 2.2-5 5-5h4c2.8 0 5 2.2 5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           Rollen &amp; Engineers
         </div>
-        <div class="rollen-modal-sub">Bekijk, voeg toe of verwijder engineers</div>
+        <div class="rollen-modal-sub">Personen die als Engineer, Projectleider, Uitvoerder of Werkvoorbereider kunnen worden toegewezen</div>
       </div>
       <button class="btn-rollen-close" onclick="closeRollenModal()">&#10005;</button>
     </div>
@@ -1158,6 +1170,7 @@ var COLS = [
   {i:3,f:"",n:"APD Bouwdeel"},{i:4,f:"",n:"Liander Tracédeel"},{i:5,f:"",n:"WP nummer"},
   {i:6,f:"",n:"Tracé start"},{i:7,f:"",n:"Tracé eind"},{i:8,f:"",n:"Engineer"},
   {i:9,f:"",n:"Lengte nieuw (m)"},{i:10,f:"",n:"Lengte verwijderen (m)"},{i:11,f:"",n:"Overdracht VO aannemer"},
+  {i:179,f:"",n:"Projectleider"},{i:180,f:"",n:"Uitvoerder"},{i:181,f:"",n:"Werkvoorbereider"},
   {i:12,f:"Analyse",n:"Stukken VO controleren"},{i:13,f:"Analyse",n:"VO inhoudelijk beoordelen"},
   {i:14,f:"Analyse",n:"Verificatieplan opstellen"},{i:15,f:"Analyse",n:"Eisen importeren Relatics"},
   {i:16,f:"Analyse",n:"VO QuickScan beoordelen"},{i:17,f:"Analyse",n:"Taakstellend Budget"},
@@ -1322,7 +1335,7 @@ var PLANDATUM_COLS    = [127,130,133,136,139,142,145,148,151,154,157,160,163,166
 var DATE_COL_INDICES  = [24,35,58,95,106,123,127,130,133,136,139,142,145,148,151,154,157,160,163,166,169,172];
 var JANEE_COL_INDICES = [26,37,60,97,108,125,128,131,134,137,140,143,146,149,152,155,158,161,164,167,170,173];
 var VIRT_COLS         = [200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,400,401];
-var TEXT_COL_INDICES  = [0,1,2,3,4,5,6,7,8,9,10,11];
+var TEXT_COL_INDICES  = [0,1,2,3,4,5,6,7,8,9,10,11,179,180,181];
 var ENGINEER_OPTIONS  = []; // Dynamisch geladen vanuit database
 
 var OPM_VIRT_MAP = {200:'Analyse',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-Fase',205:'UO-Fase',206:'Natuurtoets',207:'Natuurtoets',208:'Natuurtoets',209:'Natuurtoets',210:'Archeologie',211:'Archeologie',212:'Archeologie',213:'Bodem',214:'Bodem',215:'Bodem',216:'NGE/OO',217:'NGE/OO',218:'NGE/OO',219:'Geotechnisch',220:'Geotechnisch',221:'Geotechnisch',400:'Vergunningen',401:'Sleufloze technieken'};
@@ -1674,22 +1687,27 @@ function loadData() {
 
 function buildROWS(dbData) {
   ROWS = dbData.map(function(row) {
-    var arr = new Array(174).fill('');
+    var arr = new Array(182).fill('');
     var cd = row.cel_data || {};
-    Object.keys(cd).forEach(function(k) { arr[parseInt(k)] = cd[k] || ''; });
+    Object.keys(cd).forEach(function(k) { var idx=parseInt(k); if(idx<182) arr[idx] = cd[k] || ''; });
     arr._gearchiveerd = row.gearchiveerd || false;
     return arr;
   });
 }
 
 function buildEngineerOptionsFromDB() {
-  // Collect all unique engineer names from col 8 in cel_data
   var seen = {};
+  // Scan all role columns: Engineer(8), Projectleider(179), Uitvoerder(180), Werkvoorbereider(181)
+  var roleCols = ['8','179','180','181'];
   DB_ROWS.forEach(function(row) {
-    var eng = (row.cel_data && row.cel_data['8']) || (row.engineer || '');
-    if (eng && eng.trim()) seen[eng.trim()] = true;
+    roleCols.forEach(function(k) {
+      var val = (row.cel_data && row.cel_data[k]) || '';
+      if (val.trim()) seen[val.trim()] = true;
+    });
+    // Also check top-level engineer field
+    if (row.engineer && row.engineer.trim()) seen[row.engineer.trim()] = true;
   });
-  // Merge with any manually added engineers (preserve additions made during session)
+  // Preserve any manually added engineers from this session
   ENGINEER_OPTIONS.forEach(function(e) { if (e) seen[e] = true; });
   ENGINEER_OPTIONS = Object.keys(seen).sort();
   refreshProjectModalSelect();
@@ -1918,7 +1936,8 @@ function openTextPicker(e, rowIdx, colIdx) {
   for (var i = 0; i < COLS.length; i++) { if (COLS[i].i === colIdx) { colObj = COLS[i]; break; } }
   document.getElementById('textPickerLabel').textContent = colObj ? colObj.n : 'Waarde';
   var inp = document.getElementById('textInput');
-  if (colIdx === 8) {
+  var ROLE_COLS = [8, 179, 180, 181];
+  if (ROLE_COLS.indexOf(colIdx) >= 0) {
     inp.style.display = 'none';
     // Always rebuild from current ENGINEER_OPTIONS
     var existSel = document.getElementById('textSelect');
@@ -1926,7 +1945,7 @@ function openTextPicker(e, rowIdx, colIdx) {
     var sel = document.createElement('select');
     sel.id = 'textSelect'; sel.className = 'tp-select';
     var emptyOpt = document.createElement('option');
-    emptyOpt.value = ''; emptyOpt.textContent = '— Kies een engineer —';
+    emptyOpt.value = ''; emptyOpt.textContent = '— Kies een persoon —';
     sel.appendChild(emptyOpt);
     ENGINEER_OPTIONS.forEach(function(eng) {
       var opt = document.createElement('option');
@@ -1944,7 +1963,8 @@ function openTextPicker(e, rowIdx, colIdx) {
   positionEl(popup, e, 280, 130);
   popup.classList.add('open');
   setTimeout(function() {
-    if (colIdx === 8) { var s = document.getElementById('textSelect'); if(s) s.focus(); }
+    var ROLE_COLS2 = [8, 179, 180, 181];
+    if (ROLE_COLS2.indexOf(colIdx) >= 0) { var s = document.getElementById('textSelect'); if(s) s.focus(); }
     else { inp.focus(); inp.select(); }
     document.addEventListener('click', closeTextOutside, {once:true});
   }, 50);
@@ -1957,7 +1977,8 @@ function saveText() {
   if (!textPicker_target) return;
   var ri = textPicker_target.rowIdx, ci = textPicker_target.colIdx;
   var newVal;
-  if (ci === 8) { var sel = document.getElementById('textSelect'); newVal = sel ? sel.value : ''; }
+  var ROLE_COLS3 = [8, 179, 180, 181];
+  if (ROLE_COLS3.indexOf(ci) >= 0) { var sel = document.getElementById('textSelect'); newVal = sel ? sel.value : ''; }
   else { newVal = document.getElementById('textInput').value.trim(); }
   closeTextPicker();
   if (newVal === ROWS[ri][ci]) return;
@@ -2190,12 +2211,17 @@ function openProjectModal(rowIdx) {
   // Always rebuild engineer select from current ENGINEER_OPTIONS
   refreshProjectModalSelect();
 
-  // Populate fields
-  var row = isNew ? new Array(174).fill('') : ROWS[rowIdx];
+  // Populate fields 0-11
+  var row = isNew ? new Array(182).fill('') : ROWS[rowIdx];
   for (var i = 0; i <= 11; i++) {
     var el = document.getElementById('pf' + i);
     if (el) el.value = row[i] || '';
   }
+  // Populate role fields 179, 180, 181
+  [179, 180, 181].forEach(function(ci) {
+    var el = document.getElementById('pf' + ci);
+    if (el) el.value = row[ci] || '';
+  });
 
   document.getElementById('projOverlay').classList.add('open');
   setTimeout(function() { var el = document.getElementById('pf2'); if(el) el.focus(); }, 100);
@@ -2214,12 +2240,17 @@ function saveProject() {
   if (!wp)   { showToast('✗ WP nummer is verplicht', 'error'); return; }
   if (!eng)  { showToast('✗ Kies een engineer', 'error'); return; }
 
-  // Build cel_data from fields
+  // Build cel_data from fields 0-11
   var celData = {};
   for (var i = 0; i <= 11; i++) {
     var el = document.getElementById('pf' + i);
     if (el && el.value.trim()) celData[String(i)] = el.value.trim();
   }
+  // Also save role fields 179, 180, 181
+  [179, 180, 181].forEach(function(ci) {
+    var el = document.getElementById('pf' + ci);
+    if (el && el.value.trim()) celData[String(ci)] = el.value.trim();
+  });
 
   showSaving(true);
   closeProjModal();
@@ -2264,6 +2295,12 @@ function saveProject() {
       if (el2 && el2.value.trim()) newCelData[String(k)] = el2.value.trim();
       else delete newCelData[String(k)];
     }
+    // Save role fields 179, 180, 181
+    [179, 180, 181].forEach(function(ci) {
+      var el2 = document.getElementById('pf' + ci);
+      if (el2 && el2.value.trim()) newCelData[String(ci)] = el2.value.trim();
+      else delete newCelData[String(ci)];
+    });
     supaPatch('/rest/v1/werkpakketten?row_idx=eq.' + dbRow.row_idx, {
       projectnaam: naam,
       werkpakket:  wp,
@@ -2646,7 +2683,8 @@ function engInitials(name) {
 }
 function countProjectsForEngineer(name) {
   return DB_ROWS.filter(function(r){
-    return r.cel_data && r.cel_data['8'] === name;
+    var cd = r.cel_data || {};
+    return cd['8']===name || cd['179']===name || cd['180']===name || cd['181']===name;
   }).length;
 }
 function renderEngList() {
@@ -2683,15 +2721,24 @@ function deleteEngineer(name) {
   refreshProjectModalSelect();
   renderEngList();
   var affected = DB_ROWS.filter(function(r){return r.cel_data&&r.cel_data['8']===name;});
+  var affected = DB_ROWS.filter(function(r){
+    var cd = r.cel_data || {};
+    return cd['8']===name || cd['179']===name || cd['180']===name || cd['181']===name;
+  });
   if (!affected.length) { showToast('✓ Engineer verwijderd','success'); render(); return; }
   showSaving(true);
   Promise.all(affected.map(function(dbRow){
-    var nc = Object.assign({},dbRow.cel_data); delete nc['8'];
+    var nc = Object.assign({},dbRow.cel_data);
+    if (nc['8']   === name) delete nc['8'];
+    if (nc['179'] === name) delete nc['179'];
+    if (nc['180'] === name) delete nc['180'];
+    if (nc['181'] === name) delete nc['181'];
     return supaPatch('/rest/v1/werkpakketten?row_idx=eq.'+dbRow.row_idx,{
-      cel_data:nc, engineer:'', updated_by:currentUser, updated_at:new Date().toISOString()
+      cel_data:nc, engineer: nc['8']||'', updated_by:currentUser, updated_at:new Date().toISOString()
     }).then(function(){
-      dbRow.cel_data=nc; dbRow.engineer='';
-      var ri=DB_ROWS.indexOf(dbRow); if(ROWS[ri]) ROWS[ri][8]='';
+      dbRow.cel_data=nc; dbRow.engineer=nc['8']||'';
+      var ri=DB_ROWS.indexOf(dbRow);
+      if(ROWS[ri]){ ROWS[ri][8]=''; ROWS[ri][179]=''; ROWS[ri][180]=''; ROWS[ri][181]=''; }
     });
   })).then(function(){
     showSaving(false);
@@ -2717,12 +2764,15 @@ function refreshLoginDropdown() {
   // Login is now a free text field — no rebuild needed
 }
 function refreshProjectModalSelect() {
-  var sel=document.getElementById('pf8'); if(!sel)return;
-  var cur=sel.value;
-  sel.innerHTML='<option value="">— Kies een engineer —</option>';
-  ENGINEER_OPTIONS.forEach(function(e){
-    var o=document.createElement('option'); o.value=e; o.textContent=e;
-    if(e===cur) o.selected=true; sel.appendChild(o);
+  var roleSelIds = [{id:'pf8', label:'— Kies een engineer —'}, {id:'pf179', label:'— Kies een persoon —'}, {id:'pf180', label:'— Kies een persoon —'}, {id:'pf181', label:'— Kies een persoon —'}];
+  roleSelIds.forEach(function(rs) {
+    var sel = document.getElementById(rs.id); if (!sel) return;
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">'+rs.label+'</option>';
+    ENGINEER_OPTIONS.forEach(function(e){
+      var o = document.createElement('option'); o.value = e; o.textContent = e;
+      if (e === cur) o.selected = true; sel.appendChild(o);
+    });
   });
 }
 
