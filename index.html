@@ -808,20 +808,7 @@
       <label class="login-label">Naam</label>
       <input class="login-input" type="text" id="loginEngineer" placeholder="Bijv. Jan de Vries" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <div class="login-field">
-      <label class="login-label">Rol</label>
-      <div class="role-toggle">
-        <button type="button" class="role-btn active" id="roleBtnViewer" onclick="setRole('viewer')">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2.5" fill="currentColor"/></svg>
-          Viewer
-        </button>
-        <button type="button" class="role-btn" id="roleBtnEditor" onclick="setRole('editor')">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2.5l2.5 2.5-7 7-3 .5.5-3 7-7z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-          Bewerker
-        </button>
-      </div>
-      <input type="hidden" id="loginRole" value="viewer">
-    </div>
+    <input type="hidden" id="loginRole" value="viewer">
     <button class="login-btn" id="loginBtn" onclick="doLogin()">Verder →</button>
     <div class="login-error" id="loginError"></div>
   </div>
@@ -1133,6 +1120,31 @@
       <button class="btn-proj-delete" id="btnDeleteProject" onclick="archiveProject()" style="display:none">Archiveren</button>
       <button class="btn-proj-cancel" onclick="closeProjModal()">Annuleren</button>
       <button class="btn-proj-save" onclick="saveProject()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BEWERKER BEVESTIGING POPUP ══ -->
+<div class="opm-overlay" id="editorConfirmOverlay">
+  <div class="opm-modal" style="max-width:380px">
+    <div class="opm-modal-header">
+      <div>
+        <div class="opm-modal-title">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:-2px;margin-right:5px;color:var(--r-fg)"><path d="M8 1.5L1 14h14L8 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6v4M8 11.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Bewerkermodus activeren
+        </div>
+        <div class="opm-modal-sub">Let op — wijzigingen worden direct opgeslagen</div>
+      </div>
+    </div>
+    <div class="opm-modal-body" style="padding:1.25rem 1.25rem .75rem">
+      <p style="font-size:13px;color:var(--text-2);line-height:1.6">
+        Je gaat nu naar de <strong>bewerkermodus</strong>.<br>
+        Aanpassingen die je maakt worden <strong>automatisch opgeslagen</strong> in de database en zijn direct zichtbaar voor alle gebruikers.
+      </p>
+    </div>
+    <div class="opm-modal-footer">
+      <button class="btn-opm-cancel" onclick="cancelEditorSwitch()">Annuleren</button>
+      <button class="btn-opm-save" onclick="confirmEditorSwitch()" style="background:var(--g-fg)">Bewerken starten</button>
     </div>
   </div>
 </div>
@@ -1671,10 +1683,9 @@ function doLogin() {
     return;
   }
   var eng  = (document.getElementById('loginEngineer').value || '').trim();
-  var role = document.getElementById('loginRole').value;
   if (!eng) { showLoginError('Vul je naam in om verder te gaan.'); return; }
   currentUser = eng;
-  currentMode = role;
+  currentMode = 'viewer'; // always start as viewer
   var btn = document.getElementById('loginBtn');
   btn.disabled = true;
   btn.textContent = 'Laden...';
@@ -1703,10 +1714,28 @@ function applyModeUI() {
 }
 
 function toggleMode() {
-  currentMode = currentMode === 'viewer' ? 'editor' : 'viewer';
+  if (currentMode === 'viewer') {
+    // Show confirmation before switching to editor
+    document.getElementById('editorConfirmOverlay').classList.add('open');
+  } else {
+    // Switch back to viewer immediately, no confirmation needed
+    currentMode = 'viewer';
+    applyModeUI();
+    showToast('◎ Viewermodus actief', 'info');
+    loadData();
+  }
+}
+
+function confirmEditorSwitch() {
+  document.getElementById('editorConfirmOverlay').classList.remove('open');
+  currentMode = 'editor';
   applyModeUI();
-  showToast(currentMode === 'editor' ? '✎ Bewerkermodus actief' : '◎ Viewermodus actief', 'info');
+  showToast('✎ Bewerkermodus actief', 'info');
   loadData();
+}
+
+function cancelEditorSwitch() {
+  document.getElementById('editorConfirmOverlay').classList.remove('open');
 }
 
 function doLogout() {
