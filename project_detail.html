@@ -285,13 +285,6 @@
 
 <!-- Detail controls: only search + status filters -->
 <div class="detail-controls" id="detailControls" style="display:none">
-  <div class="rol-filter-row">
-    <span class="rol-filter-lbl">Rol</span>
-    <button class="rolf-btn rb-eng"  id="drfEng"  onclick="toggleDetailRol('engineer')">      <span class="rolf-dot" style="background:#0071E3"></span>Engineer</button>
-    <button class="rolf-btn rb-pl"   id="drfPl"   onclick="toggleDetailRol('projectleider')"> <span class="rolf-dot" style="background:#1A7F3C"></span>Projectleider</button>
-    <button class="rolf-btn rb-uitv" id="drfUitv" onclick="toggleDetailRol('uitvoerder')">    <span class="rolf-dot" style="background:#7A4800"></span>Uitvoerder</button>
-    <button class="rolf-btn rb-wb"   id="drfWb"   onclick="toggleDetailRol('werkvoorbereider')"><span class="rolf-dot" style="background:#6F35CE"></span>Werkvoorbereider</button>
-  </div>
   <div class="detail-filter-row">
     <input class="detail-search" type="text" id="detailSearch" placeholder="&#128269; Zoek veldnaam..." oninput="applyDetailFilters()">
     <div class="filter-status-btns">
@@ -909,6 +902,15 @@ function renderPage() {
   html += '<div class="fase-nav-row"><span class="fase-nav-label">Sleufloze technieken</span>';
   html += '<button class="dtab" onclick="setDetailFase(\'Sleufloze technieken\',this)">Sleufloze technieken</button>';
   html += '</div></div>';
+
+  // ── Rol filter (inline, above sections) ──
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:.5rem .875rem;margin-bottom:.75rem;display:flex;align-items:center;gap:5px;flex-wrap:wrap">'
+    + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-right:3px">Rol</span>'
+    + '<button class="rolf-btn rb-eng"  id="drfEng"  onclick="toggleDetailRol(\'engineer\')"       ><span class="rolf-dot" style="background:#0071E3"></span>Engineer</button>'
+    + '<button class="rolf-btn rb-pl"   id="drfPl"   onclick="toggleDetailRol(\'projectleider\')"  ><span class="rolf-dot" style="background:#1A7F3C"></span>Projectleider</button>'
+    + '<button class="rolf-btn rb-uitv" id="drfUitv" onclick="toggleDetailRol(\'uitvoerder\')"      ><span class="rolf-dot" style="background:#7A4800"></span>Uitvoerder</button>'
+    + '<button class="rolf-btn rb-wb"   id="drfWb"   onclick="toggleDetailRol(\'werkvoorbereider\')"><span class="rolf-dot" style="background:#6F35CE"></span>Werkvoorbereider</button>'
+    + '</div>';
 
   // Phase sections — start with Analyse visible, rest hidden
   var phases = ['Analyse','VO-Fase','DO-Fase','Onderzoeksfase','UO-Fase','Natuurtoets','Archeologie','Bodem','NGE/OO','Geotechnisch','Vergunningen','Sleufloze technieken'];
