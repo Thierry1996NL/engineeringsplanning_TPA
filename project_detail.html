@@ -206,6 +206,19 @@
   }
 
 
+  /* ── ROL FILTER ── */
+  .rol-filter-row { display:flex; gap:4px; align-items:center; flex-wrap:wrap; padding-bottom:.375rem; border-bottom:1px solid var(--border); margin-bottom:.25rem; }
+  .rol-filter-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-right:2px; white-space:nowrap; }
+  .rolf-btn { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; font-size:10px; font-weight:600; border-radius:20px; cursor:pointer; border:1px solid var(--border-md); background:transparent; color:var(--text-2); font-family:'DM Sans',sans-serif; transition:all .12s; white-space:nowrap; }
+  .rolf-btn:hover { background:var(--surface2); }
+  .rolf-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .rolf-btn.active { color:#fff; border-color:transparent; }
+  .rolf-btn.active.rb-eng  { background:#0071E3; }
+  .rolf-btn.active.rb-pl   { background:#1A7F3C; }
+  .rolf-btn.active.rb-uitv { background:#7A4800; }
+  .rolf-btn.active.rb-wb   { background:#6F35CE; }
+  .field-rol-dot { width:6px; height:6px; border-radius:50%; display:inline-block; margin-right:5px; flex-shrink:0; vertical-align:middle; }
+
   .fase-section.all-hidden { display:none; }
   .field-row.df-hidden { display:none; }
 
@@ -272,6 +285,13 @@
 
 <!-- Detail controls: only search + status filters -->
 <div class="detail-controls" id="detailControls" style="display:none">
+  <div class="rol-filter-row">
+    <span class="rol-filter-lbl">Rol</span>
+    <button class="rolf-btn rb-eng"  id="drfEng"  onclick="toggleDetailRol('engineer')">      <span class="rolf-dot" style="background:#0071E3"></span>Engineer</button>
+    <button class="rolf-btn rb-pl"   id="drfPl"   onclick="toggleDetailRol('projectleider')"> <span class="rolf-dot" style="background:#1A7F3C"></span>Projectleider</button>
+    <button class="rolf-btn rb-uitv" id="drfUitv" onclick="toggleDetailRol('uitvoerder')">    <span class="rolf-dot" style="background:#7A4800"></span>Uitvoerder</button>
+    <button class="rolf-btn rb-wb"   id="drfWb"   onclick="toggleDetailRol('werkvoorbereider')"><span class="rolf-dot" style="background:#6F35CE"></span>Werkvoorbereider</button>
+  </div>
   <div class="detail-filter-row">
     <input class="detail-search" type="text" id="detailSearch" placeholder="&#128269; Zoek veldnaam..." oninput="applyDetailFilters()">
     <div class="filter-status-btns">
@@ -368,6 +388,40 @@ function goBack() {
 
 const SUPA_URL = 'https://yuyogdqobekvsvjgwllf.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1eW9nZHFvYmVrdnN2amd3bGxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTk5MDgsImV4cCI6MjA5MjA5NTkwOH0.Fyvn5qtlsIopNNHh7ilp27o4BX1nF1JPHChSYvt7S_c';
+
+var ROLE_COLOR_MAP = { engineer:'#0071E3', projectleider:'#1A7F3C', uitvoerder:'#7A4800', werkvoorbereider:'#6F35CE' };
+var ROLE_LABEL_MAP = { engineer:'Engineer', projectleider:'Projectleider', uitvoerder:'Uitvoerder', werkvoorbereider:'Werkvoorbereider' };
+
+// Default task-role mapping (will be overwritten by DB config)
+var TASK_ROLE_MAP = {
+  12:'engineer',13:'engineer',14:'engineer',15:'engineer',
+  16:'projectleider',17:'projectleider',18:'projectleider',19:'projectleider',
+  20:'projectleider',21:'projectleider',22:'projectleider',23:'engineer',
+  27:'engineer',28:'engineer',29:'projectleider',30:'projectleider',
+  31:'engineer',32:'projectleider',33:'projectleider',34:'engineer',
+  38:'engineer',39:'engineer',40:'werkvoorbereider',41:'werkvoorbereider',
+  42:'werkvoorbereider',43:'werkvoorbereider',44:'werkvoorbereider',
+  45:'uitvoerder',46:'uitvoerder',47:'engineer',48:'uitvoerder',
+  49:'werkvoorbereider',50:'engineer',51:'werkvoorbereider',
+  52:'projectleider',53:'projectleider',54:'uitvoerder',55:'uitvoerder',
+  56:'projectleider',57:'projectleider',
+  61:'engineer',62:'engineer',63:'engineer',64:'engineer',
+  65:'engineer',66:'engineer',67:'engineer',68:'projectleider',
+  69:'uitvoerder',70:'uitvoerder',71:'werkvoorbereider',72:'projectleider',
+  73:'werkvoorbereider',74:'werkvoorbereider',75:'uitvoerder',76:'uitvoerder',
+  77:'werkvoorbereider',78:'werkvoorbereider',79:'werkvoorbereider',80:'uitvoerder',
+  81:'werkvoorbereider',82:'werkvoorbereider',83:'werkvoorbereider',84:'uitvoerder',
+  85:'engineer',86:'engineer',87:'engineer',88:'engineer',89:'engineer',
+  90:'projectleider',91:'engineer',92:'engineer',93:'werkvoorbereider',94:'engineer',
+  98:'werkvoorbereider',99:'werkvoorbereider',100:'engineer',101:'engineer',
+  102:'engineer',103:'engineer',104:'engineer',105:'projectleider',
+  109:'engineer',110:'engineer',111:'werkvoorbereider',112:'werkvoorbereider',
+  113:'engineer',114:'werkvoorbereider',115:'werkvoorbereider',116:'werkvoorbereider',
+  117:'engineer',118:'werkvoorbereider',119:'werkvoorbereider',120:'werkvoorbereider',
+  121:'engineer',122:'engineer'
+};
+
+var activeDetailRol = ''; // '' = all roles visible
 
 function esc(v) {
   return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -583,8 +637,27 @@ window.addEventListener('load', async function() {
   currentUser = params.user  || 'Onbekend';
   currentMode = params.mode  || 'viewer';
 
+  // Load task-role config from Supabase
+  try {
+    var cfg = await supa.get('/rest/v1/werkpakketten?row_idx=eq.9999&select=cel_data');
+    if (cfg && cfg.length && cfg[0].cel_data && cfg[0].cel_data['__task_roles__']) {
+      var tr = JSON.parse(cfg[0].cel_data['__task_roles__']);
+      Object.keys(tr).forEach(function(k){ TASK_ROLE_MAP[parseInt(k)] = tr[k]; });
+    }
+  } catch(e) {}
+
   await loadProject();
 });
+
+function toggleDetailRol(roleKey) {
+  activeDetailRol = (activeDetailRol === roleKey) ? '' : roleKey;
+  var map = { engineer:'drfEng', projectleider:'drfPl', uitvoerder:'drfUitv', werkvoorbereider:'drfWb' };
+  Object.keys(map).forEach(function(k) {
+    var btn = document.getElementById(map[k]);
+    if (btn) btn.classList.toggle('active', activeDetailRol === k);
+  });
+  applyDetailFilters();
+}
 
 async function loadProject() {
   try {
@@ -662,6 +735,7 @@ function applyDetailFilters() {
     var label  = (row.getAttribute('data-label')  || '').toLowerCase();
     var val    = (row.getAttribute('data-val')    || '');
     var status = (row.getAttribute('data-status') || '');
+    var colIdx = parseInt(row.getAttribute('data-col') || '-1');
     var secEl  = row.closest('.fase-section');
     var secFase = secEl ? secEl.getAttribute('data-fase') : '';
 
@@ -673,11 +747,31 @@ function applyDetailFilters() {
     if (show && hasStatusFilter && status && !activeDetailStatus[status]) show = false;
     if (show && hideEmpty && !val) show = false;
 
+    // Role filter — only for task cols (colIdx >= 12)
+    if (show && activeDetailRol && colIdx >= 12) {
+      var assigned = TASK_ROLE_MAP[colIdx] || 'engineer';
+      if (assigned !== activeDetailRol) show = false;
+    }
+
     row.classList.toggle('df-hidden', !show);
     if (show) totalVisible++;
+
+    // Update role dot in label
+    var dotEl = row.querySelector('.field-rol-dot');
+    if (dotEl && colIdx >= 12) {
+      var rKey = TASK_ROLE_MAP[colIdx] || 'engineer';
+      dotEl.style.background = ROLE_COLOR_MAP[rKey] || '#999';
+      dotEl.title = ROLE_LABEL_MAP[rKey] || rKey;
+    }
   });
 
-  // Update count
+  // Hide empty sections
+  document.querySelectorAll('.fase-section').forEach(function(sec) {
+    if (currentDetailFase !== 'alle' && sec.getAttribute('data-fase') !== currentDetailFase) return;
+    var hasVisible = sec.querySelectorAll('.field-row:not(.df-hidden)').length > 0;
+    sec.classList.toggle('all-hidden', !hasVisible);
+  });
+
   var countEl = document.getElementById('detailFilterCount');
   if (countEl) countEl.textContent = totalVisible + ' velden';
 }
@@ -884,8 +978,14 @@ function renderPage() {
 
       var statusAttr = bc ? ' data-status="'+esc(raw)+'"' : '';
       var rawVal = raw || '';
-      html += '<div class="field-row'+(isFullW?' full-width':'')+editCls+'" data-label="'+esc(col.n.toLowerCase())+'" data-val="'+esc(rawVal)+'"'+statusAttr+clickAttr+'>';
-      html += '<span class="field-label" title="'+esc(col.n)+'">'+esc(col.n)+'</span>';
+      html += '<div class="field-row'+(isFullW?' full-width':'')+editCls+'" data-label="'+esc(col.n.toLowerCase())+'" data-val="'+esc(rawVal)+'"'+statusAttr+' data-col="'+col.i+'"'+clickAttr+'>';
+      // Role dot for task cols
+      var rolDot = '';
+      if (col.i >= 12 && TASK_ROLE_MAP && ROLE_COLOR_MAP) {
+        var rk = TASK_ROLE_MAP[col.i] || 'engineer';
+        rolDot = '<span class="field-rol-dot" style="background:'+(ROLE_COLOR_MAP[rk]||'#999')+'" title="'+(ROLE_LABEL_MAP[rk]||rk)+'"></span>';
+      }
+      html += '<span class="field-label" title="'+esc(col.n)+'">'+rolDot+esc(col.n)+'</span>';
       html += '<span class="field-val">'+valHtml+'</span>';
       html += '</div>';
     });
