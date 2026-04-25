@@ -198,8 +198,9 @@
     background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
     padding:.5rem .875rem; margin-bottom:.75rem; display:flex; flex-direction:column; gap:.5rem;
   }
-  .detail-fase-row { display:flex; gap:3px; flex-wrap:wrap; align-items:center; }
-  .detail-fase-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-right:4px; white-space:nowrap; }
+  .detail-fase-row { display:flex; gap:3px; flex-wrap:wrap; align-items:center; padding:3px 0; border-bottom:1px solid var(--border); }
+  .detail-fase-row:last-child { border-bottom:none; }
+  .detail-fase-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); margin-right:4px; white-space:nowrap; width:150px; flex-shrink:0; }
   .dtab {
     padding:3px 11px; font-size:10px; font-weight:500; border:1px solid var(--border-md);
     border-radius:20px; background:transparent; color:var(--text-2); cursor:pointer;
@@ -254,19 +255,37 @@
 
 <!-- Detail controls -->
 <div class="detail-controls" id="detailControls" style="display:none">
-  <div class="detail-fase-row">
-    <span class="detail-fase-label">Fase</span>
+  <!-- Row 0: Alle fases -->
+  <div class="detail-fase-row" style="border-bottom:1px solid var(--border);padding-bottom:5px">
     <button class="dtab active" onclick="setDetailFase('alle',this)">Alle fases</button>
+  </div>
+  <!-- Row 1: Fasering -->
+  <div class="detail-fase-row">
+    <span class="detail-fase-label">Fasering</span>
     <button class="dtab" onclick="setDetailFase('Analyse',this)">Analyse</button>
     <button class="dtab" onclick="setDetailFase('VO-Fase',this)">VO-Fase</button>
     <button class="dtab" onclick="setDetailFase('DO-Fase',this)">DO-Fase</button>
     <button class="dtab" onclick="setDetailFase('Onderzoeksfase',this)">Onderzoeksfase</button>
     <button class="dtab" onclick="setDetailFase('UO-Fase',this)">UO-Fase</button>
+  </div>
+  <!-- Row 2: Omgevingsmanagement -->
+  <div class="detail-fase-row">
+    <span class="detail-fase-label">Omgevingsmanagement</span>
     <button class="dtab" onclick="setDetailFase('Natuurtoets',this)">Natuurtoets</button>
     <button class="dtab" onclick="setDetailFase('Archeologie',this)">Archeologie</button>
     <button class="dtab" onclick="setDetailFase('Bodem',this)">Bodem</button>
     <button class="dtab" onclick="setDetailFase('NGE/OO',this)">NGE/OO</button>
     <button class="dtab" onclick="setDetailFase('Geotechnisch',this)">Geotechnisch</button>
+  </div>
+  <!-- Row 3: Vergunningen -->
+  <div class="detail-fase-row">
+    <span class="detail-fase-label">Vergunningen</span>
+    <button class="dtab" onclick="setDetailFase('Vergunningen',this)">Vergunningen</button>
+  </div>
+  <!-- Row 4: Sleufloze technieken -->
+  <div class="detail-fase-row">
+    <span class="detail-fase-label">Sleufloze technieken</span>
+    <button class="dtab" onclick="setDetailFase('Sleufloze technieken',this)">Sleufloze technieken</button>
   </div>
   <div class="detail-filter-row">
     <input class="detail-search" type="text" id="detailSearch" placeholder="&#128269; Zoek veldnaam..." oninput="applyDetailFilters()">
@@ -496,7 +515,15 @@ const COLS = [
   {i:220,f:"Geotechnisch",n:"Thermische weerstand: opmerkingen"},
   {i:171,f:"Geotechnisch",n:"Grondwateronderzoek uitgezet"},{i:172,f:"Geotechnisch",n:"Grondwater: datum"},
   {i:173,f:"Geotechnisch",n:"Grondwater: gereed"},
-  {i:221,f:"Geotechnisch",n:"Grondwater: opmerkingen"}
+  {i:221,f:"Geotechnisch",n:"Grondwater: opmerkingen"},
+  {i:300,f:"Vergunningen",n:"Concept n.t.b. (1)"},
+  {i:301,f:"Vergunningen",n:"Concept n.t.b. (2)"},
+  {i:302,f:"Vergunningen",n:"Concept n.t.b. (3)"},
+  {i:400,f:"Vergunningen",n:"[Vergunningen] Opmerkingen"},
+  {i:310,f:"Sleufloze technieken",n:"Concept n.t.b. (1)"},
+  {i:311,f:"Sleufloze technieken",n:"Concept n.t.b. (2)"},
+  {i:312,f:"Sleufloze technieken",n:"Concept n.t.b. (3)"},
+  {i:401,f:"Sleufloze technieken",n:"[Sleufloze technieken] Opmerkingen"}
 ];
 
 const FASE_STYLE = {
@@ -510,6 +537,8 @@ const FASE_STYLE = {
   'Bodem':        {color:'var(--fase-bodem)',     bg:'var(--fase-bodem-bg)',     cls:'fl-bodem'},
   'NGE/OO':       {color:'var(--fase-nge)',       bg:'var(--fase-nge-bg)',       cls:'fl-nge'},
   'Geotechnisch': {color:'var(--fase-geo)',       bg:'var(--fase-geo-bg)',       cls:'fl-geo'},
+  'Vergunningen': {color:'#0077B5',               bg:'#EAF4FF',                  cls:'fl-verg'},
+  'Sleufloze technieken': {color:'#C93400',       bg:'#FFF3ED',                  cls:'fl-sleuf'},
 };
 
 
@@ -517,7 +546,7 @@ var DATE_WEEK_PAIRS   = [[24,25],[35,36],[58,59],[95,96],[106,107],[123,124]];
 var PLANDATUM_COLS    = [127,130,133,136,139,142,145,148,151,154,157,160,163,166,169,172];
 var DATE_COL_INDICES  = DATE_WEEK_PAIRS.map(p=>p[0]).concat(PLANDATUM_COLS);
 var JANEE_COL_INDICES = [26,37,60,97,108,125,128,131,134,137,140,143,146,149,152,155,158,161,164,167,170,173];
-var VIRT_COLS         = [200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221];
+var VIRT_COLS         = [200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,400,401];
 var OPM_VIRT_MAP      = {200:'Analyse',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-Fase',205:'UO-Fase',206:'Natuurtoets',207:'Natuurtoets',208:'Natuurtoets',209:'Natuurtoets',210:'Archeologie',211:'Archeologie',212:'Archeologie',213:'Bodem',214:'Bodem',215:'Bodem',216:'NGE/OO',217:'NGE/OO',218:'NGE/OO',219:'Geotechnisch',220:'Geotechnisch',221:'Geotechnisch'};
 var OPM_SUB_LABELS    = {200:'Analyse-fase',201:'VO-Fase',202:'DO-Fase',203:'Onderzoeksfase',204:'DO-vergunningen',205:'UO-Fase',206:'Ecologische quickscan',207:'Ecologisch vervolgonderzoek',208:'Natura 2000 / AERIUS',209:'Natuurtoets / voortoets',210:'Bureauonderzoek',211:'Inventariserend veldonderzoek',212:'Proefsleuvenonderzoek',213:'Historisch bodemonderzoek',214:'Verkennend bodemonderzoek',215:'Nader onderzoek / sanering',216:'Explosieven quickscan',217:'NGE detectieonderzoek',218:'NGE begeleiding graafwerk',219:'Geotechnisch onderzoek',220:'Thermische grondweerstand',221:'Grondwateronderzoek'};
 
@@ -577,7 +606,7 @@ async function loadProject() {
     var data = await supa.get('/rest/v1/werkpakketten?row_idx=eq.'+ROW_IDX+'&select=*');
     if (!data || !data.length) throw new Error('Project niet gevonden');
     DB_ROW = data[0];
-    ROW_DATA = new Array(174).fill('');
+    ROW_DATA = new Array(420).fill('');
     var cd = DB_ROW.cel_data || {};
     Object.keys(cd).forEach(function(k){ ROW_DATA[parseInt(k)] = cd[k]||''; });
 
