@@ -1799,17 +1799,19 @@ function switchBormTab(tab) {
   document.getElementById('tabKaart').classList.toggle('active',    tab === 'kaart');
   if (tab === 'kaart') {
     updateCoordDisplay();
-    // Wacht tot panel zichtbaar is, dan resize + zoom
-    requestAnimationFrame(function() {
-      setTimeout(function(){
-        if (borMap) {
-          borMap.invalidateSize(true);
-          setTimeout(fitMapToContent, 100);
-        } else {
-          initBorMap();
-        }
-      }, 50);
-    });
+    setTimeout(function() {
+      if (!borMap) {
+        initBorMap();
+      } else {
+        // Kaart bestaat al — update markers en zoom opnieuw
+        borMap.invalidateSize(true);
+        clearDxfMarkers();
+        if (borPolyline) { borMap.removeLayer(borPolyline); borPolyline = null; }
+        if (borMarker)   { borMap.removeLayer(borMarker);   borMarker   = null; }
+        refreshMapMarkers();
+        setTimeout(fitMapToContent, 250);
+      }
+    }, 150);
   }
 }
 
@@ -1895,17 +1897,8 @@ function markerHtmlDot(color) {
 function initBorMap() {
   var el = document.getElementById('borMap');
   if (!el) return;
+  if (borMap) return; // al aangemaakt
 
-  if (borMap) {
-    // Al aangemaakt — invalidate size en zoom opnieuw
-    requestAnimationFrame(function() {
-      borMap.invalidateSize(true);
-      setTimeout(fitMapToContent, 100);
-    });
-    return;
-  }
-
-  // Eerste keer: maak de kaart aan
   borMap = L.map('borMap', { center:[52.3, 5.3], zoom:8 });
   MAP_LAYERS[currentLayer].addTo(borMap);
 
@@ -1917,14 +1910,14 @@ function initBorMap() {
     placeStartMarker(e.latlng.lat, e.latlng.lng);
   });
 
-  // Wacht tot Leaflet klaar is met renderen, dan markers + zoom
-  borMap.whenReady(function() {
+  // Stap 1: forceer juiste containergrootte
+  // Stap 2: zet markers
+  // Stap 3: zoom naar inhoud
+  setTimeout(function() {
+    borMap.invalidateSize(true);
     refreshMapMarkers();
-    requestAnimationFrame(function() {
-      borMap.invalidateSize(true);
-      setTimeout(fitMapToContent, 150);
-    });
-  });
+    setTimeout(fitMapToContent, 250);
+  }, 200);
 }
 
 // ── Zoom altijd naar de boorlijn of het startpunt ──
@@ -2318,17 +2311,6 @@ function showDxfStatus(msg, type) {
   el.textContent=msg; el.className='dxf-status '+type; el.style.display='';
 }
 
-// Reset kaart bij sluiten modal
-var _origCloseBorModal = closeBorModal;
-closeBorModal = function() {
-  if (borMap) {
-    borMap.remove();
-    borMap = null; borMarker = null; borPolyline = null;
-    borDxfMarkers = []; borLabelMarker = null;
-  }
-  currentDxf = null;
-  _origCloseBorModal();
-};
 // ══════════════════════════════════════════
 // EXPORT: DXF
 // ══════════════════════════════════════════
@@ -2555,9 +2537,16 @@ function openBorModal(editId) {
 }
 
 function closeBorModal() {
+  // Ruim kaart op
+  if (borMap) {
+    borMap.remove();
+    borMap = null; borMarker = null; borPolyline = null;
+    borDxfMarkers = []; borLabelMarker = null;
+  }
+  currentDxf = null;
   document.getElementById('bormOverlay').classList.remove('open');
   borSelId = null;
-  renderBoringen(); // ververs kaarten
+  renderBoringen();
 }
 
 // ── Lijst ──
