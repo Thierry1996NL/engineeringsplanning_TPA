@@ -1799,7 +1799,12 @@ function switchBormTab(tab) {
   document.getElementById('tabKaart').classList.toggle('active',    tab === 'kaart');
   if (tab === 'kaart') {
     updateCoordDisplay();
-    setTimeout(function(){ if(borMap) borMap.invalidateSize(); }, 80);
+    setTimeout(function(){
+      if (borMap) {
+        borMap.invalidateSize();
+        fitMapToContent();
+      }
+    }, 80);
   }
 }
 
@@ -1885,18 +1890,20 @@ function markerHtmlDot(color) {
 function initBorMap() {
   var el = document.getElementById('borMap');
   if (!el) return;
-  if (borMap) { borMap.invalidateSize(); refreshMapMarkers(); return; }
 
-  var center = [52.3, 5.3], zoom = 8;
-  var rdX = parseFloat(document.getElementById('bfRdX').value);
-  var rdY = parseFloat(document.getElementById('bfRdY').value);
-  if (rdX && rdY) { var wgs = rd2wgs(rdX, rdY); center = wgs; zoom = 15; }
+  if (borMap) {
+    // Kaart bestaat al — forceer resize + zoom naar inhoud
+    borMap.invalidateSize();
+    fitMapToContent();
+    return;
+  }
 
-  borMap = L.map('borMap', { center:center, zoom:zoom });
+  // Eerste keer: start op Nederland, wordt direct overschreven door fitMapToContent
+  borMap = L.map('borMap', { center:[52.3, 5.3], zoom:8 });
   MAP_LAYERS[currentLayer].addTo(borMap);
 
   borMap.on('click', function(e) {
-    if (currentDxf) return; // alleen plaatsen als geen DXF geladen
+    if (currentDxf) return;
     var rd = wgs2rd(e.latlng.lat, e.latlng.lng);
     document.getElementById('bfRdX').value = Math.round(rd[0]);
     document.getElementById('bfRdY').value = Math.round(rd[1]);
@@ -1904,6 +1911,27 @@ function initBorMap() {
   });
 
   refreshMapMarkers();
+  // Kleine vertraging zodat tiles geladen zijn voor de zoom
+  setTimeout(fitMapToContent, 200);
+}
+
+// ── Zoom altijd naar de boorlijn of het startpunt ──
+function fitMapToContent() {
+  if (!borMap) return;
+  if (currentDxf && currentDxf.length >= 2) {
+    // Zoom naar de volledige boorlijn met padding
+    var wgsPoints = currentDxf.map(function(p){ return rd2wgs(p[0], p[1]); });
+    var bounds = wgsPoints.map(function(p){ return [p[0], p[1]]; });
+    borMap.fitBounds(bounds, { padding:[32, 32], maxZoom:17 });
+  } else {
+    // Zoom naar startpunt
+    var rdX = parseFloat(document.getElementById('bfRdX').value);
+    var rdY = parseFloat(document.getElementById('bfRdY').value);
+    if (rdX && rdY && rdX > 0 && rdY > 0) {
+      var wgs = rd2wgs(rdX, rdY);
+      borMap.setView(wgs, 16);
+    }
+  }
 }
 
 function wgs2rd(lat, lng) {
@@ -2060,11 +2088,9 @@ function parseDxf(text, filename) {
       document.getElementById('bfRdY').value = Math.round(currentDxf[0][1]);
     }
 
-    // Toon op kaart
+    // Toon op kaart en zoom automatisch naar lijn
     refreshDxfLine();
-    // Zoom naar lijn
-    var wgsPoints = currentDxf.map(function(p){ return rd2wgs(p[0],p[1]); });
-    borMap.fitBounds(wgsPoints.map(function(p){ return [p[0],p[1]]; }), {padding:[20,20]});
+    fitMapToContent();
 
     var totalLen = 0;
     for (var j=1;j<currentDxf.length;j++){
