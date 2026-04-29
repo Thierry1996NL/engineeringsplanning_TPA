@@ -1787,11 +1787,13 @@ function rd2wgs(x, y) {
 // ══════════════════════════════════════════
 // LEAFLET KAART
 // ══════════════════════════════════════════
-var borMap       = null;
-var borMarker    = null;
-var borPolyline  = null;
-var currentLayer = 'pdok';
-var currentDxf   = null;  // parsed polyline [[x,y],...] in RD
+var borMap         = null;
+var borMarker      = null;   // startpunt marker (klikbaar/draggable)
+var borPolyline    = null;   // DXF lijn
+var borDxfMarkers  = [];     // punt 1 + punt 2 markers van DXF
+var borLabelMarker = null;   // boringcode label in het midden
+var currentLayer   = 'pdok';
+var currentDxf     = null;
 
 var MAP_LAYERS = {
   pdok: L.tileLayer(
@@ -1808,44 +1810,61 @@ var MAP_LAYERS = {
   )
 };
 
+// ── Marker HTML helpers ──
+function markerHtmlPin(label, color, textColor) {
+  // Genummerd pin: cirkel met getal erin
+  textColor = textColor || '#fff';
+  return '<div style="'
+    + 'width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);'
+    + 'background:'+color+';border:2px solid #fff;'
+    + 'box-shadow:0 2px 6px rgba(0,0,0,.45);'
+    + 'display:flex;align-items:center;justify-content:center;">'
+    + '<span style="transform:rotate(45deg);font-size:11px;font-weight:700;color:'+textColor+';font-family:DM Mono,monospace;line-height:1">'
+    + label+'</span></div>';
+}
+
+function markerHtmlLabel(text, color) {
+  // Boringcode label (pill)
+  return '<div style="'
+    + 'background:'+color+';color:#fff;font-family:DM Sans,sans-serif;'
+    + 'font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;'
+    + 'white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35);'
+    + 'border:1.5px solid rgba(255,255,255,.5);letter-spacing:.03em;">'
+    + esc(text)+'</div>';
+}
+
+function markerHtmlDot(color) {
+  // Kleine startpunt bol (geen DXF)
+  return '<div style="width:16px;height:16px;border-radius:50%;'
+    + 'background:'+color+';border:2.5px solid #fff;'
+    + 'box-shadow:0 1px 5px rgba(0,0,0,.4)"></div>';
+}
+
 function initBorMap() {
   var el = document.getElementById('borMap');
   if (!el) return;
+  if (borMap) { borMap.invalidateSize(); refreshMapMarkers(); return; }
 
-  // Als kaart al bestaat: vernieuw alleen markers
-  if (borMap) {
-    borMap.invalidateSize();
-    refreshMapMarkers();
-    return;
-  }
-
-  // Startlocatie: Nederland centrum of RD coördinaat indien ingevuld
   var center = [52.3, 5.3], zoom = 8;
   var rdX = parseFloat(document.getElementById('bfRdX').value);
   var rdY = parseFloat(document.getElementById('bfRdY').value);
-  if (rdX && rdY) {
-    var wgs = rd2wgs(rdX, rdY);
-    center = wgs; zoom = 15;
-  }
+  if (rdX && rdY) { var wgs = rd2wgs(rdX, rdY); center = wgs; zoom = 15; }
 
-  borMap = L.map('borMap', { center: center, zoom: zoom });
+  borMap = L.map('borMap', { center:center, zoom:zoom });
   MAP_LAYERS[currentLayer].addTo(borMap);
 
-  // Klik op kaart → marker plaatsen + RD invullen
   borMap.on('click', function(e) {
-    var lat = e.latlng.lat, lng = e.latlng.lng;
-    // Simpele WGS84 → RD benadering (inverse)
-    var rdCoord = wgs2rd(lat, lng);
-    document.getElementById('bfRdX').value = Math.round(rdCoord[0]);
-    document.getElementById('bfRdY').value = Math.round(rdCoord[1]);
-    placeMarker(lat, lng);
+    if (currentDxf) return; // alleen plaatsen als geen DXF geladen
+    var rd = wgs2rd(e.latlng.lat, e.latlng.lng);
+    document.getElementById('bfRdX').value = Math.round(rd[0]);
+    document.getElementById('bfRdY').value = Math.round(rd[1]);
+    placeStartMarker(e.latlng.lat, e.latlng.lng);
   });
 
   refreshMapMarkers();
 }
 
 function wgs2rd(lat, lng) {
-  // Inverse RD benadering (voldoende nauwkeurig voor plaatsing)
   var phi0=52.15517440, lam0=5.38720621;
   var dphi=0.36*(lat-phi0), dlam=0.36*(lng-lam0);
   var x = 155000
@@ -1857,33 +1876,49 @@ function wgs2rd(lat, lng) {
   return [x, y];
 }
 
-function placeMarker(lat, lng) {
-  if (borMarker) borMap.removeLayer(borMarker);
-  var icon = L.divIcon({
-    className:'',
-    html:'<div style="width:14px;height:14px;background:#0057FF;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
-    iconSize:[14,14], iconAnchor:[7,7]
-  });
-  borMarker = L.marker([lat,lng], {icon:icon, draggable:true}).addTo(borMap);
-  borMarker.on('dragend', function(e){
-    var p=e.target.getLatLng();
-    var rd=wgs2rd(p.lat,p.lng);
-    document.getElementById('bfRdX').value=Math.round(rd[0]);
-    document.getElementById('bfRdY').value=Math.round(rd[1]);
+function getBoorCode() {
+  return (document.getElementById('bfNr').value || '').trim() || '?';
+}
+
+function placeStartMarker(lat, lng) {
+  // Als DXF aanwezig: geen losse startmarker (punt 1 doet dat al)
+  if (currentDxf) return;
+  if (borMarker) { borMap.removeLayer(borMarker); borMarker = null; }
+  var html = markerHtmlDot('#0057FF');
+  var icon = L.divIcon({ className:'', html:html, iconSize:[16,16], iconAnchor:[8,8] });
+  borMarker = L.marker([lat,lng], { icon:icon, draggable:true }).addTo(borMap);
+  borMarker.bindTooltip('Startpunt (versleepbaar)<br>RD: '+
+    Math.round(wgs2rd(lat,lng)[0])+', '+Math.round(wgs2rd(lat,lng)[1]),
+    {direction:'top', offset:[0,-10]});
+  borMarker.on('dragend', function(e) {
+    var p = e.target.getLatLng();
+    var rd = wgs2rd(p.lat, p.lng);
+    document.getElementById('bfRdX').value = Math.round(rd[0]);
+    document.getElementById('bfRdY').value = Math.round(rd[1]);
+    borMarker.setTooltipContent('Startpunt (versleepbaar)<br>RD: '+
+      Math.round(rd[0])+', '+Math.round(rd[1]));
   });
 }
 
+function clearDxfMarkers() {
+  borDxfMarkers.forEach(function(m){ borMap.removeLayer(m); });
+  borDxfMarkers = [];
+  if (borLabelMarker) { borMap.removeLayer(borLabelMarker); borLabelMarker = null; }
+  if (borMarker)      { borMap.removeLayer(borMarker);      borMarker = null; }
+}
+
 function refreshMapMarkers() {
-  // Marker voor startpunt
-  var rdX = parseFloat(document.getElementById('bfRdX').value);
-  var rdY = parseFloat(document.getElementById('bfRdY').value);
-  if (rdX && rdY && rdX > 0 && rdY > 0) {
-    var wgs = rd2wgs(rdX, rdY);
-    placeMarker(wgs[0], wgs[1]);
-    borMap.setView(wgs, Math.max(borMap.getZoom(), 14));
+  if (currentDxf && currentDxf.length) {
+    refreshDxfLine();
+  } else {
+    var rdX = parseFloat(document.getElementById('bfRdX').value);
+    var rdY = parseFloat(document.getElementById('bfRdY').value);
+    if (rdX && rdY && rdX > 0 && rdY > 0) {
+      var wgs = rd2wgs(rdX, rdY);
+      placeStartMarker(wgs[0], wgs[1]);
+      borMap.setView(wgs, Math.max(borMap.getZoom(), 14));
+    }
   }
-  // DXF lijn
-  refreshDxfLine();
 }
 
 function onRdCoordInput() {
@@ -1892,7 +1927,7 @@ function onRdCoordInput() {
   if (!borMap || !rdX || !rdY) return;
   if (rdX < 0 || rdX > 280000 || rdY < 300000 || rdY > 625000) return;
   var wgs = rd2wgs(rdX, rdY);
-  placeMarker(wgs[0], wgs[1]);
+  placeStartMarker(wgs[0], wgs[1]);
   borMap.setView(wgs, 15);
 }
 
@@ -2058,28 +2093,89 @@ function parseLine(lines, start) {
 
 function refreshDxfLine() {
   if (!borMap) return;
-  if (borPolyline) { borMap.removeLayer(borPolyline); borPolyline=null; }
+
+  // Verwijder oude lagen
+  if (borPolyline) { borMap.removeLayer(borPolyline); borPolyline = null; }
+  clearDxfMarkers();
+
   if (!currentDxf || !currentDxf.length) return;
-  var wgsPoints = currentDxf.map(function(p){ return rd2wgs(p[0],p[1]); });
+
+  var wgsPoints = currentDxf.map(function(p){ return rd2wgs(p[0], p[1]); });
+  var code = getBoorCode();
+
+  // ── Lijn (oranje, gestippeld) ──
   borPolyline = L.polyline(wgsPoints, {
-    color:'#FF4500', weight:3, opacity:.9,
-    dashArray: null
+    color:'#FF4500', weight:4, opacity:.95,
+    dashArray: '6 4'
   }).addTo(borMap);
-  // Start & eindpunt markering
-  var svgEnd = '<div style="width:10px;height:10px;background:#FF4500;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>';
-  [wgsPoints[0], wgsPoints[wgsPoints.length-1]].forEach(function(p){
-    L.marker(p, {icon:L.divIcon({className:'',html:svgEnd,iconSize:[10,10],iconAnchor:[5,5]})}).addTo(borMap);
+
+  // ── Punt 1: startpunt (blauw pin, draggable) ──
+  var p1 = wgsPoints[0];
+  var icon1 = L.divIcon({
+    className:'',
+    html: markerHtmlPin('1', '#0057FF'),
+    iconSize:[26,34], iconAnchor:[13,32]
   });
+  var m1 = L.marker(p1, { icon:icon1, draggable:true, zIndexOffset:1000 }).addTo(borMap);
+  var rd1 = currentDxf[0];
+  m1.bindTooltip(
+    '<b>Punt 1 — Start</b><br>'+esc(code)+'<br>RD: '+Math.round(rd1[0])+', '+Math.round(rd1[1]),
+    { direction:'top', offset:[0,-34], permanent:false }
+  );
+  m1.on('dragend', function(e) {
+    var p = e.target.getLatLng();
+    var rd = wgs2rd(p.lat, p.lng);
+    currentDxf[0] = [rd[0], rd[1]];
+    document.getElementById('bfRdX').value = Math.round(rd[0]);
+    document.getElementById('bfRdY').value = Math.round(rd[1]);
+    m1.setTooltipContent('<b>Punt 1 — Start</b><br>'+esc(getBoorCode())+'<br>RD: '+Math.round(rd[0])+', '+Math.round(rd[1]));
+    refreshDxfLine();
+  });
+  borDxfMarkers.push(m1);
+
+  // ── Punt 2: eindpunt (rood pin) ──
+  var p2   = wgsPoints[wgsPoints.length - 1];
+  var rd2c = currentDxf[currentDxf.length - 1];
+  var icon2 = L.divIcon({
+    className:'',
+    html: markerHtmlPin('2', '#D70015'),
+    iconSize:[26,34], iconAnchor:[13,32]
+  });
+  var m2 = L.marker(p2, { icon:icon2, zIndexOffset:999 }).addTo(borMap);
+  m2.bindTooltip(
+    '<b>Punt 2 — Eind</b><br>'+esc(code)+'<br>RD: '+Math.round(rd2c[0])+', '+Math.round(rd2c[1]),
+    { direction:'top', offset:[0,-34], permanent:false }
+  );
+  borDxfMarkers.push(m2);
+
+  // ── Boringcode label: in het midden van de lijn ──
+  var midIdx  = Math.floor(wgsPoints.length / 2);
+  var midPt   = wgsPoints[midIdx];
+  var lIcon   = L.divIcon({
+    className:'',
+    html: markerHtmlLabel(code, '#1D1D2E'),
+    iconSize:[null, null], iconAnchor:[-4, -6]
+  });
+  borLabelMarker = L.marker(midPt, { icon:lIcon, interactive:false, zIndexOffset:2000 }).addTo(borMap);
+  borDxfMarkers.push(borLabelMarker);
+
+  // ── RD startpunt invullen als leeg ──
+  var rdX = parseFloat(document.getElementById('bfRdX').value);
+  if (!rdX) {
+    document.getElementById('bfRdX').value = Math.round(currentDxf[0][0]);
+    document.getElementById('bfRdY').value = Math.round(currentDxf[0][1]);
+  }
 }
 
 function clearDxf() {
   currentDxf = null;
-  if (borPolyline) { borMap.removeLayer(borPolyline); borPolyline=null; }
+  if (borPolyline) { borMap.removeLayer(borPolyline); borPolyline = null; }
+  clearDxfMarkers();
   document.getElementById('dxfDropArea').classList.remove('has-file');
   document.getElementById('dxfDropLabel').textContent = 'Klik of sleep een DXF bestand hierheen';
-  document.getElementById('btnClearDxf').style.display='none';
-  document.getElementById('dxfStatus').style.display='none';
-  document.getElementById('dxfFileInput').value='';
+  document.getElementById('btnClearDxf').style.display = 'none';
+  document.getElementById('dxfStatus').style.display   = 'none';
+  document.getElementById('dxfFileInput').value = '';
 }
 
 function showDxfStatus(msg, type) {
@@ -2090,8 +2186,12 @@ function showDxfStatus(msg, type) {
 // Reset kaart bij sluiten modal
 var _origCloseBorModal = closeBorModal;
 closeBorModal = function() {
-  if (borMap) { borMap.remove(); borMap=null; borMarker=null; borPolyline=null; }
-  currentDxf=null;
+  if (borMap) {
+    borMap.remove();
+    borMap = null; borMarker = null; borPolyline = null;
+    borDxfMarkers = []; borLabelMarker = null;
+  }
+  currentDxf = null;
   _origCloseBorModal();
 };
 var BOR_MAX  = 20;
