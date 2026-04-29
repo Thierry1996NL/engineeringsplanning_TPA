@@ -1799,12 +1799,17 @@ function switchBormTab(tab) {
   document.getElementById('tabKaart').classList.toggle('active',    tab === 'kaart');
   if (tab === 'kaart') {
     updateCoordDisplay();
-    setTimeout(function(){
-      if (borMap) {
-        borMap.invalidateSize();
-        fitMapToContent();
-      }
-    }, 80);
+    // Wacht tot panel zichtbaar is, dan resize + zoom
+    requestAnimationFrame(function() {
+      setTimeout(function(){
+        if (borMap) {
+          borMap.invalidateSize(true);
+          setTimeout(fitMapToContent, 100);
+        } else {
+          initBorMap();
+        }
+      }, 50);
+    });
   }
 }
 
@@ -1892,13 +1897,15 @@ function initBorMap() {
   if (!el) return;
 
   if (borMap) {
-    // Kaart bestaat al — forceer resize + zoom naar inhoud
-    borMap.invalidateSize();
-    fitMapToContent();
+    // Al aangemaakt — invalidate size en zoom opnieuw
+    requestAnimationFrame(function() {
+      borMap.invalidateSize(true);
+      setTimeout(fitMapToContent, 100);
+    });
     return;
   }
 
-  // Eerste keer: start op Nederland, wordt direct overschreven door fitMapToContent
+  // Eerste keer: maak de kaart aan
   borMap = L.map('borMap', { center:[52.3, 5.3], zoom:8 });
   MAP_LAYERS[currentLayer].addTo(borMap);
 
@@ -1910,9 +1917,14 @@ function initBorMap() {
     placeStartMarker(e.latlng.lat, e.latlng.lng);
   });
 
-  refreshMapMarkers();
-  // Kleine vertraging zodat tiles geladen zijn voor de zoom
-  setTimeout(fitMapToContent, 200);
+  // Wacht tot Leaflet klaar is met renderen, dan markers + zoom
+  borMap.whenReady(function() {
+    refreshMapMarkers();
+    requestAnimationFrame(function() {
+      borMap.invalidateSize(true);
+      setTimeout(fitMapToContent, 150);
+    });
+  });
 }
 
 // ── Zoom altijd naar de boorlijn of het startpunt ──
@@ -2625,8 +2637,7 @@ function fillBormForm(b) {
   toggleBfVerg();
   renderBormStatBtns();
   showBormForm();
-  // Ververs kaart na kleine vertraging (DOM moet klaar zijn)
-  setTimeout(initBorMap, 120);
+  // Kaart wordt geïnitialiseerd/ververst zodra gebruiker naar Kaart & DXF tab gaat
 }
 
 function showBormForm() {
