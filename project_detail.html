@@ -2436,7 +2436,7 @@ function exportBoringenExcel() {
   showToast('✓ Excel gedownload ('+BOR_DATA.length+' boringen)', 'success');
 }
 
-var BOR_MAX  = 20;
+// Geen maximum op boringen
 var borSelId = null;
 var borStat  = 'Nog te starten';
 var BSC      = {'Nog te starten':'N','Loopt':'L','Review':'R','Gereed':'G','Geblokkeerd':'B'};
@@ -2449,18 +2449,13 @@ function renderBoringen() {
   if (!el) return;
 
   var n   = BOR_DATA.length;
-  var pct = Math.round(n / BOR_MAX * 100);
   var tot=0, ger=0, verg=0;
   BOR_DATA.forEach(function(b){
-    if (b.lengte_m)             tot  += parseFloat(b.lengte_m);
-    if (b.status === 'Gereed')  ger++;
-    if (b.vergunning_nodig)     verg++;
+    if (b.lengte_m)            tot  += parseFloat(b.lengte_m);
+    if (b.status === 'Gereed') ger++;
+    if (b.vergunning_nodig)    verg++;
   });
   tot = Math.round(tot * 10) / 10;
-
-  var barCol = pct>=90 ? 'linear-gradient(90deg,#ff6b35,#d70015)'
-             : pct>=60 ? 'linear-gradient(90deg,#E8870C,#f5c542)'
-             : 'linear-gradient(90deg,#0057FF,#34C759)';
 
   var h = '<div class="bor-wrap" id="borWrap">';
 
@@ -2469,20 +2464,14 @@ function renderBoringen() {
     + '<div class="bor-hdr-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none">'
     + '<path d="M12 2v20M7 7l5-5 5 5M7 17l5 5 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
     + '<span class="bor-hdr-lbl">Sleufloze technieken — Boringen</span>'
-    + (n ? '<span class="bor-hdr-cnt">'+n+' / '+BOR_MAX+'</span>' : '')
+    + (n ? '<span class="bor-hdr-cnt">'+n+'</span>' : '')
     + '<button class="btn-bor-open" onclick="event.stopPropagation();openBorModal(null)">'
     + '<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'
     + ' Toevoegen</button>'
     + '<span class="bor-hdr-chev">▾</span>'
     + '</div>';
 
-  // Progressbalk
   h += '<div class="bor-content">';
-  h += '<div class="bor-prog-row">'
-    + '<span class="bor-prog-lbl">'+n+' van '+BOR_MAX+' boringen</span>'
-    + '<div class="bor-prog-track"><div class="bor-prog-fill" style="width:'+pct+'%;background:'+barCol+'"></div></div>'
-    + '<span class="bor-prog-pct">'+pct+'%</span>'
-    + '</div>';
 
   if (!n) {
     h += '<div class="bor-empty-state">'
@@ -2596,16 +2585,14 @@ function renderBormList() {
   });
   list.innerHTML = h;
   var ab = document.getElementById('btnBormNew');
-  ab.disabled = BOR_DATA.length >= BOR_MAX;
-  ab.title    = BOR_DATA.length >= BOR_MAX ? 'Maximum van '+BOR_MAX+' bereikt' : '';
+  ab.disabled = false;
+  ab.title    = false ? '' : '';
 }
 
 function updateBormProg() {
-  var n = BOR_DATA.length, pct = Math.round(n/BOR_MAX*100);
-  var pl = document.getElementById('bormProgLbl');  if (pl) pl.textContent = n+' van '+BOR_MAX;
-  var pb = document.getElementById('bormProgFill');
-  if (pb) { pb.style.width = pct+'%'; pb.style.background = pct>=90?'linear-gradient(90deg,#ff6b35,#d70015)':pct>=60?'linear-gradient(90deg,#E8870C,#f5c542)':'linear-gradient(90deg,#0057FF,#34C759)'; }
-  var pp = document.getElementById('bormProgPct');  if (pp) pp.textContent = pct+'%';
+  var n  = BOR_DATA.length;
+  var pl = document.getElementById('bormProgLbl');
+  if (pl) pl.textContent = n + ' boring' + (n !== 1 ? 'en' : '');
 }
 
 function selectBorm(id) {
@@ -2617,7 +2604,7 @@ function selectBorm(id) {
 }
 
 function newBorm() {
-  if (BOR_DATA.length >= BOR_MAX) { showToast('Maximum van '+BOR_MAX+' boringen bereikt','error'); return; }
+  // Geen maximum op aantal boringen
   borSelId = null;
   var nextNr = 'B-' + String(BOR_DATA.length + 1).padStart(2,'0');
   fillBormForm({
@@ -2770,16 +2757,14 @@ async function deleteBorm() {
       </div>
       <div>
         <div class="borm-mtitle" id="bormTitle">Boringen</div>
-        <div class="borm-msub">Sleufloze technieken · maximaal 20 boringen per project</div>
+        <div class="borm-msub">Sleufloze technieken · Sleufloze technieken</div>
       </div>
       <button class="borm-mclose" onclick="closeBorModal()">✕</button>
     </div>
 
     <!-- Progressbalk -->
     <div class="borm-mprog">
-      <span class="bor-prog-lbl" id="bormProgLbl">0 van 20</span>
-      <div class="bor-prog-track" style="flex:1"><div class="bor-prog-fill" id="bormProgFill" style="width:0%"></div></div>
-      <span class="bor-prog-pct" id="bormProgPct">0%</span>
+      <span class="bor-prog-lbl" id="bormProgLbl">0 boringen</span>
     </div>
 
     <!-- Body: lijst + formulier -->
