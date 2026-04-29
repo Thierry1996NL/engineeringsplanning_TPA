@@ -229,12 +229,24 @@
     position:absolute; top:-4px; bottom:-4px; width:2px;
     background:#FF3B30; border-radius:1px; z-index:5; pointer-events:none;
   }
-  .gantt-today::after {
-    content:'Vandaag'; position:absolute; top:-16px; left:50%; transform:translateX(-50%);
-    font-size:8px; font-weight:700; color:#FF3B30; white-space:nowrap;
+  /* Geen Vandaag label */
+  .gantt-today::after { content:none; }
+  .gantt-axis { display:flex; margin-left:110px; padding-left:.625rem; margin-bottom:6px; border-bottom:1px solid var(--border-md); padding-bottom:5px; }
+  .gantt-tick {
+    flex:1; font-size:9px; font-weight:600; color:var(--text-2);
+    text-align:center; font-variant-numeric:tabular-nums; letter-spacing:-.01em;
   }
-  .gantt-axis { display:flex; margin-left:110px; padding-left:.625rem; margin-bottom:3px; }
-  .gantt-tick { flex:1; font-size:8px; color:var(--text-3); text-align:center; font-variant-numeric:tabular-nums; }
+  .gantt-tick-today {
+    color:#FF3B30; font-weight:700;
+  }
+  /* Info kolom rechts van track: datum + weken */
+  .gantt-info { width:120px; flex-shrink:0; display:flex; flex-direction:column; gap:1px; padding-left:4px; }
+  .gantt-info-date { font-size:9px; font-weight:600; color:var(--text-2); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .gantt-info-wk { font-size:9px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .gantt-info-wk.wk-over { color:var(--b-fg); font-weight:700; }
+  .gantt-info-wk.wk-warn { color:var(--r-fg); font-weight:600; }
+  .gantt-info-wk.wk-ok   { color:var(--g-fg); }
+  .gantt-info-wk.wk-none { color:var(--text-3); font-style:italic; }
   .gantt-filters { display:flex; flex-direction:column; gap:0; margin-bottom:.5rem; padding-bottom:.5rem; border-bottom:1px solid var(--border); }
   .gantt-filter-row { display:flex; gap:4px; align-items:center; flex-wrap:wrap; padding:3px 0; }
   .gantt-filter-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); width:42px; flex-shrink:0; }
@@ -249,8 +261,6 @@
   .gantt-rtab.active.rb-uitv { background:#7A4800; }
   .gantt-rtab.active.rb-wb   { background:#6F35CE; }
   .gr-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
-
-
   .gantt-leg-item { display:flex; align-items:center; gap:4px; font-size:9px; color:var(--text-3); }
   .gantt-leg-dot { width:8px; height:8px; border-radius:2px; }
 
@@ -1605,13 +1615,42 @@ function renderGanttChart() {
   var todayPct = pct(today);
   var html = '';
 
-  // Axis
-  html += '<div class="gantt-axis">';
-  for (var ti=0; ti<=3; ti++) {
-    var tDate = new Date(minD.getTime() + (totalMs/3)*ti);
+  // ── As met datums + Vandaag markering ──
+  html += '<div style="display:flex;align-items:flex-end;margin-left:110px;padding-left:.625rem;margin-bottom:0">'
+    + '<div class="gantt-axis" style="flex:1;position:relative;margin:0;padding:0">';
+  // Tick labels
+  for (var ti = 0; ti <= 3; ti++) {
+    var tDate = new Date(minD.getTime() + (totalMs / 3) * ti);
     html += '<div class="gantt-tick">'+fmtShortG(tDate)+'</div>';
   }
-  html += '</div>';
+  // Vandaag label op juiste positie
+  html += '<div style="position:absolute;bottom:0;left:'+todayPct+'%;transform:translateX(-50%);'
+    + 'font-size:9px;font-weight:700;color:#FF3B30;white-space:nowrap;background:var(--surface);'
+    + 'padding:0 2px;border-radius:2px">Vandaag</div>';
+  html += '</div>'
+    + '<div style="width:120px;flex-shrink:0;padding-left:4px;font-size:9px;font-weight:700;'
+    + 'text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Datum &nbsp;·&nbsp; Weken</div>'
+    + '</div>';
+
+  // Lijn onder de as
+  html += '<div style="display:flex;gap:.625rem;margin-bottom:6px">'
+    + '<div style="width:110px;flex-shrink:0"></div>'
+    + '<div style="flex:1;height:1px;background:var(--border-md)"></div>'
+    + '<div style="width:120px;flex-shrink:0"></div>'
+    + '</div>';
+
+  // Weken-helper
+  function wekenTot(d) {
+    if (!d) return null;
+    return Math.ceil((d - today) / (1000*60*60*24*7));
+  }
+  function wekenLabel(wk) {
+    if (wk === null) return {cls:'wk-none', txt:'— geen datum'};
+    if (wk < 0)  return {cls:'wk-over', txt: Math.abs(wk)+'w geleden'};
+    if (wk === 0) return {cls:'wk-warn', txt: 'deze week'};
+    if (wk <= 4) return {cls:'wk-warn', txt: wk+'w'};
+    return {cls:'wk-ok', txt: wk+'w'};
+  }
 
   // Bars
   var lastGroup = null;
@@ -1637,6 +1676,7 @@ function renderGanttChart() {
           + '<div class="gantt-today" style="left:'+todayPct+'%"></div>'
           + '<span style="font-size:9px;color:var(--text-3);position:absolute;left:4px;top:50%;transform:translateY(-50%);font-style:italic">Geen datum</span>'
         + '</div>'
+        + '<div class="gantt-info"><span class="gantt-info-wk wk-none">— geen datum</span></div>'
       + '</div>';
       return;
     }
@@ -1662,6 +1702,10 @@ function renderGanttChart() {
       ? '<div style="position:absolute;top:0;left:0;height:100%;width:'+progPct+'%;background:rgba(255,255,255,0.25);border-radius:4px;pointer-events:none"></div>'
       : '';
 
+    var wk    = wekenTot(endD);
+    var wkLbl = wekenLabel(wk);
+    var fmtEndD = String(endD.getDate()).padStart(2,'0')+'-'+String(endD.getMonth()+1).padStart(2,'0')+'-'+endD.getFullYear();
+
     html += '<div class="gantt-row">'
       + '<div class="gantt-label" title="'+esc(p.label)+'">'+esc(p.label)+'</div>'
       + '<div class="gantt-track">'
@@ -1669,6 +1713,10 @@ function renderGanttChart() {
           + progBar + barLabel
         + '</div>'
         + '<div class="gantt-today" style="left:'+todayPct+'%"></div>'
+      + '</div>'
+      + '<div class="gantt-info">'
+        + '<span class="gantt-info-date">'+fmtEndD+'</span>'
+        + '<span class="gantt-info-wk '+wkLbl.cls+'">'+wkLbl.txt+'</span>'
       + '</div>'
     + '</div>';
   });
