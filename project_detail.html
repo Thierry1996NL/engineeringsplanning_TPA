@@ -1567,12 +1567,11 @@ function renderGanttChart() {
   // Filter phases — show all, group, or highlight specific fase
   var phases = GANTT_PHASES.filter(function(p) {
     var gff = ganttFaseFilter;
-    if (gff === 'fasering'    && p.group !== 'fasering')    return false;
-    if (gff === 'omgeving'    && p.group !== 'omgeving')    return false;
-    if (gff === 'vergunningen'&& p.group !== 'vergunningen')return false;
-    if (gff === 'sleufloze'   && p.group !== 'sleufloze')   return false;
+    if (gff === 'fasering'     && p.group !== 'fasering')    return false;
+    if (gff === 'omgeving'     && p.group !== 'omgeving')    return false;
+    if (gff === 'vergunningen' && p.group !== 'vergunningen')return false;
+    if (gff === 'sleufloze'    && p.group !== 'sleufloze')   return false;
     if (gff !== 'alle' && gff !== 'fasering' && gff !== 'omgeving' && gff !== 'vergunningen' && gff !== 'sleufloze') {
-      // Specifieke fase: toon altijd fasering als context + matching omgeving
       var mapLabel = (gff === 'Onderzoeksfase') ? 'Onderzoek' : gff;
       if (p.group === 'fasering') { /* altijd tonen */ }
       else if (p.label !== mapLabel) return false;
@@ -1581,7 +1580,7 @@ function renderGanttChart() {
       var hasRole = p.taskCols.some(function(ci){ return (TASK_ROLE_MAP[ci]||'engineer') === ganttRolFilter; });
       if (!hasRole) return false;
     }
-    return parseDatumG(ROW_DATA[p.datumCol]) !== null;
+    return true; // altijd tonen, ook zonder datum
   });
 
   if (!phases.length) {
@@ -1590,8 +1589,10 @@ function renderGanttChart() {
   }
 
   var today = new Date(); today.setHours(0,0,0,0);
+  // Gebruik alleen fases mét datum voor de as-berekening
+  var datedPhases = phases.filter(function(p){ return parseDatumG(ROW_DATA[p.datumCol]) !== null; });
   var allDates = [today];
-  phases.forEach(function(p){ var d=parseDatumG(ROW_DATA[p.datumCol]); if(d) allDates.push(d); });
+  datedPhases.forEach(function(p){ var d=parseDatumG(ROW_DATA[p.datumCol]); if(d) allDates.push(d); });
 
   var minD = new Date(Math.min.apply(null,allDates));
   var maxD = new Date(Math.max.apply(null,allDates));
@@ -1612,12 +1613,11 @@ function renderGanttChart() {
   }
   html += '</div>';
 
-  // Bars grouped by category
+  // Bars
   var lastGroup = null;
   phases.forEach(function(p) {
     var endD   = parseDatumG(ROW_DATA[p.datumCol]);
     var isDone = ROW_DATA[p.gereedCol] === 'Ja';
-    if (!endD) return;
 
     // Group header separator
     if (p.group !== lastGroup) {
@@ -1629,14 +1629,25 @@ function renderGanttChart() {
         + '<div style="flex:1;height:1px;background:var(--border)"></div></div>';
     }
 
-    // Start: vorige fasering-fase einddatum, of 4 weken voor einddatum
+    // Fase zonder datum: lege rij
+    if (!endD) {
+      html += '<div class="gantt-row">'
+        + '<div class="gantt-label" title="'+esc(p.label)+'">'+esc(p.label)+'</div>'
+        + '<div class="gantt-track">'
+          + '<div class="gantt-today" style="left:'+todayPct+'%"></div>'
+          + '<span style="font-size:9px;color:var(--text-3);position:absolute;left:4px;top:50%;transform:translateY(-50%);font-style:italic">Geen datum</span>'
+        + '</div>'
+      + '</div>';
+      return;
+    }
+
+    // Start berekening
     var fasering = phases.filter(function(q){return q.group==='fasering';});
     var prevFas  = fasering[fasering.indexOf(p) - 1];
     var startD;
     if (p.group === 'fasering' && prevFas && parseDatumG(ROW_DATA[prevFas.datumCol])) {
       startD = parseDatumG(ROW_DATA[prevFas.datumCol]);
     } else {
-      // Omgeving: toon als 4-weken balk vóór einddatum (planningsindicatie)
       startD = new Date(endD.getTime() - 28*24*60*60*1000);
     }
 
