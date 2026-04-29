@@ -1864,12 +1864,14 @@ function markerHtmlPin(label, color, textColor) {
 }
 
 function markerHtmlLabel(text, color) {
-  // Boringcode label (pill)
+  // Boringcode label — CSS transform centers it regardless of text length
   return '<div style="'
-    + 'background:'+color+';color:#fff;font-family:DM Sans,sans-serif;'
-    + 'font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;'
-    + 'white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35);'
-    + 'border:1.5px solid rgba(255,255,255,.5);letter-spacing:.03em;">'
+    + 'display:inline-block;'
+    + 'background:'+color+';color:#fff;font-family:\'DM Sans\',sans-serif;'
+    + 'font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;'
+    + 'white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.45);'
+    + 'border:2px solid rgba(255,255,255,.7);letter-spacing:.04em;'
+    + 'transform:translate(-50%,-50%);position:relative;">'
     + esc(text)+'</div>';
 }
 
@@ -2240,8 +2242,8 @@ function refreshDxfLine() {
   var lIcon = L.divIcon({
     className:'',
     html: markerHtmlLabel(code, '#1D1D2E'),
-    iconSize:  [labelW, 22],
-    iconAnchor:[Math.round(labelW/2), 11]
+    iconSize:  [0, 0],
+    iconAnchor:[0, 0]
   });
   borLabelMarker = L.marker(midPt, { icon:lIcon, interactive:false, zIndexOffset:2000 }).addTo(borMap);
   borDxfMarkers.push(borLabelMarker);
