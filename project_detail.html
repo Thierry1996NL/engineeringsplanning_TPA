@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -463,6 +465,47 @@
   .btn-borm-save { padding:5px 14px; font-size:12px; font-family:'DM Sans',sans-serif; font-weight:600; border:none; border-radius:var(--r); background:var(--navy); color:#fff; cursor:pointer; margin-left:auto; transition:all .1s; }
   .btn-borm-save:hover { background:var(--accent); }
   .btn-borm-save:disabled { background:var(--surface3); color:var(--text-3); cursor:not-allowed; }
+
+  /* ── KAART TAB ── */
+  .borm-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; padding:0 1.25rem; gap:0; }
+  .borm-tab {
+    display:flex; align-items:center; gap:5px; padding:.5rem .875rem;
+    font-size:11px; font-weight:500; color:var(--text-3); cursor:pointer;
+    border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap;
+    transition:all .12s; background:none; border-top:none; border-left:none; border-right:none;
+    font-family:'DM Sans',sans-serif;
+  }
+  .borm-tab:hover { color:var(--text-2); }
+  .borm-tab.active { color:var(--navy); border-bottom-color:var(--navy); font-weight:600; }
+
+  .borm-map-pane { display:flex; flex-direction:column; gap:.625rem; flex:1; overflow-y:auto; padding:.875rem 1.25rem; }
+  .borm-map-pane::-webkit-scrollbar { width:3px; }
+  #borMap { height:320px; border-radius:var(--r-lg); border:1px solid var(--border-md); overflow:hidden; background:var(--surface2); flex-shrink:0; }
+  .map-layer-btns { display:flex; gap:4px; }
+  .map-lbtn {
+    padding:3px 10px; font-size:10px; font-weight:600; border:1px solid var(--border-md);
+    border-radius:20px; background:transparent; color:var(--text-2);
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .1s;
+  }
+  .map-lbtn:hover { background:var(--surface2); }
+  .map-lbtn.active { background:var(--navy); color:#fff; border-color:var(--navy); }
+  .map-coord-row { display:grid; grid-template-columns:1fr 1fr; gap:.375rem .75rem; }
+  .map-coord-hint { font-size:10px; color:var(--text-3); grid-column:1/-1; }
+  .dxf-upload-area {
+    border:2px dashed var(--border-strong); border-radius:var(--r-lg);
+    padding:1rem; text-align:center; cursor:pointer; transition:all .12s;
+    background:var(--surface2);
+  }
+  .dxf-upload-area:hover { border-color:var(--accent); background:var(--accent-2); }
+  .dxf-upload-area.has-file { border-color:var(--g-fg); background:var(--g-bg); border-style:solid; }
+  .dxf-upload-icon { font-size:22px; margin-bottom:.25rem; }
+  .dxf-upload-lbl { font-size:11px; color:var(--text-2); }
+  .dxf-upload-sub  { font-size:10px; color:var(--text-3); margin-top:2px; }
+  .dxf-status { font-size:11px; padding:.375rem .625rem; border-radius:var(--r); margin-top:.25rem; }
+  .dxf-status.ok  { background:var(--g-bg); color:var(--g-fg); }
+  .dxf-status.err { background:var(--b-bg); color:var(--b-fg); }
+  .dxf-status.info{ background:var(--l-bg); color:var(--l-fg); }
+  .map-fsec { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); padding-bottom:.25rem; border-bottom:1px solid var(--border); }
 
 </style>
 </head>
@@ -1710,8 +1753,347 @@ function showToast(msg, type) {
   toastTimer=setTimeout(function(){ t.className='toast '+(type||''); },2500);
 }
 // ══════════════════════════════════════════
-// BORINGEN MODULE
+// TABS
 // ══════════════════════════════════════════
+function switchBormTab(tab) {
+  document.getElementById('panelGegevens').style.display = tab === 'gegevens' ? '' : 'none';
+  document.getElementById('panelKaart').style.display    = tab === 'kaart'    ? '' : 'none';
+  document.getElementById('tabGegevens').classList.toggle('active', tab === 'gegevens');
+  document.getElementById('tabKaart').classList.toggle('active',    tab === 'kaart');
+  if (tab === 'kaart') setTimeout(function(){ if(borMap) borMap.invalidateSize(); }, 80);
+}
+
+// ══════════════════════════════════════════
+// RD NEW ↔ WGS84 CONVERSIE (Amersfoort)
+// Bron: RDNAP transform (simplified)
+// ══════════════════════════════════════════
+function rd2wgs(x, y) {
+  // Correctiewaarden RD → WGS84
+  var X0=155000, Y0=463000, phi0=52.15517440, lam0=5.38720621;
+  var dx=1e-5*(x-X0), dy=1e-5*(y-Y0);
+  var phi = phi0
+    + (3235.65389*dy + (-32.58297)*dx*dx + (-0.24750)*dy*dy + (-0.84978)*dx*dx*dy
+       + (-0.06550)*dy*dy*dy + (-0.01709)*dx*dx*dy*dy + (-0.00738)*dx
+       + 0.00530*dx*dx*dx*dx + (-0.00039)*dx*dx*dx*dx*dy + 0.00033*dy*dy*dy*dy*dy
+       + (-0.00012)*dx*dx*dy) / 3600;
+  var lam = lam0
+    + (5260.52916*dx + 105.94684*dx*dy + 2.45656*dx*dy*dy + (-0.81885)*dx*dx*dx
+       + 0.05594*dx*dy*dy*dy + (-0.05607)*dx*dx*dx*dy + 0.01199*dy
+       + (-0.00256)*dx*dx*dx*dy*dy + 0.00128*dx*dy*dy*dy*dy + 0.00022*dy*dy
+       + (-0.00022)*dx*dx + 0.00026*dx*dx*dx*dx*dx) / 3600;
+  return [phi, lam];
+}
+
+// ══════════════════════════════════════════
+// LEAFLET KAART
+// ══════════════════════════════════════════
+var borMap       = null;
+var borMarker    = null;
+var borPolyline  = null;
+var currentLayer = 'pdok';
+var currentDxf   = null;  // parsed polyline [[x,y],...] in RD
+
+var MAP_LAYERS = {
+  pdok: L.tileLayer(
+    'https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0/Actueel_ortho25/EPSG:3857/{z}/{x}/{y}.jpeg',
+    { attribution:'© PDOK Luchtfoto', maxZoom:19 }
+  ),
+  osm: L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { attribution:'© OpenStreetMap', maxZoom:19 }
+  ),
+  brt: L.tileLayer(
+    'https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/standaard/EPSG:3857/{z}/{x}/{y}.png',
+    { attribution:'© PDOK BRT', maxZoom:19 }
+  )
+};
+
+function initBorMap() {
+  var el = document.getElementById('borMap');
+  if (!el) return;
+
+  // Als kaart al bestaat: vernieuw alleen markers
+  if (borMap) {
+    borMap.invalidateSize();
+    refreshMapMarkers();
+    return;
+  }
+
+  // Startlocatie: Nederland centrum of RD coördinaat indien ingevuld
+  var center = [52.3, 5.3], zoom = 8;
+  var rdX = parseFloat(document.getElementById('bfRdX').value);
+  var rdY = parseFloat(document.getElementById('bfRdY').value);
+  if (rdX && rdY) {
+    var wgs = rd2wgs(rdX, rdY);
+    center = wgs; zoom = 15;
+  }
+
+  borMap = L.map('borMap', { center: center, zoom: zoom });
+  MAP_LAYERS[currentLayer].addTo(borMap);
+
+  // Klik op kaart → marker plaatsen + RD invullen
+  borMap.on('click', function(e) {
+    var lat = e.latlng.lat, lng = e.latlng.lng;
+    // Simpele WGS84 → RD benadering (inverse)
+    var rdCoord = wgs2rd(lat, lng);
+    document.getElementById('bfRdX').value = Math.round(rdCoord[0]);
+    document.getElementById('bfRdY').value = Math.round(rdCoord[1]);
+    placeMarker(lat, lng);
+  });
+
+  refreshMapMarkers();
+}
+
+function wgs2rd(lat, lng) {
+  // Inverse RD benadering (voldoende nauwkeurig voor plaatsing)
+  var phi0=52.15517440, lam0=5.38720621;
+  var dphi=0.36*(lat-phi0), dlam=0.36*(lng-lam0);
+  var x = 155000
+    + 190094.945*dlam + (-0.008*dphi) + (-32.391*dphi*dphi) + (-0.705*dlam*dlam)
+    + (-2.340*dphi*dphi*dlam) + (-0.608*dlam*dlam*dlam) + (-0.008*dphi*dphi*dphi*dphi);
+  var y = 463000
+    + 309056.544*dphi + 60.022*dlam*dlam + (-0.508*dphi*dphi) + 0.148*dphi*dlam*dlam
+    + (-7.373*dphi*dphi*dphi) + 0.003*dlam*dlam*dlam*dlam;
+  return [x, y];
+}
+
+function placeMarker(lat, lng) {
+  if (borMarker) borMap.removeLayer(borMarker);
+  var icon = L.divIcon({
+    className:'',
+    html:'<div style="width:14px;height:14px;background:#0057FF;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
+    iconSize:[14,14], iconAnchor:[7,7]
+  });
+  borMarker = L.marker([lat,lng], {icon:icon, draggable:true}).addTo(borMap);
+  borMarker.on('dragend', function(e){
+    var p=e.target.getLatLng();
+    var rd=wgs2rd(p.lat,p.lng);
+    document.getElementById('bfRdX').value=Math.round(rd[0]);
+    document.getElementById('bfRdY').value=Math.round(rd[1]);
+  });
+}
+
+function refreshMapMarkers() {
+  // Marker voor startpunt
+  var rdX = parseFloat(document.getElementById('bfRdX').value);
+  var rdY = parseFloat(document.getElementById('bfRdY').value);
+  if (rdX && rdY && rdX > 0 && rdY > 0) {
+    var wgs = rd2wgs(rdX, rdY);
+    placeMarker(wgs[0], wgs[1]);
+    borMap.setView(wgs, Math.max(borMap.getZoom(), 14));
+  }
+  // DXF lijn
+  refreshDxfLine();
+}
+
+function onRdCoordInput() {
+  var rdX = parseFloat(document.getElementById('bfRdX').value);
+  var rdY = parseFloat(document.getElementById('bfRdY').value);
+  if (!borMap || !rdX || !rdY) return;
+  if (rdX < 0 || rdX > 280000 || rdY < 300000 || rdY > 625000) return;
+  var wgs = rd2wgs(rdX, rdY);
+  placeMarker(wgs[0], wgs[1]);
+  borMap.setView(wgs, 15);
+}
+
+function setMapLayer(name) {
+  if (!borMap) return;
+  Object.values(MAP_LAYERS).forEach(function(l){ if(borMap.hasLayer(l)) borMap.removeLayer(l); });
+  MAP_LAYERS[name].addTo(borMap);
+  currentLayer = name;
+  document.getElementById('btnLayerPdok').classList.toggle('active', name==='pdok');
+  document.getElementById('btnLayerOsm').classList.toggle('active',  name==='osm');
+  document.getElementById('btnLayerBrt').classList.toggle('active',  name==='brt');
+}
+
+// ══════════════════════════════════════════
+// DXF PARSER
+// ══════════════════════════════════════════
+function handleDxfDrop(e) {
+  e.preventDefault();
+  document.getElementById('dxfDropArea').style.borderColor='';
+  var file = e.dataTransfer.files[0];
+  if (file) handleDxfFile(file);
+}
+
+function handleDxfFile(file) {
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.dxf')) {
+    showDxfStatus('Alleen .dxf bestanden worden ondersteund.', 'err');
+    return;
+  }
+  showDxfStatus('Bestand wordt gelezen...', 'info');
+  var reader = new FileReader();
+  reader.onload = function(e) { parseDxf(e.target.result, file.name); };
+  reader.readAsText(file);
+}
+
+function parseDxf(text, filename) {
+  try {
+    var lines = text.split(/\r?\n/).map(function(l){ return l.trim(); });
+    var polylines = [];
+
+    // Zoek ENTITIES sectie
+    var entStart = lines.indexOf('ENTITIES');
+    if (entStart < 0) entStart = 0;
+
+    var i = entStart;
+    while (i < lines.length) {
+      // LWPOLYLINE
+      if (lines[i] === 'LWPOLYLINE' || (lines[i]==='0' && lines[i+1]==='LWPOLYLINE')) {
+        var pts = parseLwPolyline(lines, i);
+        if (pts.length >= 2) polylines.push(pts);
+      }
+      // POLYLINE (oud formaat)
+      if (lines[i] === 'POLYLINE' || (lines[i]==='0' && lines[i+1]==='POLYLINE')) {
+        var pts2 = parsePolyline(lines, i);
+        if (pts2.length >= 2) polylines.push(pts2);
+      }
+      // LINE
+      if (lines[i-1]==='0' && lines[i]==='LINE') {
+        var ln = parseLine(lines, i);
+        if (ln) polylines.push(ln);
+      }
+      i++;
+    }
+
+    if (!polylines.length) {
+      showDxfStatus('Geen polylines of lijnen gevonden in DXF. Controleer of het bestand LWPOLYLINE, POLYLINE of LINE entiteiten bevat.', 'err');
+      return;
+    }
+
+    // Neem de langste polyline
+    polylines.sort(function(a,b){ return b.length - a.length; });
+    currentDxf = polylines[0];
+
+    // Valideer RD-bereik
+    var inRd = currentDxf.every(function(p){
+      return p[0]>0 && p[0]<300000 && p[1]>250000 && p[1]<650000;
+    });
+    if (!inRd) {
+      showDxfStatus('⚠ Coördinaten lijken niet in RD New te staan. Controleer het coördinatenstelsel van uw DXF.', 'err');
+      currentDxf = null; return;
+    }
+
+    // Eerste punt als startpunt overnemen als nog leeg
+    var rdX = parseFloat(document.getElementById('bfRdX').value);
+    var rdY = parseFloat(document.getElementById('bfRdY').value);
+    if (!rdX || !rdY) {
+      document.getElementById('bfRdX').value = Math.round(currentDxf[0][0]);
+      document.getElementById('bfRdY').value = Math.round(currentDxf[0][1]);
+    }
+
+    // Toon op kaart
+    refreshDxfLine();
+    // Zoom naar lijn
+    var wgsPoints = currentDxf.map(function(p){ return rd2wgs(p[0],p[1]); });
+    borMap.fitBounds(wgsPoints.map(function(p){ return [p[0],p[1]]; }), {padding:[20,20]});
+
+    var totalLen = 0;
+    for (var j=1;j<currentDxf.length;j++){
+      var dx=currentDxf[j][0]-currentDxf[j-1][0], dy=currentDxf[j][1]-currentDxf[j-1][1];
+      totalLen += Math.sqrt(dx*dx+dy*dy);
+    }
+
+    document.getElementById('dxfDropArea').classList.add('has-file');
+    document.getElementById('dxfDropLabel').textContent = filename;
+    document.getElementById('btnClearDxf').style.display = '';
+    showDxfStatus('✓ '+currentDxf.length+' punten geladen · '+Math.round(totalLen)+' m · '+polylines.length+' polyline(s) gevonden', 'ok');
+
+    // Automatisch lengte invullen als nog leeg
+    if (!document.getElementById('bfLengte').value) {
+      document.getElementById('bfLengte').value = Math.round(totalLen);
+    }
+  } catch(err) {
+    showDxfStatus('Parseerfout: ' + err.message, 'err');
+  }
+}
+
+function parseLwPolyline(lines, start) {
+  var pts=[], i=start;
+  var x=null, y=null;
+  while(i < lines.length) {
+    var code=parseInt(lines[i]);
+    var val=lines[i+1];
+    if (i > start+2 && lines[i]==='0') break; // volgend entity
+    if (code===10) { x=parseFloat(val); }
+    if (code===20) { y=parseFloat(val); if(x!==null){pts.push([x,y]);x=null;} }
+    i+=2;
+  }
+  return pts;
+}
+
+function parsePolyline(lines, start) {
+  // Zoek VERTEX records
+  var pts=[], i=start;
+  while(i < lines.length) {
+    if (lines[i]==='VERTEX') {
+      var vx=null,vy=null,j=i;
+      while(j<lines.length && !(lines[j]==='0' && lines[j+1]!=='VERTEX')){
+        if(parseInt(lines[j])===10) vx=parseFloat(lines[j+1]);
+        if(parseInt(lines[j])===20) vy=parseFloat(lines[j+1]);
+        j+=2;
+      }
+      if(vx!==null&&vy!==null) pts.push([vx,vy]);
+    }
+    if(lines[i]==='SEQEND') break;
+    i++;
+  }
+  return pts;
+}
+
+function parseLine(lines, start) {
+  var x1=null,y1=null,x2=null,y2=null,i=start;
+  while(i<lines.length && !(lines[i]==='0'&&i>start+2)){
+    var code=parseInt(lines[i]);
+    if(code===10) x1=parseFloat(lines[i+1]);
+    if(code===20) y1=parseFloat(lines[i+1]);
+    if(code===11) x2=parseFloat(lines[i+1]);
+    if(code===21) y2=parseFloat(lines[i+1]);
+    i+=2;
+  }
+  if(x1!==null&&y1!==null&&x2!==null&&y2!==null) return [[x1,y1],[x2,y2]];
+  return null;
+}
+
+function refreshDxfLine() {
+  if (!borMap) return;
+  if (borPolyline) { borMap.removeLayer(borPolyline); borPolyline=null; }
+  if (!currentDxf || !currentDxf.length) return;
+  var wgsPoints = currentDxf.map(function(p){ return rd2wgs(p[0],p[1]); });
+  borPolyline = L.polyline(wgsPoints, {
+    color:'#FF4500', weight:3, opacity:.9,
+    dashArray: null
+  }).addTo(borMap);
+  // Start & eindpunt markering
+  var svgEnd = '<div style="width:10px;height:10px;background:#FF4500;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>';
+  [wgsPoints[0], wgsPoints[wgsPoints.length-1]].forEach(function(p){
+    L.marker(p, {icon:L.divIcon({className:'',html:svgEnd,iconSize:[10,10],iconAnchor:[5,5]})}).addTo(borMap);
+  });
+}
+
+function clearDxf() {
+  currentDxf = null;
+  if (borPolyline) { borMap.removeLayer(borPolyline); borPolyline=null; }
+  document.getElementById('dxfDropArea').classList.remove('has-file');
+  document.getElementById('dxfDropLabel').textContent = 'Klik of sleep een DXF bestand hierheen';
+  document.getElementById('btnClearDxf').style.display='none';
+  document.getElementById('dxfStatus').style.display='none';
+  document.getElementById('dxfFileInput').value='';
+}
+
+function showDxfStatus(msg, type) {
+  var el=document.getElementById('dxfStatus');
+  el.textContent=msg; el.className='dxf-status '+type; el.style.display='';
+}
+
+// Reset kaart bij sluiten modal
+var _origCloseBorModal = closeBorModal;
+closeBorModal = function() {
+  if (borMap) { borMap.remove(); borMap=null; borMarker=null; borPolyline=null; }
+  currentDxf=null;
+  _origCloseBorModal();
+};
 var BOR_MAX  = 20;
 var borSelId = null;
 var borStat  = 'Nog te starten';
@@ -1911,21 +2293,28 @@ function fillBormForm(b) {
   document.getElementById('bfVerg').checked    = !!b.vergunning_nodig;
   document.getElementById('bfVergDatum').value = b.vergunning_datum || '';
   document.getElementById('bfOpm').value       = b.opmerkingen     || '';
+  // Kaart velden
+  document.getElementById('bfRdX').value = b.rd_x != null ? b.rd_x : '';
+  document.getElementById('bfRdY').value = b.rd_y != null ? b.rd_y : '';
+  currentDxf = b.dxf_polyline || null;
   borStat = b.status || 'Nog te starten';
   toggleBfVerg();
   renderBormStatBtns();
   showBormForm();
+  // Ververs kaart na kleine vertraging (DOM moet klaar zijn)
+  setTimeout(initBorMap, 120);
 }
 
 function showBormForm() {
   document.getElementById('bormPh').style.display       = 'none';
-  document.getElementById('bormForm').style.display     = '';
+  document.getElementById('bormTabs').style.display     = 'flex';
   document.getElementById('btnBormSave').style.display  = '';
   document.getElementById('btnBormDel').style.display   = borSelId !== null ? '' : 'none';
+  switchBormTab('gegevens');
 }
 function hideBormForm() {
   document.getElementById('bormPh').style.display       = '';
-  document.getElementById('bormForm').style.display     = 'none';
+  document.getElementById('bormTabs').style.display     = 'none';
   document.getElementById('btnBormSave').style.display  = 'none';
   document.getElementById('btnBormDel').style.display   = 'none';
 }
@@ -1964,6 +2353,9 @@ async function saveBorm() {
     vergunning_nodig:  document.getElementById('bfVerg').checked,
     vergunning_datum:  document.getElementById('bfVergDatum').value || null,
     opmerkingen:    document.getElementById('bfOpm').value     || null,
+    rd_x:           parseFloat(document.getElementById('bfRdX').value) || null,
+    rd_y:           parseFloat(document.getElementById('bfRdY').value) || null,
+    dxf_polyline:   currentDxf || null,
     updated_by:     currentUser,
     updated_at:     new Date().toISOString()
   };
@@ -2056,96 +2448,169 @@ async function deleteBorm() {
         </div>
       </div>
 
-      <!-- Rechts: formulier -->
-      <div class="borm-form-pane">
-        <div class="borm-ph" id="bormPh">
+      <!-- Rechts: tabs + inhoud -->
+      <div class="borm-form-pane" style="padding:0;gap:0;display:flex;flex-direction:column">
+
+        <!-- Placeholder vóór selectie -->
+        <div class="borm-ph" id="bormPh" style="flex:1;padding:1.25rem">
           <span style="font-size:26px">👈</span>
           <span>Kies een boring uit de lijst, of voeg een nieuwe toe</span>
         </div>
 
-        <div id="bormForm" style="display:none">
-
-          <div class="borm-fsec">Identificatie</div>
-          <div class="borm-grid">
-            <div class="borm-field">
-              <label class="borm-lbl">Boring nr.</label>
-              <input class="borm-inp" id="bfNr" type="text" placeholder="B-01" maxlength="20">
-            </div>
-            <div class="borm-field">
-              <label class="borm-lbl">Type boring</label>
-              <select class="borm-sel" id="bfType">
-                <option value="HDD">HDD</option>
-                <option value="Gestuurde boring">Gestuurde boring</option>
-                <option value="Persing">Persing</option>
-                <option value="Microtunneling">Microtunneling</option>
-                <option value="Anders">Anders</option>
-              </select>
-            </div>
-            <div class="borm-field full">
-              <label class="borm-lbl">Locatie omschrijving</label>
-              <input class="borm-inp" id="bfLocatie" type="text" placeholder="bijv. Kruising N381 te Hoogeveen">
-            </div>
+        <!-- Tabs (verborgen tot selectie) -->
+        <div id="bormTabs" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+          <div class="borm-tabs">
+            <button class="borm-tab active" id="tabGegevens" onclick="switchBormTab('gegevens')">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="3" rx="1" fill="currentColor"/><rect x="2" y="7" width="8" height="2" rx="1" fill="currentColor"/><rect x="2" y="11" width="10" height="2" rx="1" fill="currentColor"/></svg>
+              Gegevens
+            </button>
+            <button class="borm-tab" id="tabKaart" onclick="switchBormTab('kaart')">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M8 12v3M5 7a3 3 0 003-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              Kaart & DXF
+            </button>
           </div>
 
-          <div class="borm-fsec" style="margin-top:.5rem">Technische specs</div>
-          <div class="borm-grid g3">
-            <div class="borm-field">
-              <label class="borm-lbl">Lengte (m)</label>
-              <input class="borm-inp" id="bfLengte" type="number" placeholder="0" min="0" step="0.1">
-            </div>
-            <div class="borm-field">
-              <label class="borm-lbl">Diameter (mm)</label>
-              <input class="borm-inp" id="bfDiam" type="number" placeholder="0" min="0">
-            </div>
-            <div class="borm-field">
-              <label class="borm-lbl">Diepte (m NAP)</label>
-              <input class="borm-inp" id="bfDiepte" type="number" placeholder="0" step="0.01">
-            </div>
-          </div>
-
-          <div class="borm-fsec" style="margin-top:.5rem">Planning & uitvoering</div>
-          <div class="borm-grid">
-            <div class="borm-field">
-              <label class="borm-lbl">Aannemer</label>
-              <input class="borm-inp" id="bfAannemer" type="text" placeholder="naam aannemer">
-            </div>
-            <div class="borm-field" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:.375rem .75rem">
+          <!-- TAB: Gegevens -->
+          <div id="panelGegevens" class="borm-form-pane" style="flex:1;overflow-y:auto">
+            <div class="borm-fsec">Identificatie</div>
+            <div class="borm-grid">
               <div class="borm-field">
-                <label class="borm-lbl">Startdatum</label>
-                <input class="borm-inp" id="bfStart" type="date">
+                <label class="borm-lbl">Boring nr.</label>
+                <input class="borm-inp" id="bfNr" type="text" placeholder="B-01" maxlength="20">
               </div>
               <div class="borm-field">
-                <label class="borm-lbl">Einddatum</label>
-                <input class="borm-inp" id="bfEind" type="date">
+                <label class="borm-lbl">Type boring</label>
+                <select class="borm-sel" id="bfType">
+                  <option value="HDD">HDD</option>
+                  <option value="Gestuurde boring">Gestuurde boring</option>
+                  <option value="Persing">Persing</option>
+                  <option value="Microtunneling">Microtunneling</option>
+                  <option value="Anders">Anders</option>
+                </select>
+              </div>
+              <div class="borm-field full">
+                <label class="borm-lbl">Locatie omschrijving</label>
+                <input class="borm-inp" id="bfLocatie" type="text" placeholder="bijv. Kruising N381 te Hoogeveen">
               </div>
             </div>
-          </div>
 
-          <div class="borm-fsec" style="margin-top:.5rem">Status</div>
-          <div class="borm-stat-row">
-            <button class="borm-sbtn" data-s="Nog te starten" onclick="setBormStat(this)">— Nog te starten</button>
-            <button class="borm-sbtn" data-s="Loopt"          onclick="setBormStat(this)">▶ Loopt</button>
-            <button class="borm-sbtn" data-s="Review"         onclick="setBormStat(this)">👁 Review</button>
-            <button class="borm-sbtn" data-s="Gereed"         onclick="setBormStat(this)">✓ Gereed</button>
-            <button class="borm-sbtn" data-s="Geblokkeerd"    onclick="setBormStat(this)">✗ Geblokkeerd</button>
-          </div>
-
-          <div class="borm-fsec" style="margin-top:.5rem">Vergunning</div>
-          <label class="borm-check-row">
-            <input type="checkbox" id="bfVerg" onchange="toggleBfVerg()">
-            <span class="borm-check-lbl">Vergunning benodigd voor deze boring</span>
-          </label>
-          <div id="bfVergDatumWrap" style="display:none">
-            <div class="borm-field">
-              <label class="borm-lbl">Vergunningsdatum</label>
-              <input class="borm-inp" id="bfVergDatum" type="date">
+            <div class="borm-fsec" style="margin-top:.5rem">Technische specs</div>
+            <div class="borm-grid g3">
+              <div class="borm-field">
+                <label class="borm-lbl">Lengte (m)</label>
+                <input class="borm-inp" id="bfLengte" type="number" placeholder="0" min="0" step="0.1">
+              </div>
+              <div class="borm-field">
+                <label class="borm-lbl">Diameter (mm)</label>
+                <input class="borm-inp" id="bfDiam" type="number" placeholder="0" min="0">
+              </div>
+              <div class="borm-field">
+                <label class="borm-lbl">Diepte (m NAP)</label>
+                <input class="borm-inp" id="bfDiepte" type="number" placeholder="0" step="0.01">
+              </div>
             </div>
-          </div>
 
-          <div class="borm-fsec" style="margin-top:.5rem">Opmerkingen</div>
-          <textarea class="borm-ta" id="bfOpm" placeholder="Notities over deze boring..." maxlength="500"></textarea>
+            <div class="borm-fsec" style="margin-top:.5rem">Planning & uitvoering</div>
+            <div class="borm-grid">
+              <div class="borm-field">
+                <label class="borm-lbl">Aannemer</label>
+                <input class="borm-inp" id="bfAannemer" type="text" placeholder="naam aannemer">
+              </div>
+              <div class="borm-field" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:.375rem .75rem">
+                <div class="borm-field">
+                  <label class="borm-lbl">Startdatum</label>
+                  <input class="borm-inp" id="bfStart" type="date">
+                </div>
+                <div class="borm-field">
+                  <label class="borm-lbl">Einddatum</label>
+                  <input class="borm-inp" id="bfEind" type="date">
+                </div>
+              </div>
+            </div>
 
-        </div><!-- /bormForm -->
+            <div class="borm-fsec" style="margin-top:.5rem">Status</div>
+            <div class="borm-stat-row">
+              <button class="borm-sbtn" data-s="Nog te starten" onclick="setBormStat(this)">— Nog te starten</button>
+              <button class="borm-sbtn" data-s="Loopt"          onclick="setBormStat(this)">▶ Loopt</button>
+              <button class="borm-sbtn" data-s="Review"         onclick="setBormStat(this)">👁 Review</button>
+              <button class="borm-sbtn" data-s="Gereed"         onclick="setBormStat(this)">✓ Gereed</button>
+              <button class="borm-sbtn" data-s="Geblokkeerd"    onclick="setBormStat(this)">✗ Geblokkeerd</button>
+            </div>
+
+            <div class="borm-fsec" style="margin-top:.5rem">Vergunning</div>
+            <label class="borm-check-row">
+              <input type="checkbox" id="bfVerg" onchange="toggleBfVerg()">
+              <span class="borm-check-lbl">Vergunning benodigd voor deze boring</span>
+            </label>
+            <div id="bfVergDatumWrap" style="display:none">
+              <div class="borm-field">
+                <label class="borm-lbl">Vergunningsdatum</label>
+                <input class="borm-inp" id="bfVergDatum" type="date">
+              </div>
+            </div>
+
+            <div class="borm-fsec" style="margin-top:.5rem">Opmerkingen</div>
+            <textarea class="borm-ta" id="bfOpm" placeholder="Notities over deze boring..." maxlength="500"></textarea>
+          </div><!-- /panelGegevens -->
+
+          <!-- TAB: Kaart & DXF -->
+          <div id="panelKaart" class="borm-map-pane" style="display:none">
+
+            <!-- Kaart lagen knoppen -->
+            <div>
+              <div class="map-fsec" style="margin-bottom:.375rem">Achtergrondkaart</div>
+              <div class="map-layer-btns">
+                <button class="map-lbtn active" id="btnLayerPdok"  onclick="setMapLayer('pdok')">PDOK Luchtfoto</button>
+                <button class="map-lbtn"        id="btnLayerOsm"   onclick="setMapLayer('osm')">OpenStreetMap</button>
+                <button class="map-lbtn"        id="btnLayerBrt"   onclick="setMapLayer('brt')">BRT (topografisch)</button>
+              </div>
+            </div>
+
+            <!-- Kaart -->
+            <div id="borMap"></div>
+
+            <!-- Coördinaten (RD New) -->
+            <div>
+              <div class="map-fsec" style="margin-bottom:.375rem">
+                Startpunt boring — RD New coördinaten
+                <span style="font-size:9px;font-weight:400;color:var(--text-3);margin-left:.5rem">(klik op de kaart om te plaatsen)</span>
+              </div>
+              <div class="map-coord-row">
+                <div class="borm-field">
+                  <label class="borm-lbl">X (m Oost)</label>
+                  <input class="borm-inp" id="bfRdX" type="number" placeholder="bijv. 233000" step="1" oninput="onRdCoordInput()">
+                </div>
+                <div class="borm-field">
+                  <label class="borm-lbl">Y (m Noord)</label>
+                  <input class="borm-inp" id="bfRdY" type="number" placeholder="bijv. 582000" step="1" oninput="onRdCoordInput()">
+                </div>
+              </div>
+              <div class="map-coord-hint">Nederland: X 0–280.000 · Y 300.000–625.000</div>
+            </div>
+
+            <!-- DXF upload -->
+            <div>
+              <div class="map-fsec" style="margin-bottom:.375rem">
+                Boorlijn — DXF bestand
+                <span style="font-size:9px;font-weight:400;color:var(--text-3);margin-left:.5rem">(LWPOLYLINE of LINE in RD New)</span>
+              </div>
+              <div class="dxf-upload-area" id="dxfDropArea"
+                onclick="document.getElementById('dxfFileInput').click()"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+                ondragleave="this.style.borderColor=''"
+                ondrop="handleDxfDrop(event)">
+                <div class="dxf-upload-icon">📐</div>
+                <div class="dxf-upload-lbl" id="dxfDropLabel">Klik of sleep een DXF bestand hierheen</div>
+                <div class="dxf-upload-sub">Ondersteund: LWPOLYLINE, POLYLINE, LINE entiteiten in RD New</div>
+              </div>
+              <input type="file" id="dxfFileInput" accept=".dxf" style="display:none" onchange="handleDxfFile(this.files[0])">
+              <div id="dxfStatus" style="display:none" class="dxf-status"></div>
+              <button id="btnClearDxf" onclick="clearDxf()" style="display:none;margin-top:.375rem;padding:3px 9px;font-size:10px;font-weight:600;border:1px solid var(--b-mid);border-radius:20px;background:var(--b-bg);color:var(--b-fg);cursor:pointer;font-family:'DM Sans',sans-serif">✕ DXF verwijderen</button>
+            </div>
+
+          </div><!-- /panelKaart -->
+        </div><!-- /bormTabs -->
+
       </div><!-- /borm-form-pane -->
 
     </div><!-- /borm-body -->
