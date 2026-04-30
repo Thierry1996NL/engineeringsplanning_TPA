@@ -501,9 +501,9 @@
   .dkm-tab.active { color:var(--dk); border-bottom-color:var(--dk); font-weight:600; }
   .dkm-right { flex:1; display:flex; flex-direction:column; overflow:hidden; }
   .dkm-form-ph { flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:.5rem; color:var(--text-3); font-size:12px; padding:2rem; }
-  .dkm-map-pane { height:280px; flex-shrink:0; border-bottom:1px solid var(--border); position:relative; overflow:hidden; background:#e8f2f8; }
+  .dkm-map-pane { height:280px; flex-shrink:0; border-bottom:1px solid var(--border); position:relative; overflow:hidden; background:#e8f2f8; isolation:isolate; }
   .dkm-map-ph { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; color:var(--text-3); font-size:12px; pointer-events:none; }
-  #dkmMap { width:100%; height:100%; z-index:1; }
+  #dkmMap { width:100%; height:100%; }
   .dkm-coord-bar { position:absolute; bottom:0; left:0; right:0; background:rgba(255,255,255,.93); backdrop-filter:blur(8px); border-top:1px solid var(--border); padding:5px 10px; display:none; align-items:center; gap:10px; z-index:1000; }
   .dkm-coord-bar.show { display:flex; }
   .dkm-coord-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-3); white-space:nowrap; }
@@ -650,10 +650,10 @@
   .psm-empty-icon { font-size:28px; margin-bottom:.5rem; display:block; }
   .psm-right { flex:1; display:flex; flex-direction:column; overflow:hidden; }
   /* Map pane */
-  .psm-map-pane { height:290px; flex-shrink:0; border-bottom:1px solid var(--border); position:relative; overflow:hidden; background:#e8f0e8; }
+  .psm-map-pane { height:290px; flex-shrink:0; border-bottom:1px solid var(--border); position:relative; overflow:hidden; background:#e8f0e8; isolation:isolate; }
   .psm-map-ph { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; color:var(--text-3); font-size:12px; pointer-events:none; }
   .psm-map-ph-icon { font-size:32px; }
-  #psmMap { width:100%; height:100%; z-index:1; }
+  #psmMap { width:100%; height:100%; }
   .psm-draw-bar { position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:1000; display:flex; gap:5px; background:rgba(255,255,255,0.95); border:1px solid var(--border-md); border-radius:var(--r-lg); padding:5px 8px; box-shadow:var(--sh-md); }
   .btn-psm-draw { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; border:1px solid var(--border-md); border-radius:var(--r); cursor:pointer; background:transparent; color:var(--text-2); transition:all .12s; white-space:nowrap; }
   .btn-psm-draw:hover { background:var(--surface2); color:var(--text); }
@@ -4682,7 +4682,7 @@ async function deleteBorm() {
           <div id="panelKaart" class="borm-map-pane" style="display:none">
 
             <!-- Kaart lagen knoppen -->
-            <div>
+            <div style="position:relative;z-index:20">
               <div class="map-fsec" style="margin-bottom:.375rem">Achtergrondkaart</div>
               <div class="map-layer-btns">
                 <button class="map-lbtn active" id="btnLayerPdok"  onclick="setMapLayer('pdok')">PDOK Luchtfoto</button>
@@ -4871,7 +4871,7 @@ async function deleteBorm() {
         <div id="psmPanelKaart" style="display:none;flex-direction:column;flex:1;overflow:hidden">
 
           <!-- Achtergrondkaart kiezer — BOVEN de kaart (zelfde als boringen) -->
-          <div style="padding:.375rem .75rem .25rem;border-bottom:1px solid var(--border);background:var(--surface2)">
+          <div style="padding:.375rem .75rem .25rem;border-bottom:1px solid var(--border);background:var(--surface2);position:relative;z-index:20">
             <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:.25rem">Achtergrondkaart</div>
             <div class="map-layer-btns">
               <button class="map-lbtn active" id="btnPsmPdok" onclick="setPsmLayer('pdok')">PDOK Luchtfoto</button>
@@ -5286,7 +5286,7 @@ async function deleteBorm() {
         <div id="dkmPanelKaart" style="display:none;flex:1;flex-direction:column;overflow:hidden">
 
           <!-- Achtergrondkaart -->
-          <div style="padding:.375rem .75rem .25rem;border-bottom:1px solid var(--border);background:var(--surface2)">
+          <div style="padding:.375rem .75rem .25rem;border-bottom:1px solid var(--border);background:var(--surface2);position:relative;z-index:20">
             <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:.25rem">Achtergrondkaart</div>
             <div class="map-layer-btns">
               <button class="map-lbtn active" id="btnDkmLayer_pdok" onclick="setDkmLayer('pdok')">PDOK Luchtfoto</button>
