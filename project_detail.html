@@ -1581,7 +1581,7 @@ function renderPage() {
   html += '</div>';
 
   // ── Gantt chart ──
-  html += '<div class="sec-heading"><span class="sec-heading-icon">&#x1F4C5;</span>Planning &amp; Voortgang</div>';
+  html += '<div class="sec-heading"><span class="sec-heading-icon">&#x1F4C5;</span>Planning</div>';
   html += buildGanttHTML();
 
   // Phase sections with group headings
@@ -1591,9 +1591,8 @@ function renderPage() {
     { heading:'&#x1F4DC; Vergunningen', icon:'', fases:['Vergunningen'] },
     { heading:'&#x1F6A7; Sleufloze technieken', icon:'', fases:['Sleufloze technieken'] }
   ];
+  html += '<div class="sec-heading"><span class="sec-heading-icon">&#x1F4CA;</span>Voortgang</div>';
   phaseGroups.forEach(function(group) {
-    // Group heading
-    html += '<div class="sec-heading">'+group.heading+'</div>';
     group.fases.forEach(function(fase) {
     var faseCols = COLS.filter(function(c){ return c.f === fase; });
     if (!faseCols.length) return;
