@@ -793,6 +793,18 @@
   }
   .map-lbtn:hover { background:var(--surface2); }
   .map-lbtn.active { background:var(--navy); color:#fff; border-color:var(--navy); }
+  .map-lbtn.kadaster-active { background:#7A1452; color:#fff; border-color:#7A1452; }
+  .kadaster-toggle-row { display:flex; align-items:center; gap:6px; margin-top:5px; padding-top:5px; border-top:1px solid var(--border); }
+  .btn-kadaster-toggle {
+    display:inline-flex; align-items:center; gap:5px; padding:4px 11px;
+    font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif;
+    border:1px solid rgba(122,20,82,0.3); border-radius:20px;
+    background:transparent; color:var(--text-2); cursor:pointer; transition:all .12s;
+  }
+  .btn-kadaster-toggle:hover { background:rgba(122,20,82,0.07); color:#7A1452; border-color:#7A1452; }
+  .btn-kadaster-toggle.active { background:#7A1452; color:#fff; border-color:#7A1452; }
+  .btn-kadaster-toggle .kt-dot { width:7px; height:7px; border-radius:50%; background:rgba(122,20,82,0.3); flex-shrink:0; }
+  .btn-kadaster-toggle.active .kt-dot { background:rgba(255,255,255,0.5); }
   .map-coord-row { display:grid; grid-template-columns:1fr 1fr; gap:.375rem .75rem; }
   .map-coord-hint { font-size:10px; color:var(--text-3); grid-column:1/-1; }
   .dxf-upload-area {
@@ -2298,8 +2310,19 @@ var MAP_LAYERS = {
   brt: L.tileLayer(
     'https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/standaard/EPSG:3857/{z}/{x}/{y}.png',
     { attribution:'© PDOK BRT', maxZoom:19 }
+  ),
+  kadaster: L.tileLayer(
+    'https://service.pdok.nl/kadaster/kadastralekaart/wmts/v5_0/Kadastralekaart/EPSG:3857/{z}/{x}/{y}.png',
+    { attribution:'© Kadaster', maxZoom:19, opacity:1 }
   )
 };
+
+// Kadaster is een overlay — combineert met andere lagen
+var kadasterOverlay = L.tileLayer(
+  'https://service.pdok.nl/kadaster/kadastralekaart/wmts/v5_0/Kadastralekaart/EPSG:3857/{z}/{x}/{y}.png',
+  { attribution:'© Kadaster', maxZoom:19, opacity:0.75, className:'kadaster-overlay' }
+);
+var kadasterActive = { bor:false, psm:false, dkm:false };
 
 // ── Marker HTML helpers ──
 function markerHtmlPin(label, color, textColor) {
@@ -2453,6 +2476,11 @@ function setMapLayer(name) {
   document.getElementById('btnLayerPdok').classList.toggle('active', name==='pdok');
   document.getElementById('btnLayerOsm').classList.toggle('active',  name==='osm');
   document.getElementById('btnLayerBrt').classList.toggle('active',  name==='brt');
+  // Herlaad kadaster overlay als die actief is
+  if (kadasterActive.bor && borMap) {
+    if (borMap.hasLayer(kadasterOverlay)) borMap.removeLayer(kadasterOverlay);
+    kadasterOverlay.addTo(borMap);
+  }
 }
 
 // ══════════════════════════════════════════
@@ -3480,6 +3508,10 @@ function setDkmLayer(name){
   ['pdok','osm','brt'].forEach(function(k){
     var el=document.getElementById('btnDkmLayer_'+k); if(el) el.classList.toggle('active',k===name);
   });
+  if (kadasterActive.dkm && dkmMap) {
+    if (dkmMap.hasLayer(kadasterOverlay)) dkmMap.removeLayer(kadasterOverlay);
+    kadasterOverlay.addTo(dkmMap);
+  }
 }
 function placeDkmMarker(){
   if(!dkmMap||!dkmRdX||!dkmRdY) return;
@@ -4136,6 +4168,21 @@ function psmRenderCoordStrip() {
   } else { lenEl.textContent = ''; }
 }
 
+function toggleKadaster(mapKey) {
+  var mapObj = mapKey==='bor'?borMap : mapKey==='psm'?psmMap : dkmMap;
+  if (!mapObj) return;
+  kadasterActive[mapKey] = !kadasterActive[mapKey];
+  if (kadasterActive[mapKey]) {
+    kadasterOverlay.addTo(mapObj);
+  } else {
+    if (mapObj.hasLayer(kadasterOverlay)) mapObj.removeLayer(kadasterOverlay);
+  }
+  // Update alle kadaster-knoppen voor deze map
+  var btnIds = { bor:'btnKadBor', psm:'btnKadPsm', dkm:'btnKadDkm' };
+  var btn = document.getElementById(btnIds[mapKey]);
+  if (btn) btn.classList.toggle('active', kadasterActive[mapKey]);
+}
+
 function setPsmLayer(name) {
   if (!psmMap) return;
   Object.values(MAP_LAYERS).forEach(function(l){ if(psmMap.hasLayer(l)) psmMap.removeLayer(l); });
@@ -4146,6 +4193,10 @@ function setPsmLayer(name) {
     var el = document.getElementById(btns[k]);
     if (el) el.classList.toggle('active', k === name);
   });
+  if (kadasterActive.psm && psmMap) {
+    if (psmMap.hasLayer(kadasterOverlay)) psmMap.removeLayer(kadasterOverlay);
+    kadasterOverlay.addTo(psmMap);
+  }
 }
 
 function swapPsmPoints() {
@@ -4638,6 +4689,13 @@ async function deleteBorm() {
                 <button class="map-lbtn"        id="btnLayerOsm"   onclick="setMapLayer('osm')">OpenStreetMap</button>
                 <button class="map-lbtn"        id="btnLayerBrt"   onclick="setMapLayer('brt')">BRT (topografisch)</button>
               </div>
+              <div class="kadaster-toggle-row">
+                <button class="btn-kadaster-toggle" id="btnKadBor" onclick="toggleKadaster('bor')">
+                  <span class="kt-dot"></span>
+                  Kadastrale kaart overlay
+                </button>
+                <span style="font-size:10px;color:var(--text-3)">Percelen &amp; grenzen bovenop de kaart</span>
+              </div>
             </div>
 
             <!-- Kaart -->
@@ -4822,6 +4880,13 @@ async function deleteBorm() {
               <button class="map-lbtn active" id="btnPsmPdok" onclick="setPsmLayer('pdok')">PDOK Luchtfoto</button>
               <button class="map-lbtn"        id="btnPsmOsm"  onclick="setPsmLayer('osm')">OpenStreetMap</button>
               <button class="map-lbtn"        id="btnPsmBrt"  onclick="setPsmLayer('brt')">BRT (topografisch)</button>
+            </div>
+            <div class="kadaster-toggle-row">
+              <button class="btn-kadaster-toggle" id="btnKadPsm" onclick="toggleKadaster('psm')">
+                <span class="kt-dot"></span>
+                Kadastrale kaart overlay
+              </button>
+              <span style="font-size:10px;color:var(--text-3)">Percelen &amp; grenzen bovenop de kaart</span>
             </div>
           </div>
 
@@ -5227,6 +5292,13 @@ async function deleteBorm() {
               <button class="map-lbtn active" id="btnDkmLayer_pdok" onclick="setDkmLayer('pdok')">PDOK Luchtfoto</button>
               <button class="map-lbtn"        id="btnDkmLayer_osm"  onclick="setDkmLayer('osm')">OpenStreetMap</button>
               <button class="map-lbtn"        id="btnDkmLayer_brt"  onclick="setDkmLayer('brt')">BRT (topografisch)</button>
+            </div>
+            <div class="kadaster-toggle-row">
+              <button class="btn-kadaster-toggle" id="btnKadDkm" onclick="toggleKadaster('dkm')">
+                <span class="kt-dot"></span>
+                Kadastrale kaart overlay
+              </button>
+              <span style="font-size:10px;color:var(--text-3)">Percelen &amp; grenzen bovenop de kaart</span>
             </div>
           </div>
 
