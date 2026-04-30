@@ -1267,9 +1267,16 @@ var dkmSelId    = null;
 var dkmStatus   = 'Nog te starten';
 var dkmMap      = null;
 var dkmMapInit  = false;
-var dkmMarker   = null;  // enkel punt
-var dkmRdX      = null;
-var dkmRdY      = null;
+var dkmMarker   = null;  // startpunt marker
+var dkmMarker2  = null;  // eindpunt marker
+var dkmPolyline = null;  // lijn
+var dkmLabelMkr = null;  // naamlabel
+var dkmRdX      = null;  // start X
+var dkmRdY      = null;  // start Y
+var dkmRdX2     = null;  // eind X
+var dkmRdY2     = null;  // eind Y
+var dkmDxf      = null;  // RD New [[x,y],...] uit DXF
+var dkmClickState = 0;   // 0=idle, 1=wacht op eindpunt
 var dkmCurLayer = 'pdok';
 var psmLabelMarker  = null;
 var psmDxf          = null;   // RD New [[x,y],...] geladen via DXF import
@@ -3356,7 +3363,7 @@ function openDkmModal(editId) {
 }
 function closeDkmModal() {
   document.getElementById('dkmOverlay').classList.remove('open');
-  dkmSelId = null; dkmRdX = null; dkmRdY = null;
+  dkmSelId = null; dkmRdX = null; dkmRdY = null; dkmRdX2 = null; dkmRdY2 = null; dkmDxf = null; dkmClickState = 0;
 }
 
 // ── List ──
@@ -3433,12 +3440,15 @@ function fillDkmForm(d) {
   document.getElementById('dkmVergDt').value   = d.vergunning_datum||'';
   document.getElementById('dkmOpm').value      = d.opmerkingen||'';
   dkmStatus = d.status||'Nog te starten';
-  dkmRdX = d.rd_x || null;
-  dkmRdY = d.rd_y || null;
+  dkmRdX  = d.rd_x  || null;
+  dkmRdY  = d.rd_y  || null;
+  dkmRdX2 = d.rd_x2 || null;
+  dkmRdY2 = d.rd_y2 || null;
+  dkmDxf  = null; dkmClickState = 0;
   dkmToggleVerg();
   renderDkmStatBtns();
   showDkmForm();
-  setTimeout(function(){ initDkmMap(); if(dkmRdX&&dkmRdY) placeDkmMarker(); }, 150);
+  setTimeout(function(){ initDkmMap(); dkmRenderLine(); dkmRenderCoordTable(); }, 150);
 }
 function showDkmForm() {
   var tabsEl = document.getElementById('dkmTabs'); if(tabsEl) tabsEl.style.display='flex';
@@ -3485,21 +3495,31 @@ function initDkmMap() {
   if(!el||typeof L==='undefined') return;
   document.getElementById('dkmMapPh').style.display='none';
   if(!dkmMapInit){
-    dkmMap=L.map('dkmMap',{center:[52.3,5.3],zoom:8,zoomControl:true,attributionControl:false});
+    dkmMap=L.map('dkmMap',{center:[52.9,6.6],zoom:12,zoomControl:true,attributionControl:false});
     MAP_LAYERS[dkmCurLayer].addTo(dkmMap);
     L.control.attribution({prefix:false}).addTo(dkmMap);
     dkmMap.on('click',function(e){
       var rd=wgs2rd(e.latlng.lat,e.latlng.lng);
-      dkmRdX=rd[0]; dkmRdY=rd[1];
-      document.getElementById('dkmRdX').value=Math.round(rd[0]);
-      document.getElementById('dkmRdY').value=Math.round(rd[1]);
-      placeDkmMarker();
-      updateDkmCoordBar();
+      if(dkmClickState===0){
+        // 1e klik = startpunt (inlaat)
+        dkmRdX=rd[0]; dkmRdY=rd[1];
+        dkmClickState=1;
+        // Hint tonen
+        var ph=document.getElementById('dkmClickHint'); if(ph) ph.style.display='flex';
+      } else if(dkmClickState===1){
+        // 2e klik = eindpunt (uitlaat)
+        dkmRdX2=rd[0]; dkmRdY2=rd[1];
+        dkmClickState=0;
+        var ph=document.getElementById('dkmClickHint'); if(ph) ph.style.display='none';
+      }
+      syncDkmRdInputs();
+      dkmRenderLine();
+      dkmRenderCoordTable();
     });
     dkmMapInit=true;
   }
   dkmMap.invalidateSize();
-  if(dkmRdX&&dkmRdY) placeDkmMarker();
+  dkmRenderLine();
 }
 function setDkmLayer(name){
   if(!dkmMap) return;
@@ -3513,49 +3533,154 @@ function setDkmLayer(name){
     kadasterOverlay.addTo(dkmMap);
   }
 }
-function placeDkmMarker(){
-  if(!dkmMap||!dkmRdX||!dkmRdY) return;
-  var wgs=rd2wgs(dkmRdX,dkmRdY);
-  if(dkmMarker){ dkmMap.removeLayer(dkmMarker); dkmMarker=null; }
-  var code=(document.getElementById('dkmNr')&&document.getElementById('dkmNr').value.trim())||'D';
-  var html='<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#005580,#0070A8);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,112,168,.5);display:flex;align-items:center;justify-content:center;">'
-    +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="12" rx="3" ry="8" stroke="white" stroke-width="1.8"/><path d="M4 12h16" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg></div>';
-  var icon=L.divIcon({className:'',html:html,iconSize:[28,28],iconAnchor:[14,14]});
-  dkmMarker=L.marker(wgs,{icon:icon,draggable:true,zIndexOffset:1000}).addTo(dkmMap);
-  dkmMarker.bindTooltip('<b>'+esc(code)+'</b><br>RD: '+Math.round(dkmRdX)+', '+Math.round(dkmRdY),{direction:'top',offset:[0,-16]});
-  dkmMarker.on('dragend',function(e){
-    var p=e.target.getLatLng(), rd=wgs2rd(p.lat,p.lng);
-    dkmRdX=rd[0]; dkmRdY=rd[1];
-    document.getElementById('dkmRdX').value=Math.round(rd[0]);
-    document.getElementById('dkmRdY').value=Math.round(rd[1]);
-    dkmMarker.setTooltipContent('<b>'+esc(code)+'</b><br>RD: '+Math.round(rd[0])+', '+Math.round(rd[1]));
-    updateDkmCoordBar();
-  });
-  dkmMap.setView(wgs,Math.max(dkmMap.getZoom(),15));
-  updateDkmCoordBar();
+function syncDkmRdInputs(){
+  var x1=document.getElementById('dkmRdX'),y1=document.getElementById('dkmRdY');
+  var x2=document.getElementById('dkmRdX2'),y2=document.getElementById('dkmRdY2');
+  if(x1) x1.value=dkmRdX?Math.round(dkmRdX):'';
+  if(y1) y1.value=dkmRdY?Math.round(dkmRdY):'';
+  if(x2) x2.value=dkmRdX2?Math.round(dkmRdX2):'';
+  if(y2) y2.value=dkmRdY2?Math.round(dkmRdY2):'';
 }
-function updateDkmCoordBar(){
-  var bar=document.getElementById('dkmCoordBar');
-  if(!bar||!dkmRdX||!dkmRdY){ if(bar) bar.classList.remove('show'); return; }
-  bar.classList.add('show');
-  document.getElementById('dkmCoordX').textContent=Math.round(dkmRdX).toLocaleString('nl-NL');
-  document.getElementById('dkmCoordY').textContent=Math.round(dkmRdY).toLocaleString('nl-NL');
+function dkmRenderLine(){
+  if(!dkmMap) return;
+  // Clear existing
+  if(dkmPolyline) { dkmMap.removeLayer(dkmPolyline); dkmPolyline=null; }
+  if(dkmMarker)   { dkmMap.removeLayer(dkmMarker);   dkmMarker=null; }
+  if(dkmMarker2)  { dkmMap.removeLayer(dkmMarker2);  dkmMarker2=null; }
+  if(dkmLabelMkr) { dkmMap.removeLayer(dkmLabelMkr); dkmLabelMkr=null; }
+  var code=(document.getElementById('dkmNr')&&document.getElementById('dkmNr').value.trim())||'';
+  var hasStart = dkmRdX&&dkmRdY;
+  var hasEnd   = dkmRdX2&&dkmRdY2;
+  if(!hasStart) return;
+  var wgs1=rd2wgs(dkmRdX,dkmRdY);
+  // Punt 1 — blauw pin (inlaat)
+  dkmMarker=L.marker(wgs1,{icon:L.divIcon({className:'',html:markerHtmlPin('1','#0057FF'),iconSize:[26,34],iconAnchor:[13,32]}),draggable:true,zIndexOffset:1000}).addTo(dkmMap);
+  dkmMarker.bindTooltip('<b>Punt 1 &mdash; Inlaat</b>'+(code?'<br>'+esc(code):'')+'<br>RD: '+Math.round(dkmRdX)+', '+Math.round(dkmRdY),{direction:'top',offset:[0,-34]});
+  dkmMarker.on('dragend',function(e){ var p=e.target.getLatLng(),rd=wgs2rd(p.lat,p.lng); dkmRdX=rd[0]; dkmRdY=rd[1]; syncDkmRdInputs(); dkmRenderLine(); dkmRenderCoordTable(); });
+  if(hasEnd){
+    var wgs2=rd2wgs(dkmRdX2,dkmRdY2);
+    // Lijn (blauw gestippeld)
+    dkmPolyline=L.polyline([wgs1,wgs2],{color:'#0070A8',weight:4,opacity:.9,dashArray:'6 4'}).addTo(dkmMap);
+    // Punt 2 — rood pin (uitlaat)
+    dkmMarker2=L.marker(wgs2,{icon:L.divIcon({className:'',html:markerHtmlPin('2','#D70015'),iconSize:[26,34],iconAnchor:[13,32]}),draggable:true,zIndexOffset:999}).addTo(dkmMap);
+    dkmMarker2.bindTooltip('<b>Punt 2 &mdash; Uitlaat</b>'+(code?'<br>'+esc(code):'')+'<br>RD: '+Math.round(dkmRdX2)+', '+Math.round(dkmRdY2),{direction:'top',offset:[0,-34]});
+    dkmMarker2.on('dragend',function(e){ var p=e.target.getLatLng(),rd=wgs2rd(p.lat,p.lng); dkmRdX2=rd[0]; dkmRdY2=rd[1]; syncDkmRdInputs(); dkmRenderLine(); dkmRenderCoordTable(); });
+    // Label op middelpunt
+    if(code){
+      var mid=[(wgs1[0]+wgs2[0])/2,(wgs1[1]+wgs2[1])/2];
+      dkmLabelMkr=L.marker(mid,{icon:L.divIcon({className:'',html:markerHtmlLabel(code,'#1D1D2E'),iconSize:[0,0],iconAnchor:[0,0]}),interactive:false,zIndexOffset:2000}).addTo(dkmMap);
+    }
+    // Auto-lengte
+    var dx=dkmRdX2-dkmRdX, dy=dkmRdY2-dkmRdY;
+    var len=Math.sqrt(dx*dx+dy*dy);
+    var lEl=document.getElementById('dkmLen');
+    if(lEl&&(!lEl.value||parseFloat(lEl.value)===0)) lEl.value=Math.round(len);
+    try{ dkmMap.fitBounds(dkmPolyline.getBounds(),{padding:[28,28],maxZoom:17}); }catch(e){}
+  } else {
+    dkmMap.setView(wgs1,Math.max(dkmMap.getZoom(),15));
+  }
+}
+function dkmRenderCoordTable(){
+  var tbl=document.getElementById('dkmCoordTable');
+  if(!tbl) return;
+  if(!dkmRdX||!dkmRdY){ tbl.style.display='none'; return; }
+  tbl.style.display='';
+  var fmt=function(v){ return v?Math.round(v).toLocaleString('nl-NL'):'—'; };
+  document.getElementById('dkmCoordP1X').textContent=fmt(dkmRdX);
+  document.getElementById('dkmCoordP1Y').textContent=fmt(dkmRdY);
+  document.getElementById('dkmCoordP2X').textContent=fmt(dkmRdX2);
+  document.getElementById('dkmCoordP2Y').textContent=fmt(dkmRdY2);
+  var lenEl=document.getElementById('dkmCoordLen');
+  if(lenEl&&dkmRdX2&&dkmRdY2){
+    var dx=dkmRdX2-dkmRdX, dy=dkmRdY2-dkmRdY;
+    lenEl.innerHTML='&asymp; <strong>'+Math.round(Math.sqrt(dx*dx+dy*dy))+' m</strong>';
+  } else if(lenEl){ lenEl.textContent=''; }
+}
+function swapDkmPoints(){
+  var tx=dkmRdX,ty=dkmRdY; dkmRdX=dkmRdX2; dkmRdY=dkmRdY2; dkmRdX2=tx; dkmRdY2=ty;
+  syncDkmRdInputs(); dkmRenderLine(); dkmRenderCoordTable();
+  showToast('⇅ Inlaat en uitlaat omgedraaid','info');
 }
 function onDkmRdInput(){
-  dkmRdX=parseFloat(document.getElementById('dkmRdX').value)||null;
-  dkmRdY=parseFloat(document.getElementById('dkmRdY').value)||null;
-  if(!dkmMap||!dkmRdX||!dkmRdY) return;
-  if(dkmRdX<0||dkmRdX>280000||dkmRdY<300000||dkmRdY>625000) return;
-  placeDkmMarker();
+  dkmRdX  = parseFloat(document.getElementById('dkmRdX').value)||null;
+  dkmRdY  = parseFloat(document.getElementById('dkmRdY').value)||null;
+  var x2el=document.getElementById('dkmRdX2'), y2el=document.getElementById('dkmRdY2');
+  dkmRdX2 = x2el ? (parseFloat(x2el.value)||null) : null;
+  dkmRdY2 = y2el ? (parseFloat(y2el.value)||null) : null;
+  if(!dkmMap) return;
+  dkmRenderLine(); dkmRenderCoordTable();
+}
+// DXF import for duikers
+function handleDkmDxfDrop(e){ e.preventDefault(); document.getElementById('dkmDxfDrop').style.borderColor=''; var f=e.dataTransfer.files[0]; if(f) handleDkmDxfFile(f); }
+function handleDkmDxfFile(file){
+  if(!file) return;
+  if(!file.name.toLowerCase().endsWith('.dxf')){ showDkmDxfStatus('Alleen .dxf bestanden worden ondersteund','err'); return; }
+  showDkmDxfStatus('Bestand wordt gelezen...','info');
+  var r=new FileReader(); r.onload=function(e){ parseDkmDxf(e.target.result,file.name); }; r.readAsText(file);
+}
+function parseDkmDxf(text,filename){
+  try{
+    var lines=text.split(/\r?\n/).map(function(l){ return l.trim(); });
+    var polylines=[];
+    var entStart=lines.indexOf('ENTITIES'); if(entStart<0) entStart=0;
+    var i=entStart;
+    while(i<lines.length){
+      if(lines[i]==='LWPOLYLINE'||(lines[i]==='0'&&lines[i+1]==='LWPOLYLINE')){ var pts=parseLwPolyline(lines,i); if(pts.length>=2) polylines.push(pts); }
+      if(lines[i]==='POLYLINE'  ||(lines[i]==='0'&&lines[i+1]==='POLYLINE'))  { var pts2=parsePolyline(lines,i);  if(pts2.length>=2) polylines.push(pts2); }
+      if(lines[i-1]==='0'&&lines[i]==='LINE'){ var ln=parseLine(lines,i); if(ln) polylines.push(ln); }
+      i++;
+    }
+    if(!polylines.length){ showDkmDxfStatus('Geen polylines of lijnen gevonden','err'); return; }
+    polylines.sort(function(a,b){ return b.length-a.length; });
+    dkmDxf=polylines[0];
+    var inRd=dkmDxf.every(function(p){ return p[0]>0&&p[0]<300000&&p[1]>250000&&p[1]<650000; });
+    if(!inRd){ showDkmDxfStatus('⚠ Coördinaten lijken niet in RD New','err'); dkmDxf=null; return; }
+    // Start = eerste punt, Eind = laatste punt
+    dkmRdX=dkmDxf[0][0]; dkmRdY=dkmDxf[0][1];
+    dkmRdX2=dkmDxf[dkmDxf.length-1][0]; dkmRdY2=dkmDxf[dkmDxf.length-1][1];
+    syncDkmRdInputs(); dkmRenderLine(); dkmRenderCoordTable();
+    document.getElementById('dkmDxfDrop').classList.add('has-file');
+    document.getElementById('dkmDxfLabel').textContent=filename;
+    document.getElementById('btnClearDkmDxf').style.display='';
+    var dx=dkmRdX2-dkmRdX,dy=dkmRdY2-dkmRdY;
+    var len=Math.round(Math.sqrt(dx*dx+dy*dy));
+    showDkmDxfStatus('✓ '+dkmDxf.length+' punten geladen · '+len+' m','ok');
+  }catch(err){ showDkmDxfStatus('Parseerfout: '+err.message,'err'); }
+}
+function showDkmDxfStatus(msg,type){
+  var el=document.getElementById('dkmDxfStatus'); if(!el) return;
+  el.textContent=msg; el.className='dkm-dxf-status '+type; el.style.display='';
+}
+function clearDkmDxf(){
+  dkmDxf=null; dkmRdX=null; dkmRdY=null; dkmRdX2=null; dkmRdY2=null;
+  syncDkmRdInputs(); dkmRenderLine(); dkmRenderCoordTable();
+  var drop=document.getElementById('dkmDxfDrop'); if(drop) drop.classList.remove('has-file');
+  document.getElementById('dkmDxfLabel').textContent='Klik of sleep een DXF bestand hierheen';
+  document.getElementById('btnClearDkmDxf').style.display='none';
+  document.getElementById('dkmDxfStatus').style.display='none';
+  document.getElementById('dkmDxfInput').value='';
 }
 
-// ── DXF export (POINT) ──
+// ── DXF export (LWPOLYLINE inlaat→uitlaat) ──
 function exportDkmDxf(){
-  if(!dkmRdX||!dkmRdY){ showToast('Geen locatie beschikbaar om te exporteren','error'); return; }
+  if(!dkmRdX||!dkmRdY){ showToast('Geen coördinaten beschikbaar om te exporteren','error'); return; }
   var code=(document.getElementById('dkmNr')&&document.getElementById('dkmNr').value.trim())||'D';
+  // Gebruik DXF punten of start+eind
+  var pts;
+  if(dkmDxf&&dkmDxf.length>=2){ pts=dkmDxf; }
+  else if(dkmRdX2&&dkmRdY2){ pts=[[dkmRdX,dkmRdY],[dkmRdX2,dkmRdY2]]; }
+  else { pts=[[dkmRdX,dkmRdY]]; }
   var lines=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1015','0','ENDSEC','0','SECTION','2','ENTITIES'];
-  lines.push('0','POINT','8','DUIKERS','10',dkmRdX.toFixed(3),'20',dkmRdY.toFixed(3),'30','0.0');
-  lines.push('0','TEXT','8','LABELS','10',(dkmRdX+1).toFixed(3),'20',(dkmRdY+2).toFixed(3),'30','0.0','40','2.0','1',code);
+  if(pts.length>=2){
+    lines.push('0','LWPOLYLINE','5','1','8','DUIKERS','100','AcDbEntity','100','AcDbPolyline');
+    lines.push('90',String(pts.length),'70','0');
+    pts.forEach(function(pt){ lines.push('10',pt[0].toFixed(3),'20',pt[1].toFixed(3)); });
+  } else {
+    lines.push('0','POINT','8','DUIKERS','10',pts[0][0].toFixed(3),'20',pts[0][1].toFixed(3),'30','0.0');
+  }
+  // Label op middelpunt
+  var mx=pts[Math.floor(pts.length/2)][0], my=pts[Math.floor(pts.length/2)][1];
+  lines.push('0','TEXT','8','LABELS','10',mx.toFixed(3),'20',(my+2).toFixed(3),'30','0.0','40','2.0','1',code,'72','1','11',mx.toFixed(3),'21',(my+2).toFixed(3),'31','0.0');
   lines.push('0','ENDSEC','0','EOF');
   var blob=new Blob([lines.join('\n')],{type:'application/dxf'});
   var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -3569,9 +3694,9 @@ function exportDuikersExcel(){
   if(!DK_DATA||!DK_DATA.length){ showToast('Geen duikers om te exporteren','error'); return; }
   if(typeof XLSX==='undefined'){ showToast('Excel bibliotheek niet geladen','error'); return; }
   var pNaam=(ROW_DATA&&ROW_DATA[2])||'Project', wp=(ROW_DATA&&ROW_DATA[5])||'';
-  var rows=[['Duiker nr.','Type','Locatie','Materiaal','Diameter (mm)','Breedte (mm)','Hoogte (mm)','Lengte (m)','Bodemhoogte (m NAP)','Toestand','Beheerder','Watergang','Aannemer','Startdatum','Einddatum','Status','Vergunning','Vergunningsdatum','X RD','Y RD','Opmerkingen']];
+  var rows=[['Duiker nr.','Type','Locatie','Materiaal','Diameter (mm)','Breedte (mm)','Hoogte (mm)','Lengte (m)','Bodemhoogte (m NAP)','Toestand','Beheerder','Watergang','Aannemer','Startdatum','Einddatum','Status','Vergunning','Vergunningsdatum','X Inlaat RD','Y Inlaat RD','X Uitlaat RD','Y Uitlaat RD','Opmerkingen']];
   DK_DATA.forEach(function(d){
-    rows.push([d.duiker_nr||'',d.type_duiker||'',d.locatie||'',d.materiaal||'',d.diameter_mm!=null?d.diameter_mm:'',d.breedte_mm!=null?d.breedte_mm:'',d.hoogte_mm!=null?d.hoogte_mm:'',d.lengte_m!=null?d.lengte_m:'',d.bodem_hoogte_m!=null?d.bodem_hoogte_m:'',d.toestand||'',d.beheerder||'',d.watergang||'',d.aannemer||'',d.startdatum||'',d.einddatum||'',d.status||'',d.vergunning_nodig?'Ja':'Nee',d.vergunning_datum||'',d.rd_x?Math.round(d.rd_x):'',d.rd_y?Math.round(d.rd_y):'',d.opmerkingen||'']);
+    rows.push([d.duiker_nr||'',d.type_duiker||'',d.locatie||'',d.materiaal||'',d.diameter_mm!=null?d.diameter_mm:'',d.breedte_mm!=null?d.breedte_mm:'',d.hoogte_mm!=null?d.hoogte_mm:'',d.lengte_m!=null?d.lengte_m:'',d.bodem_hoogte_m!=null?d.bodem_hoogte_m:'',d.toestand||'',d.beheerder||'',d.watergang||'',d.aannemer||'',d.startdatum||'',d.einddatum||'',d.status||'',d.vergunning_nodig?'Ja':'Nee',d.vergunning_datum||'',d.rd_x?Math.round(d.rd_x):'',d.rd_y?Math.round(d.rd_y):'',d.rd_x2?Math.round(d.rd_x2):'',d.rd_y2?Math.round(d.rd_y2):'',d.opmerkingen||'']);
   });
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(rows);
@@ -3627,7 +3752,7 @@ function saveDkm(){
     status:       dkmStatus,
     vergunning_nodig: document.getElementById('dkmVergCb').checked,
     vergunning_datum: document.getElementById('dkmVergDt').value||null,
-    rd_x: dkmRdX||null, rd_y: dkmRdY||null,
+    rd_x: dkmRdX||null, rd_y: dkmRdY||null, rd_x2: dkmRdX2||null, rd_y2: dkmRdY2||null,
     updated_by:currentUser, updated_at:new Date().toISOString()
   };
   document.getElementById('btnDkmSave').disabled=true;
@@ -5302,35 +5427,78 @@ async function deleteBorm() {
             </div>
           </div>
 
-          <!-- Kaart -->
+          <!-- Kaart: 1e klik = inlaat, 2e klik = uitlaat -->
           <div class="dkm-map-pane" id="dkmMapPane">
             <div class="dkm-map-ph" id="dkmMapPh">
               <span style="font-size:30px">&#x1F5FA;&#xFE0F;</span>
-              <span>Klik op de kaart om de duikerlocatie in te meten</span>
+              <span>1e klik = inlaat &middot; 2e klik = uitlaat</span>
             </div>
             <div id="dkmMap"></div>
-
-            <!-- Coord bar -->
-            <div class="dkm-coord-bar" id="dkmCoordBar">
-              <span class="dkm-coord-lbl">RD New</span>
-              <span>X:</span><span class="dkm-coord-val" id="dkmCoordX">&#x2014;</span>
-              <span style="color:var(--text-3)">&nbsp;Y:</span><span class="dkm-coord-val" id="dkmCoordY">&#x2014;</span>
-              <span class="dkm-coord-hint">Sleep de marker om te corrigeren</span>
+            <!-- Click hint (verschijnt na 1e klik) -->
+            <div id="dkmClickHint" style="display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:1001;background:rgba(0,112,168,.9);color:#fff;border-radius:var(--r-lg);padding:7px 16px;font-size:12px;font-weight:500;pointer-events:none;white-space:nowrap;box-shadow:var(--sh-md)">
+              Nu klikken voor uitlaat (punt 2)
             </div>
           </div>
 
-          <!-- RD handmatig invoeren -->
+          <!-- DXF importeren -->
+          <div style="padding:.625rem .875rem;display:flex;flex-direction:column;gap:.375rem;border-bottom:1px solid var(--border)">
+            <div class="map-fsec">Duikeras &mdash; DXF importeren <span style="font-size:9px;font-weight:400;color:var(--text-3);margin-left:.375rem">(LWPOLYLINE of LINE in RD New)</span></div>
+            <div class="dkm-dxf-area" id="dkmDxfDrop"
+              onclick="document.getElementById('dkmDxfInput').click()"
+              ondragover="event.preventDefault();this.style.borderColor='var(--dk)'"
+              ondragleave="this.style.borderColor=''"
+              ondrop="handleDkmDxfDrop(event)">
+              <div style="font-size:20px;margin-bottom:3px">&#x1F4D0;</div>
+              <div class="dkm-dxf-lbl" id="dkmDxfLabel">Klik of sleep een DXF bestand hierheen</div>
+              <div class="dkm-dxf-sub">LWPOLYLINE, POLYLINE, LINE in RD New</div>
+            </div>
+            <input type="file" id="dkmDxfInput" accept=".dxf" style="display:none" onchange="handleDkmDxfFile(this.files[0])">
+            <div id="dkmDxfStatus" style="display:none" class="dkm-dxf-status"></div>
+            <button id="btnClearDkmDxf" onclick="clearDkmDxf()" style="display:none;padding:3px 9px;font-size:10px;font-weight:600;border:1px solid var(--b-mid);border-radius:20px;background:var(--b-bg);color:var(--b-fg);cursor:pointer;font-family:'DM Sans',sans-serif;align-self:flex-start">&times; DXF verwijderen</button>
+          </div>
+
+          <!-- Coördinaten tabel (RD New) -->
+          <div id="dkmCoordTable" style="display:none;padding:.375rem .75rem .5rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,.95)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.375rem">
+              <div class="map-fsec">Co&ouml;rdinaten (RD New)</div>
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <span id="dkmCoordLen" style="font-size:10px;color:var(--text-3)"></span>
+                <button onclick="swapDkmPoints()" style="font-size:10px;padding:3px 8px;border:1px solid var(--border-md);border-radius:var(--r);background:var(--surface2);color:var(--text-2);cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:'DM Sans',sans-serif">
+                  <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Omdraaien
+                </button>
+              </div>
+            </div>
+            <div class="coord-table">
+              <div class="coord-row coord-row-head">
+                <div class="coord-cell-pin"></div>
+                <div class="coord-cell-lbl">Punt</div>
+                <div class="coord-cell-x">X (m Oost)</div>
+                <div class="coord-cell-y">Y (m Noord)</div>
+              </div>
+              <div class="coord-row">
+                <div class="coord-cell-pin"><div class="coord-pin p1">1</div></div>
+                <div class="coord-cell-lbl coord-pt-lbl">Inlaat</div>
+                <div class="coord-cell-x"><span class="coord-val" id="dkmCoordP1X">&mdash;</span></div>
+                <div class="coord-cell-y"><span class="coord-val" id="dkmCoordP1Y">&mdash;</span></div>
+              </div>
+              <div class="coord-row">
+                <div class="coord-cell-pin"><div class="coord-pin p2">2</div></div>
+                <div class="coord-cell-lbl coord-pt-lbl">Uitlaat</div>
+                <div class="coord-cell-x"><span class="coord-val" id="dkmCoordP2X">&mdash;</span></div>
+                <div class="coord-cell-y"><span class="coord-val" id="dkmCoordP2Y">&mdash;</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Handmatige invoer & Export -->
           <div style="padding:.5rem .875rem;border-bottom:1px solid var(--border);background:var(--surface2)">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:.375rem">Of voer RD New co&#246;rdinaten handmatig in</div>
-            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
-              <div style="display:flex;align-items:center;gap:6px">
-                <label style="font-size:11px;color:var(--text-2);white-space:nowrap">X (m Oost):</label>
-                <input class="dkm-in" id="dkmRdX" type="number" placeholder="bijv. 192323" style="width:120px" oninput="onDkmRdInput()">
-              </div>
-              <div style="display:flex;align-items:center;gap:6px">
-                <label style="font-size:11px;color:var(--text-2);white-space:nowrap">Y (m Noord):</label>
-                <input class="dkm-in" id="dkmRdY" type="number" placeholder="bijv. 559081" style="width:120px" oninput="onDkmRdInput()">
-              </div>
+            <div class="map-fsec" style="margin-bottom:.375rem">Handmatig invoeren</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.375rem .625rem">
+              <div><div style="font-size:9px;font-weight:600;color:var(--text-3);margin-bottom:2px;display:flex;align-items:center;gap:4px"><span class="coord-pin p1" style="width:14px;height:14px;font-size:8px">1</span> Inlaat X</div><input class="dkm-in" id="dkmRdX" type="number" placeholder="bijv. 192323" oninput="onDkmRdInput()"></div>
+              <div><div style="font-size:9px;font-weight:600;color:var(--text-3);margin-bottom:2px">Inlaat Y</div><input class="dkm-in" id="dkmRdY" type="number" placeholder="bijv. 559081" oninput="onDkmRdInput()"></div>
+              <div><div style="font-size:9px;font-weight:600;color:var(--text-3);margin-bottom:2px;display:flex;align-items:center;gap:4px"><span class="coord-pin p2" style="width:14px;height:14px;font-size:8px">2</span> Uitlaat X</div><input class="dkm-in" id="dkmRdX2" type="number" placeholder="bijv. 192435" oninput="onDkmRdInput()"></div>
+              <div><div style="font-size:9px;font-weight:600;color:var(--text-3);margin-bottom:2px">Uitlaat Y</div><input class="dkm-in" id="dkmRdY2" type="number" placeholder="bijv. 559156" oninput="onDkmRdInput()"></div>
             </div>
           </div>
 
