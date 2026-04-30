@@ -4323,9 +4323,9 @@ async function deleteBorm() {
 
             <div class="psm-sec-title">Identificatie</div>
             <div class="psm-fg">
-              <div class="psm-field"><label class="psm-fl">Sleuf nr.</label><input class="psm-in" id="psmNr" type="text" placeholder="bijv. PS-01" maxlength="20"></div>
+              <div class="psm-field"><label class="psm-fl">Sleuf nr.</label><input class="psm-in" id="psmNr" type="text" placeholder="bijv. PS-01" maxlength="20" oninput="renderPsmList()"></div>
               <div class="psm-field"><label class="psm-fl">Doeleinde</label>
-                <select class="psm-sel" id="psmDoel">
+                <select class="psm-sel" id="psmDoel" onchange="renderPsmList()">
                   <option value="Archeologie">Archeologie</option>
                   <option value="Bodem">Bodem</option>
                   <option value="Kabels &amp; Leidingen">Kabels &amp; Leidingen</option>
