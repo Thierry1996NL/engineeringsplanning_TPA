@@ -1954,43 +1954,65 @@ function setAllGanttPhases(show) {
 function renderGanttLegend() {
   var leg = document.getElementById('ganttLegend');
   if (!leg) return;
+
+  // Group phases by their group property
+  var GROUPS = [
+    { key:'fasering',     label:'Fasering',            fases:[] },
+    { key:'omgeving',     label:'Omgevingsmanagement', fases:[] },
+    { key:'vergunningen', label:'Vergunningen',        fases:[] },
+    { key:'sleufloze',    label:'Sleufloze technieken',fases:[] }
+  ];
+  var groupMap = {};
+  GROUPS.forEach(function(g){ groupMap[g.key] = g; });
+  GANTT_PHASES.forEach(function(p){
+    if (groupMap[p.group]) groupMap[p.group].fases.push(p);
+  });
+
   var lhtml = '';
+
   // Control buttons row
-  lhtml += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.625rem">'
+  lhtml += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">'
     + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)">Fasen in-/uitschakelen</span>'
     + '<div style="display:flex;gap:5px">'
-    + '<button onclick="setAllGanttPhases(true)" style="font-size:11px;font-weight:500;padding:4px 12px;border:1px solid var(--border-md);border-radius:20px;background:var(--surface2);color:var(--text-2);cursor:pointer;font-family:inherit;transition:all .1s">Alles tonen</button>'
-    + '<button onclick="setAllGanttPhases(false)" style="font-size:11px;font-weight:500;padding:4px 12px;border:1px solid var(--border-md);border-radius:20px;background:var(--surface2);color:var(--text-2);cursor:pointer;font-family:inherit;transition:all .1s">Alles verbergen</button>'
-    + '</div>'
-    + '</div>';
-  // Checkbox grid
-  lhtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px 8px">';
+    + '<button onclick="setAllGanttPhases(true)" style="font-size:11px;font-weight:500;padding:4px 12px;border:1px solid var(--border-md);border-radius:20px;background:var(--surface2);color:var(--text-2);cursor:pointer;font-family:inherit">Alles tonen</button>'
+    + '<button onclick="setAllGanttPhases(false)" style="font-size:11px;font-weight:500;padding:4px 12px;border:1px solid var(--border-md);border-radius:20px;background:var(--surface2);color:var(--text-2);cursor:pointer;font-family:inherit">Alles verbergen</button>'
+    + '</div></div>';
+
   var cbId = 0;
-  GANTT_PHASES.forEach(function(p){
-    var isHidden = !!ganttHidden[p.label];
-    var id = 'gcb_' + (cbId++);
-    lhtml += '<label style="display:flex;align-items:center;gap:6px;font-size:12px;'
-      + 'color:'+(isHidden?'var(--text-3)':'var(--text-2)')+';cursor:pointer;user-select:none;'
-      + 'padding:4px 6px;border-radius:6px;transition:background .08s;'
-      + (isHidden?'opacity:.5;':'')
-      + '">'
-      + '<input type="checkbox" id="'+id+'" '+(isHidden?'':'checked')+' '
-      + 'onchange="toggleGanttPhase(\''+p.label+'\',this)" '
-      + 'style="width:14px;height:14px;cursor:pointer;accent-color:'+p.color+';flex-shrink:0">'
-      + '<span style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:'+p.color+'"></span>'
-      + '<span style="'+(isHidden?'text-decoration:line-through;':'')+'">'+esc(p.label)+'</span>'
-      + '</label>';
+
+  GROUPS.forEach(function(group) {
+    if (!group.fases.length) return;
+
+    // Group header with toggle-all for this group
+    lhtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;margin-top:6px">'
+      + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)">'+esc(group.label)+'</span>'
+      + '<div style="flex:1;height:1px;background:var(--border)"></div>'
+      + '</div>';
+
+    // Checkbox items in a grid
+    lhtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:2px 6px;margin-bottom:2px">';
+    group.fases.forEach(function(p) {
+      var isHidden = !!ganttHidden[p.label];
+      var id = 'gcb_' + (cbId++);
+      lhtml += '<label style="display:flex;align-items:center;gap:6px;font-size:12px;'
+        + 'color:'+(isHidden?'var(--text-3)':'var(--text-2)')+';cursor:pointer;user-select:none;'
+        + 'padding:3px 6px;border-radius:6px;'+(isHidden?'opacity:.5;':'')+'">'
+        + '<input type="checkbox" id="'+id+'" '+(isHidden?'':'checked')+' '
+        + 'onchange="toggleGanttPhase(\''+p.label+'\',this)" '
+        + 'style="width:13px;height:13px;cursor:pointer;accent-color:'+p.color+';flex-shrink:0">'
+        + '<span style="width:9px;height:9px;border-radius:2px;flex-shrink:0;background:'+p.color+'"></span>'
+        + '<span style="'+(isHidden?'text-decoration:line-through;':'')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.label)+'</span>'
+        + '</label>';
+    });
+    lhtml += '</div>';
   });
-  // Vaste items
-  lhtml += '<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);padding:4px 6px">'
-    + '<span style="width:14px;height:14px;display:inline-block"></span>'
-    + '<span style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:#FF3B30"></span>'
-    + '<span>Vandaag</span></div>';
-  lhtml += '<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);padding:4px 6px">'
-    + '<span style="width:14px;height:14px;display:inline-block"></span>'
-    + '<span style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:rgba(0,0,0,.12);border:1px solid #ccc"></span>'
-    + '<span>Voortgang</span></div>';
-  lhtml += '</div>';
+
+  // Fixed legend items (Vandaag, Voortgang)
+  lhtml += '<div style="display:flex;gap:14px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">'
+    + '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)"><span style="width:9px;height:9px;border-radius:2px;background:#FF3B30;flex-shrink:0"></span>Vandaag</div>'
+    + '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)"><span style="width:9px;height:9px;border-radius:2px;background:rgba(0,0,0,.12);border:1px solid #ccc;flex-shrink:0"></span>Voortgang (% gereed)</div>'
+    + '</div>';
+
   leg.innerHTML = lhtml;
 }
 
