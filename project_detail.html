@@ -1592,6 +1592,34 @@ function renderPage() {
     { heading:'&#x1F6A7; Sleufloze technieken', icon:'', fases:['Sleufloze technieken'] }
   ];
   html += '<div class="sec-heading"><span class="sec-heading-icon">&#x1F4CA;</span>Voortgang</div>';
+  html += '<div class="fase-nav" id="unifiedFilter">'
+    + '<div class="fase-nav-row" style="padding-top:0;border-bottom:1px solid var(--border);padding-bottom:5px">'
+    + '<button class="dtab active" id="uf-alle" onclick="applyFilters(\'alle\',null,this)">Alle fases</button>'
+    + '</div>'
+    + '<div class="fase-nav-row"><span class="fase-nav-label">Fasering</span>'
+    + ['Analyse','VO-Fase','DO-Fase','Onderzoeksfase','UO-Fase'].map(function(f){
+        return '<button class="dtab" onclick="applyFilters(\''+f+'\',null,this)">'+f+'</button>';
+      }).join('')
+    + '</div>'
+    + '<div class="fase-nav-row"><span class="fase-nav-label">Omgevingsmanagement</span>'
+    + ['Natuurtoets','Archeologie','Bodem','NGE/OO','Geotechnisch'].map(function(f){
+        return '<button class="dtab" onclick="applyFilters(\''+f+'\',null,this)">'+f+'</button>';
+      }).join('')
+    + '</div>'
+    + '<div class="fase-nav-row"><span class="fase-nav-label">Vergunningen</span>'
+    + '<button class="dtab" onclick="applyFilters(\'Vergunningen\',null,this)">Vergunningen</button>'
+    + '</div>'
+    + '<div class="fase-nav-row" style="border-bottom:1px solid var(--border);padding-bottom:5px"><span class="fase-nav-label">Sleufloze technieken</span>'
+    + '<button class="dtab" onclick="applyFilters(\'Sleufloze technieken\',null,this)">Sleufloze technieken</button>'
+    + '</div>'
+    + '<div class="fase-nav-row" style="border-bottom:none">'
+    + '<span class="fase-nav-label">Rol</span>'
+    + '<button class="rolf-btn rb-eng"  id="drfEng"  onclick="applyFilters(null,\'engineer\')"><span class="rolf-dot" style="background:#0071E3"></span>Engineer</button>'
+    + '<button class="rolf-btn rb-pl"   id="drfPl"   onclick="applyFilters(null,\'projectleider\')"><span class="rolf-dot" style="background:#1A7F3C"></span>Projectleider</button>'
+    + '<button class="rolf-btn rb-uitv" id="drfUitv" onclick="applyFilters(null,\'uitvoerder\')"><span class="rolf-dot" style="background:#7A4800"></span>Uitvoerder</button>'
+    + '<button class="rolf-btn rb-wb"   id="drfWb"   onclick="applyFilters(null,\'werkvoorbereider\')"><span class="rolf-dot" style="background:#6F35CE"></span>Werkvoorbereider</button>'
+    + '</div>'
+    + '</div>';
   phaseGroups.forEach(function(group) {
     group.fases.forEach(function(fase) {
     var faseCols = COLS.filter(function(c){ return c.f === fase; });
@@ -1872,35 +1900,6 @@ function buildGanttHTML() {
     + 'Planning</div>'
     + '<div id="ganttChart"></div>'
     + '<div id="ganttLegend" style="margin-top:.875rem;padding-top:.625rem;border-top:1px solid var(--border)"></div>'
-    + '</div>'
-    // Fase filter BELOW the gantt
-    + '<div class="fase-nav" id="unifiedFilter" style="margin-top:.75rem">'
-    + '<div class="fase-nav-row" style="padding-top:0;border-bottom:1px solid var(--border);padding-bottom:5px">'
-    + '<button class="dtab active" id="uf-alle" onclick="applyFilters(\'alle\',null,this)">Alle fases</button>'
-    + '</div>'
-    + '<div class="fase-nav-row"><span class="fase-nav-label">Fasering</span>'
-    + ['Analyse','VO-Fase','DO-Fase','Onderzoeksfase','UO-Fase'].map(function(f){
-        return '<button class="dtab" onclick="applyFilters(\''+f+'\',null,this)">'+f+'</button>';
-      }).join('')
-    + '</div>'
-    + '<div class="fase-nav-row"><span class="fase-nav-label">Omgevingsmanagement</span>'
-    + ['Natuurtoets','Archeologie','Bodem','NGE/OO','Geotechnisch'].map(function(f){
-        return '<button class="dtab" onclick="applyFilters(\''+f+'\',null,this)">'+f+'</button>';
-      }).join('')
-    + '</div>'
-    + '<div class="fase-nav-row"><span class="fase-nav-label">Vergunningen</span>'
-    + '<button class="dtab" onclick="applyFilters(\'Vergunningen\',null,this)">Vergunningen</button>'
-    + '</div>'
-    + '<div class="fase-nav-row" style="border-bottom:1px solid var(--border);padding-bottom:5px"><span class="fase-nav-label">Sleufloze technieken</span>'
-    + '<button class="dtab" onclick="applyFilters(\'Sleufloze technieken\',null,this)">Sleufloze technieken</button>'
-    + '</div>'
-    + '<div class="fase-nav-row" style="border-bottom:none">'
-    + '<span class="fase-nav-label">Rol</span>'
-    + '<button class="rolf-btn rb-eng"  id="drfEng"  onclick="applyFilters(null,\'engineer\')">      <span class="rolf-dot" style="background:#0071E3"></span>Engineer</button>'
-    + '<button class="rolf-btn rb-pl"   id="drfPl"   onclick="applyFilters(null,\'projectleider\')"> <span class="rolf-dot" style="background:#1A7F3C"></span>Projectleider</button>'
-    + '<button class="rolf-btn rb-uitv" id="drfUitv" onclick="applyFilters(null,\'uitvoerder\')">    <span class="rolf-dot" style="background:#7A4800"></span>Uitvoerder</button>'
-    + '<button class="rolf-btn rb-wb"   id="drfWb"   onclick="applyFilters(null,\'werkvoorbereider\')"><span class="rolf-dot" style="background:#6F35CE"></span>Werkvoorbereider</button>'
-    + '</div>'
     + '</div>';
 }
 
