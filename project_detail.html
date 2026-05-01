@@ -1871,6 +1871,7 @@ function buildGanttHTML() {
     + '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M1 7h14M5 3V1M11 3V1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'
     + 'Planning</div>'
     + '<div id="ganttChart"></div>'
+    + '<div id="ganttLegend" style="margin-top:.875rem;padding-top:.625rem;border-top:1px solid var(--border)"></div>'
     + '</div>'
     // Fase filter BELOW the gantt
     + '<div class="fase-nav" id="unifiedFilter" style="margin-top:.75rem">'
@@ -1948,6 +1949,50 @@ function applyFilters(fase, rol, btn) {
 function setAllGanttPhases(show) {
   GANTT_PHASES.forEach(function(p){ ganttHidden[p.label] = !show; });
   renderGanttChart();
+  renderGanttLegend();
+}
+
+function renderGanttLegend() {
+  var leg = document.getElementById('ganttLegend');
+  if (!leg) return;
+  var lhtml = '';
+  // Control buttons row
+  lhtml += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.625rem">'
+    + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)">Fasen in-/uitschakelen</span>'
+    + '<div style="display:flex;gap:5px">'
+    + '<button onclick="setAllGanttPhases(true)" style="font-size:11px;font-weight:500;padding:4px 12px;border:1px solid var(--border-md);border-radius:20px;background:var(--surface2);color:var(--text-2);cursor:pointer;font-family:inherit;transition:all .1s">Alles tonen</button>'
+    + '<button onclick="setAllGanttPhases(false)" style="font-size:11px;font-weight:500;padding:4px 12px;border:1px solid var(--border-md);border-radius:20px;background:var(--surface2);color:var(--text-2);cursor:pointer;font-family:inherit;transition:all .1s">Alles verbergen</button>'
+    + '</div>'
+    + '</div>';
+  // Checkbox grid
+  lhtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px 8px">';
+  var cbId = 0;
+  GANTT_PHASES.forEach(function(p){
+    var isHidden = !!ganttHidden[p.label];
+    var id = 'gcb_' + (cbId++);
+    lhtml += '<label style="display:flex;align-items:center;gap:6px;font-size:12px;'
+      + 'color:'+(isHidden?'var(--text-3)':'var(--text-2)')+';cursor:pointer;user-select:none;'
+      + 'padding:4px 6px;border-radius:6px;transition:background .08s;'
+      + (isHidden?'opacity:.5;':'')
+      + '">'
+      + '<input type="checkbox" id="'+id+'" '+(isHidden?'':'checked')+' '
+      + 'onchange="toggleGanttPhase(\''+p.label+'\',this)" '
+      + 'style="width:14px;height:14px;cursor:pointer;accent-color:'+p.color+';flex-shrink:0">'
+      + '<span style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:'+p.color+'"></span>'
+      + '<span style="'+(isHidden?'text-decoration:line-through;':'')+'">'+esc(p.label)+'</span>'
+      + '</label>';
+  });
+  // Vaste items
+  lhtml += '<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);padding:4px 6px">'
+    + '<span style="width:14px;height:14px;display:inline-block"></span>'
+    + '<span style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:#FF3B30"></span>'
+    + '<span>Vandaag</span></div>';
+  lhtml += '<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);padding:4px 6px">'
+    + '<span style="width:14px;height:14px;display:inline-block"></span>'
+    + '<span style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:rgba(0,0,0,.12);border:1px solid #ccc"></span>'
+    + '<span>Voortgang</span></div>';
+  lhtml += '</div>';
+  leg.innerHTML = lhtml;
 }
 
 function toggleGanttPhase(label, cb) {
@@ -1982,7 +2027,8 @@ function renderGanttChart() {
   });
 
   if (!phases.length) {
-    chart.innerHTML = '<div style="text-align:center;padding:1.5rem;font-size:12px;color:var(--text-3);font-style:italic">Geen data beschikbaar voor deze filter.</div>';
+    chart.innerHTML = '<div style="text-align:center;padding:1.5rem;font-size:12px;color:var(--text-3);font-style:italic">Geen data zichtbaar — vink fasen aan in de legenda.</div>';
+    renderGanttLegend();
     return;
   }
 
@@ -2109,28 +2155,8 @@ function renderGanttChart() {
     + '</div>';
   });
 
-  // Legend with checkboxes — all phases (not just visible ones)
-  html += '<div class="gantt-legend">';
-  var cbId = 0;
-  GANTT_PHASES.forEach(function(p){
-    var isHidden = !!ganttHidden[p.label];
-    var id = 'gcb_' + (cbId++);
-    html += '<label class="gantt-leg-item'+(isHidden?' hidden-fase':'')+'" title="'+(isHidden?'Klik om te tonen':'Klik om te verbergen')+'">'
-      + '<input type="checkbox" class="gantt-leg-cb" id="'+id+'" '+(isHidden?'':'checked')+' onchange="toggleGanttPhase(\''+p.label+'\',this)">'
-      + '<div class="gantt-leg-dot" style="background:'+p.color+'"></div>'
-      + '<span>'+esc(p.label)+'</span>'
-      + '</label>';
-  });
-  html += '<div class="gantt-leg-item" style="cursor:default"><div class="gantt-leg-dot" style="background:#FF3B30"></div><span>Vandaag</span></div>';
-  html += '<div class="gantt-leg-item" style="cursor:default"><div class="gantt-leg-dot" style="background:rgba(0,0,0,.12);border:1px solid #ccc"></div><span>Voortgang</span></div>';
-  // Show all / hide all buttons
-  html += '</div>';
-  html += '<div style="display:flex;gap:6px;margin-top:5px">'
-    + '<button onclick="setAllGanttPhases(true)" style="font-size:10px;padding:3px 9px;border:1px solid var(--border-md);border-radius:20px;background:transparent;color:var(--text-2);cursor:pointer;font-family:inherit">Alles tonen</button>'
-    + '<button onclick="setAllGanttPhases(false)" style="font-size:10px;padding:3px 9px;border:1px solid var(--border-md);border-radius:20px;background:transparent;color:var(--text-2);cursor:pointer;font-family:inherit">Alles verbergen</button>'
-    + '</div>';
-
   chart.innerHTML = html;
+  renderGanttLegend();
 }
 
 
