@@ -240,7 +240,7 @@
   /* Grid layout: label | track | info */
   .gantt-grid { display:flex; flex-direction:column; }
   .gantt-row {
-    display:grid; grid-template-columns:130px 1fr 96px;
+    display:grid; grid-template-columns:130px 1fr 164px;
     align-items:center; gap:0; min-height:30px;
     border-radius:6px; transition:background .08s;
     position:relative;
@@ -302,23 +302,39 @@
 
   /* Info column */
   .gantt-info {
-    display:flex; flex-direction:column; gap:1px;
-    padding-left:8px; justify-content:center;
+    display:flex; align-items:center; gap:6px;
+    padding-left:8px; justify-content:flex-start;
   }
   .gantt-info-date {
     font-size:10px; font-weight:600; color:var(--text-2);
     font-variant-numeric:tabular-nums; white-space:nowrap;
-    font-family:'DM Mono',monospace;
+    font-family:'DM Mono',monospace; width:82px; flex-shrink:0;
   }
-  .gantt-info-wk { font-size:10px; font-variant-numeric:tabular-nums; white-space:nowrap; font-weight:500; }
+  .gantt-info-wk {
+    font-size:10px; font-variant-numeric:tabular-nums; white-space:nowrap;
+    font-weight:600; min-width:52px; text-align:left;
+  }
   .gantt-info-wk.wk-over { color:var(--b-fg); font-weight:700; }
   .gantt-info-wk.wk-warn { color:var(--r-fg); font-weight:600; }
   .gantt-info-wk.wk-ok   { color:var(--g-fg); }
-  .gantt-info-wk.wk-none { color:var(--text-3); font-style:italic; font-weight:400; }
+  .gantt-info-wk.wk-none { color:var(--text-3); font-style:italic; font-weight:400; min-width:unset; }
+  /* Gereed badge */
+  .g-done-badge {
+    display:inline-flex; align-items:center; gap:3px;
+    background:var(--g-bg); color:var(--g-fg);
+    font-size:9px; font-weight:700; padding:2px 6px;
+    border-radius:20px; white-space:nowrap; flex-shrink:0;
+  }
+  .g-pending-badge {
+    display:inline-flex; align-items:center; gap:3px;
+    background:var(--n-bg); color:var(--n-fg);
+    font-size:9px; font-weight:600; padding:2px 6px;
+    border-radius:20px; white-space:nowrap; flex-shrink:0;
+  }
 
   /* Month axis */
   .gantt-axis-row {
-    display:grid; grid-template-columns:130px 1fr 96px;
+    display:grid; grid-template-columns:130px 1fr 164px;
     align-items:stretch; gap:0; margin-bottom:3px;
   }
   .gantt-axis-track { display:flex; position:relative; }
@@ -336,8 +352,10 @@
   .gantt-axis-hdr-label {
     font-size:9px; font-weight:700; text-transform:uppercase;
     letter-spacing:.06em; color:var(--text-3); padding-left:8px;
-    display:flex; align-items:center;
+    display:flex; align-items:center; gap:0;
   }
+  .gantt-axis-hdr-date { width:82px; flex-shrink:0; }
+  .gantt-axis-hdr-wk   { flex:1; }
   .gantt-axis-divider {
     grid-column:1/-1; height:1px; background:var(--border-md);
     margin-bottom:4px;
@@ -2226,7 +2244,7 @@ function renderGanttChart() {
       + '</div>';
   });
   html += '</div>'
-    + '<div class="gantt-axis-hdr-label">Datum &nbsp;&middot;&nbsp; Weken</div>'
+    + '<div class="gantt-axis-hdr-label"><span class="gantt-axis-hdr-date">Datum</span><span class="gantt-axis-hdr-wk">Weken</span></div>'
     + '</div>';
 
   // ── Axis divider ──
@@ -2272,7 +2290,7 @@ function renderGanttChart() {
         + '<div class="gantt-label" title="'+esc(p.label)+'">'+esc(p.label)+'</div>'
         + '<div class="gantt-track">'+monthLines+todayLine
         + '<span class="gantt-nodate-text">Geen datum</span></div>'
-        + '<div class="gantt-info"><span class="gantt-info-wk wk-none">— geen datum</span></div>'
+        + '<div class="gantt-info"><span class="gantt-info-date" style="color:var(--text-3);font-style:italic;font-weight:400">— geen datum</span></div>'
         + '</div>';
       return;
     }
@@ -2305,7 +2323,7 @@ function renderGanttChart() {
       : 'linear-gradient(135deg,'+p.color+','+p.color+'dd)';
 
     var barCls = 'gantt-bar' + (isDone?' g-done':'') + (isOverdue?' g-overdue':'');
-    var barLabel = isDone ? '&#x2713; '+fmtShortG(endD) : fmtShortG(endD);
+    var barLabel = fmtShortG(endD);
 
     var progOverlay = (progPct > 0 && !isDone)
       ? '<div class="gantt-bar-prog" style="width:'+progPct+'%"></div>'
@@ -2322,7 +2340,10 @@ function renderGanttChart() {
       + '</div>'
       + '<div class="gantt-info">'
         + '<span class="gantt-info-date">'+fmtFull(endD)+'</span>'
-        + '<span class="gantt-info-wk '+wkL.cls+'">'+wkL.txt+'</span>'
+        + (isDone
+            ? '<span class="g-done-badge">&#x2713; Gereed</span>'
+            : '<span class="gantt-info-wk '+wkL.cls+'">'+wkL.txt+'</span>'
+          )
       + '</div>'
     + '</div>';
   });
