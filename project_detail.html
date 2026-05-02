@@ -1857,12 +1857,15 @@ function renderPage() {
   document.getElementById('mainContent').innerHTML = html;
   document.getElementById('detailControls').style.display = 'flex';
   document.getElementById('detailExportRow').style.display = 'flex';
-  // Default: show Analyse, all roles
+  // Herstel huidig filter (of standaard 'alle' bij eerste load)
   setTimeout(function() {
-    applyFilters('Analyse', null, document.querySelector('#unifiedFilter .dtab[onclick*="\'Analyse\'"]'));
+    var fase = currentDetailFase || 'alle';
+    var btn  = document.querySelector('#unifiedFilter .dtab[onclick*="' + fase + '"]');
+    if (!btn) btn = document.getElementById('uf-alle');
+    applyFilters(fase, null, btn);
   }, 0);
-}
 
+}
 function toggleSection(header) {
   header.classList.toggle('collapsed');
   header.nextElementSibling.classList.toggle('collapsed');
@@ -2323,7 +2326,7 @@ function renderGanttChart() {
       : 'linear-gradient(135deg,'+p.color+','+p.color+'dd)';
 
     var barCls = 'gantt-bar' + (isDone?' g-done':'') + (isOverdue?' g-overdue':'');
-    var barLabel = fmtShortG(endD);
+    var barLabel = '';
 
     var progOverlay = (progPct > 0 && !isDone)
       ? '<div class="gantt-bar-prog" style="width:'+progPct+'%"></div>'
