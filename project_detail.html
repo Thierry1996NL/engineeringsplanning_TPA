@@ -220,61 +220,193 @@
   }
 
 
-  /* ── GANTT CHART ── */
+  /* ══ GANTT CHART — PROFESSIONAL OVERHAUL ══ */
   .gantt-wrap {
     background:var(--surface); border:1px solid var(--border); border-radius:var(--r-xl);
-    padding:1rem 1.25rem; margin-bottom:.875rem; box-shadow:var(--sh-sm);
+    overflow:hidden; margin-bottom:.875rem; box-shadow:var(--sh-sm);
   }
-  .gantt-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-2); margin-bottom:.875rem; display:flex; align-items:center; gap:6px; }
-  .gantt-row { display:flex; align-items:center; gap:.625rem; margin-bottom:6px; }
-  .gantt-label { font-size:10px; font-weight:500; color:var(--text-2); width:110px; flex-shrink:0; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .gantt-track { flex:1; background:var(--surface2); border-radius:4px; height:20px; position:relative; overflow:visible; }
+  .gantt-header {
+    padding:.75rem 1.25rem .625rem;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:.75rem;
+    background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);
+  }
+  .gantt-title {
+    font-size:12px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.07em; color:var(--text); display:flex; align-items:center; gap:7px;
+  }
+  .gantt-body { padding:.875rem 1.25rem 1rem; }
+
+  /* Grid layout: label | track | info */
+  .gantt-grid { display:flex; flex-direction:column; }
+  .gantt-row {
+    display:grid; grid-template-columns:130px 1fr 96px;
+    align-items:center; gap:0; min-height:30px;
+    border-radius:6px; transition:background .08s;
+    position:relative;
+  }
+  .gantt-row:hover { background:var(--surface2); }
+  .gantt-row.g-group-hdr {
+    grid-template-columns:1fr; margin:8px 0 3px;
+    background:none; min-height:20px;
+  }
+  .gantt-row.g-no-date { opacity:.65; }
+
+  .gantt-label {
+    font-size:11px; font-weight:500; color:var(--text-2);
+    text-align:right; white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; padding:0 10px 0 0;
+  }
+  .gantt-row:hover .gantt-label { color:var(--text); }
+
+  .gantt-track {
+    height:24px; position:relative; overflow:visible;
+    background:var(--surface2); border-radius:5px;
+  }
+  .gantt-row:hover .gantt-track { background:var(--surface3); }
+
+  /* Month column lines drawn inside track */
+  .gantt-col-line {
+    position:absolute; top:0; bottom:0; width:1px;
+    background:var(--border); pointer-events:none; z-index:1;
+  }
+  .gantt-col-line.is-today-col { background:rgba(255,59,48,.15); width:100%; }
+
   .gantt-bar {
-    position:absolute; height:100%; border-radius:4px;
-    display:flex; align-items:center; padding:0 7px;
-    font-size:9px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden;
-    transition:opacity .15s; cursor:default; min-width:4px;
+    position:absolute; height:100%; border-radius:5px;
+    display:flex; align-items:center; justify-content:flex-end; padding:0 7px;
+    font-size:9px; font-weight:700; color:rgba(255,255,255,.95);
+    white-space:nowrap; overflow:hidden; cursor:default;
+    transition:filter .12s, transform .12s;
+    min-width:6px; z-index:3;
+    box-shadow:0 1px 4px rgba(0,0,0,.18);
   }
-  .gantt-bar:hover { opacity:.85; }
-  .gantt-bar.done { opacity:.45; }
-  .gantt-today {
-    position:absolute; top:-4px; bottom:-4px; width:2px;
-    background:#FF3B30; border-radius:1px; z-index:5; pointer-events:none;
+  .gantt-bar:hover { filter:brightness(1.08); transform:scaleY(1.05); }
+  .gantt-bar.g-done { filter:grayscale(.5); opacity:.7; }
+  .gantt-bar.g-overdue { box-shadow:0 0 0 2px #FF3B30, 0 1px 4px rgba(0,0,0,.18); }
+
+  /* Progress overlay inside bar */
+  .gantt-bar-prog {
+    position:absolute; left:0; top:0; height:100%;
+    background:rgba(255,255,255,.22); border-radius:5px;
+    pointer-events:none;
   }
-  /* Geen Vandaag label */
-  .gantt-today::after { content:none; }
-  .gantt-axis { display:flex; margin-left:110px; padding-left:.625rem; margin-bottom:6px; border-bottom:1px solid var(--border-md); padding-bottom:5px; }
-  .gantt-tick {
-    flex:1; font-size:9px; font-weight:600; color:var(--text-2);
-    text-align:center; font-variant-numeric:tabular-nums; letter-spacing:-.01em;
+
+  /* Today line */
+  .gantt-today-line {
+    position:absolute; top:0; bottom:0; width:2px; z-index:10;
+    background:linear-gradient(180deg,#FF3B30,#FF6B35);
+    border-radius:1px; pointer-events:none;
+    box-shadow:0 0 6px rgba(255,59,48,.45);
   }
-  .gantt-tick-today {
-    color:#FF3B30; font-weight:700;
+
+  /* Info column */
+  .gantt-info {
+    display:flex; flex-direction:column; gap:1px;
+    padding-left:8px; justify-content:center;
   }
-  /* Info kolom rechts van track: datum + weken */
-  .gantt-info { width:120px; flex-shrink:0; display:flex; flex-direction:column; gap:1px; padding-left:4px; }
-  .gantt-info-date { font-size:9px; font-weight:600; color:var(--text-2); font-variant-numeric:tabular-nums; white-space:nowrap; }
-  .gantt-info-wk { font-size:9px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .gantt-info-date {
+    font-size:10px; font-weight:600; color:var(--text-2);
+    font-variant-numeric:tabular-nums; white-space:nowrap;
+    font-family:'DM Mono',monospace;
+  }
+  .gantt-info-wk { font-size:10px; font-variant-numeric:tabular-nums; white-space:nowrap; font-weight:500; }
   .gantt-info-wk.wk-over { color:var(--b-fg); font-weight:700; }
   .gantt-info-wk.wk-warn { color:var(--r-fg); font-weight:600; }
   .gantt-info-wk.wk-ok   { color:var(--g-fg); }
-  .gantt-info-wk.wk-none { color:var(--text-3); font-style:italic; }
-  .gantt-filters { display:flex; flex-direction:column; gap:0; margin-bottom:.5rem; padding-bottom:.5rem; border-bottom:1px solid var(--border); }
-  .gantt-filter-row { display:flex; gap:4px; align-items:center; flex-wrap:wrap; padding:3px 0; }
-  .gantt-filter-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-3); width:42px; flex-shrink:0; }
-  .gantt-ftab { padding:2px 9px; font-size:10px; font-weight:500; border:1px solid var(--border-md); border-radius:20px; background:transparent; color:var(--text-2); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .1s; white-space:nowrap; }
-  .gantt-ftab:hover { background:var(--surface2); }
-  .gantt-ftab.active { background:var(--navy); color:#fff; border-color:var(--navy); }
-  .gantt-rtab { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; font-size:10px; font-weight:500; border:1px solid var(--border-md); border-radius:20px; background:transparent; color:var(--text-2); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .1s; white-space:nowrap; }
-  .gantt-rtab:hover { background:var(--surface2); }
-  .gantt-rtab.active { color:#fff; border-color:transparent; }
-  .gantt-rtab.active.rb-eng  { background:#0071E3; }
-  .gantt-rtab.active.rb-pl   { background:#1A7F3C; }
-  .gantt-rtab.active.rb-uitv { background:#7A4800; }
-  .gantt-rtab.active.rb-wb   { background:#6F35CE; }
-  .gr-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
-  .gantt-leg-item { display:flex; align-items:center; gap:4px; font-size:9px; color:var(--text-3); }
-  .gantt-leg-dot { width:8px; height:8px; border-radius:2px; }
+  .gantt-info-wk.wk-none { color:var(--text-3); font-style:italic; font-weight:400; }
+
+  /* Month axis */
+  .gantt-axis-row {
+    display:grid; grid-template-columns:130px 1fr 96px;
+    align-items:stretch; gap:0; margin-bottom:3px;
+  }
+  .gantt-axis-track { display:flex; position:relative; }
+  .gantt-month-cell {
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px; font-weight:700; letter-spacing:.04em;
+    color:var(--text-3); border-right:1px solid var(--border);
+    padding:4px 2px; overflow:hidden; white-space:nowrap;
+    flex-shrink:0;
+  }
+  .gantt-month-cell.is-today-month {
+    color:#FF3B30; background:rgba(255,59,48,.06);
+    font-weight:800; border-radius:3px 3px 0 0;
+  }
+  .gantt-axis-hdr-label {
+    font-size:9px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--text-3); padding-left:8px;
+    display:flex; align-items:center;
+  }
+  .gantt-axis-divider {
+    grid-column:1/-1; height:1px; background:var(--border-md);
+    margin-bottom:4px;
+  }
+
+  /* Group header row */
+  .g-group-label {
+    font-size:8.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.09em; color:var(--text-3);
+    display:flex; align-items:center; gap:7px;
+    padding:0;
+  }
+  .g-group-label::after {
+    content:''; flex:1; height:1px; background:var(--border);
+  }
+
+  /* No-date placeholder */
+  .gantt-nodate-text {
+    position:absolute; left:8px; top:50%; transform:translateY(-50%);
+    font-size:9px; color:var(--text-3); font-style:italic; pointer-events:none;
+  }
+
+  /* Legend */
+  .gantt-legend-wrap {
+    border-top:1px solid var(--border); padding:.75rem 1.25rem .875rem;
+    background:var(--surface2);
+  }
+  .gantt-leg-controls {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:.625rem;
+  }
+  .gantt-leg-title {
+    font-size:9px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.07em; color:var(--text-3);
+  }
+  .gantt-leg-btns { display:flex; gap:4px; }
+  .gantt-leg-btn {
+    font-size:10px; font-weight:500; padding:3px 10px;
+    border:1px solid var(--border-md); border-radius:20px;
+    background:var(--surface); color:var(--text-2);
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .1s;
+  }
+  .gantt-leg-btn:hover { background:var(--surface3); color:var(--text); }
+  .gantt-leg-groups { display:flex; flex-direction:column; gap:.5rem; }
+  .gantt-leg-group-hdr {
+    font-size:9px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.07em; color:var(--text-3);
+    display:flex; align-items:center; gap:6px; margin-bottom:3px;
+  }
+  .gantt-leg-group-hdr::after { content:''; flex:1; height:1px; background:var(--border); }
+  .gantt-leg-items {
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:1px 4px;
+  }
+  .gantt-leg-item {
+    display:flex; align-items:center; gap:6px; font-size:11px;
+    color:var(--text-2); cursor:pointer; user-select:none;
+    padding:3px 5px; border-radius:5px; transition:background .07s;
+  }
+  .gantt-leg-item:hover { background:var(--surface); }
+  .gantt-leg-item.g-hidden { opacity:.4; }
+  .gantt-leg-item.g-hidden span.g-leg-name { text-decoration:line-through; color:var(--text-3); }
+  .gantt-leg-cb { width:13px; height:13px; cursor:pointer; flex-shrink:0; }
+  .gantt-leg-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+  .g-leg-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gantt-leg-fixed { display:flex; gap:16px; margin-top:.5rem; padding-top:.5rem; border-top:1px solid var(--border); }
+  .gantt-leg-fixed-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-3); }
+
+  /* Legacy stubs kept for applyFilters compatibility */
+  .gantt-filters,.gantt-filter-row,.gantt-filter-lbl,.gantt-ftab,.gantt-rtab,.gr-dot { display:none; }
 
 
   .comments-section {
@@ -1895,11 +2027,12 @@ function fmtShortG(d) {
 
 function buildGanttHTML() {
   return '<div class="gantt-wrap" id="ganttWrap">'
-    + '<div class="gantt-title">'
-    + '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M1 7h14M5 3V1M11 3V1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'
-    + 'Planning</div>'
-    + '<div id="ganttChart"></div>'
-    + '<div id="ganttLegend" style="margin-top:.875rem;padding-top:.625rem;border-top:1px solid var(--border)"></div>'
+    + '<div class="gantt-header">'
+    + '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M1 7h14M5 3V1M11 3V1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'
+    + '<span class="gantt-title">Planning</span>'
+    + '</div>'
+    + '<div class="gantt-body"><div id="ganttChart"></div></div>'
+    + '<div class="gantt-legend-wrap" id="ganttLegend"></div>'
     + '</div>';
 }
 
@@ -1954,66 +2087,51 @@ function setAllGanttPhases(show) {
 function renderGanttLegend() {
   var leg = document.getElementById('ganttLegend');
   if (!leg) return;
-
-  // Group phases by their group property
   var GROUPS = [
-    { key:'fasering',     label:'Fasering',            fases:[] },
-    { key:'omgeving',     label:'Omgevingsmanagement', fases:[] },
-    { key:'vergunningen', label:'Vergunningen',        fases:[] },
-    { key:'sleufloze',    label:'Sleufloze technieken',fases:[] }
+    { key:'fasering',     label:'Fasering' },
+    { key:'omgeving',     label:'Omgevingsmanagement' },
+    { key:'vergunningen', label:'Vergunningen' },
+    { key:'sleufloze',    label:'Sleufloze technieken' }
   ];
-  var groupMap = {};
-  GROUPS.forEach(function(g){ groupMap[g.key] = g; });
-  GANTT_PHASES.forEach(function(p){
-    if (groupMap[p.group]) groupMap[p.group].fases.push(p);
-  });
+  var grouped = {};
+  GROUPS.forEach(function(g){ grouped[g.key] = []; });
+  GANTT_PHASES.forEach(function(p){ if (grouped[p.group]) grouped[p.group].push(p); });
 
-  var lhtml = '';
-
-  // Control buttons row
-  lhtml += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">'
-    + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)">Fasen in-/uitschakelen</span>'
-    + '<div style="display:flex;gap:5px">'
-    + '<button onclick="setAllGanttPhases(true)" style="font-size:11px;font-weight:500;padding:4px 12px;border:1px solid var(--border-md);border-radius:20px;background:var(--surface2);color:var(--text-2);cursor:pointer;font-family:inherit">Alles tonen</button>'
-    + '<button onclick="setAllGanttPhases(false)" style="font-size:11px;font-weight:500;padding:4px 12px;border:1px solid var(--border-md);border-radius:20px;background:var(--surface2);color:var(--text-2);cursor:pointer;font-family:inherit">Alles verbergen</button>'
+  var html = '<div class="gantt-leg-controls">'
+    + '<span class="gantt-leg-title">Fasen in-/uitschakelen</span>'
+    + '<div class="gantt-leg-btns">'
+    + '<button class="gantt-leg-btn" onclick="setAllGanttPhases(true)">Alles tonen</button>'
+    + '<button class="gantt-leg-btn" onclick="setAllGanttPhases(false)">Alles verbergen</button>'
     + '</div></div>';
 
+  html += '<div class="gantt-leg-groups">';
   var cbId = 0;
-
-  GROUPS.forEach(function(group) {
-    if (!group.fases.length) return;
-
-    // Group header with toggle-all for this group
-    lhtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;margin-top:6px">'
-      + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)">'+esc(group.label)+'</span>'
-      + '<div style="flex:1;height:1px;background:var(--border)"></div>'
-      + '</div>';
-
-    // Checkbox items in a grid
-    lhtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:2px 6px;margin-bottom:2px">';
-    group.fases.forEach(function(p) {
-      var isHidden = !!ganttHidden[p.label];
-      var id = 'gcb_' + (cbId++);
-      lhtml += '<label style="display:flex;align-items:center;gap:6px;font-size:12px;'
-        + 'color:'+(isHidden?'var(--text-3)':'var(--text-2)')+';cursor:pointer;user-select:none;'
-        + 'padding:3px 6px;border-radius:6px;'+(isHidden?'opacity:.5;':'')+'">'
-        + '<input type="checkbox" id="'+id+'" '+(isHidden?'':'checked')+' '
-        + 'onchange="toggleGanttPhase(\''+p.label+'\',this)" '
-        + 'style="width:13px;height:13px;cursor:pointer;accent-color:'+p.color+';flex-shrink:0">'
-        + '<span style="width:9px;height:9px;border-radius:2px;flex-shrink:0;background:'+p.color+'"></span>'
-        + '<span style="'+(isHidden?'text-decoration:line-through;':'')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.label)+'</span>'
+  GROUPS.forEach(function(g) {
+    var items = grouped[g.key]; if (!items || !items.length) return;
+    html += '<div>'
+      + '<div class="gantt-leg-group-hdr">'+esc(g.label)+'</div>'
+      + '<div class="gantt-leg-items">';
+    items.forEach(function(p) {
+      var hidden = !!ganttHidden[p.label];
+      var id = 'gcb_'+(cbId++);
+      html += '<label class="gantt-leg-item'+(hidden?' g-hidden':'')+'">'
+        + '<input class="gantt-leg-cb" type="checkbox" id="'+id+'" '+(hidden?'':'checked')
+        + ' onchange="toggleGanttPhase(\\"'+p.label+'\\",this)" style="accent-color:'+p.color+'">'  
+        + '<span class="gantt-leg-dot" style="background:'+p.color+'"></span>'
+        + '<span class="g-leg-name">'+esc(p.label)+'</span>'
         + '</label>';
     });
-    lhtml += '</div>';
+    html += '</div></div>';
   });
+  html += '</div>';
 
-  // Fixed legend items (Vandaag, Voortgang)
-  lhtml += '<div style="display:flex;gap:14px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">'
-    + '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)"><span style="width:9px;height:9px;border-radius:2px;background:#FF3B30;flex-shrink:0"></span>Vandaag</div>'
-    + '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)"><span style="width:9px;height:9px;border-radius:2px;background:rgba(0,0,0,.12);border:1px solid #ccc;flex-shrink:0"></span>Voortgang (% gereed)</div>'
+  html += '<div class="gantt-leg-fixed">'
+    + '<div class="gantt-leg-fixed-item"><span style="width:9px;height:9px;border-radius:2px;background:#FF3B30;display:inline-block"></span>Vandaag</div>'
+    + '<div class="gantt-leg-fixed-item"><span style="width:9px;height:9px;border-radius:2px;background:rgba(0,0,0,.12);border:1px solid #ccc;display:inline-block"></span>Voortgang</div>'
+    + '<div class="gantt-leg-fixed-item"><span style="width:18px;height:9px;border-radius:2px;background:linear-gradient(90deg,#8E8E93 0%,#aaa 100%);display:inline-block;opacity:.6"></span>Gereed</div>'
     + '</div>';
 
-  leg.innerHTML = lhtml;
+  leg.innerHTML = html;
 }
 
 function toggleGanttPhase(label, cb) {
@@ -2027,174 +2145,193 @@ function renderGanttChart() {
   var chart = document.getElementById('ganttChart');
   if (!chart) return;
 
-  // Filter phases — show all, group, or highlight specific fase
+  var today = new Date(); today.setHours(0,0,0,0);
+  var MAANDEN = ['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+
+  // ── Filter phases ──
   var phases = GANTT_PHASES.filter(function(p) {
     if (ganttHidden[p.label]) return false;
     var gff = ganttFaseFilter;
     if (gff === 'fasering'     && p.group !== 'fasering')    return false;
     if (gff === 'omgeving'     && p.group !== 'omgeving')    return false;
-    if (gff === 'vergunningen' && p.group !== 'vergunningen')return false;
+    if (gff === 'vergunningen' && p.group !== 'vergunningen') return false;
     if (gff === 'sleufloze'    && p.group !== 'sleufloze')   return false;
     if (gff !== 'alle' && gff !== 'fasering' && gff !== 'omgeving' && gff !== 'vergunningen' && gff !== 'sleufloze') {
       var mapLabel = (gff === 'Onderzoeksfase') ? 'Onderzoek' : gff;
-      if (p.group === 'fasering') { /* altijd tonen */ }
-      else if (p.label !== mapLabel) return false;
+      if (p.group !== 'fasering' && p.label !== mapLabel) return false;
     }
     if (ganttRolFilter && p.taskCols.length > 0) {
       var hasRole = p.taskCols.some(function(ci){ return (TASK_ROLE_MAP[ci]||'engineer') === ganttRolFilter; });
       if (!hasRole) return false;
     }
-    return true; // altijd tonen, ook zonder datum
+    return true;
   });
 
   if (!phases.length) {
-    chart.innerHTML = '<div style="text-align:center;padding:1.5rem;font-size:12px;color:var(--text-3);font-style:italic">Geen data zichtbaar — vink fasen aan in de legenda.</div>';
+    chart.innerHTML = '<div style="padding:2rem 0;text-align:center;font-size:12px;color:var(--text-3);font-style:italic">Geen fasen zichtbaar — vink fasen aan in de legenda hieronder.</div>';
     renderGanttLegend();
     return;
   }
 
-  var today = new Date(); today.setHours(0,0,0,0);
-  // Gebruik alleen fases mét datum voor de as-berekening
+  // ── Date range ──
   var datedPhases = phases.filter(function(p){ return parseDatumG(ROW_DATA[p.datumCol]) !== null; });
   var allDates = [today];
-  datedPhases.forEach(function(p){ var d=parseDatumG(ROW_DATA[p.datumCol]); if(d) allDates.push(d); });
+  datedPhases.forEach(function(p){ var d = parseDatumG(ROW_DATA[p.datumCol]); if(d) allDates.push(d); });
 
-  var minD = new Date(Math.min.apply(null,allDates));
-  var maxD = new Date(Math.max.apply(null,allDates));
-  minD.setMonth(minD.getMonth()-2);
-  maxD.setMonth(maxD.getMonth()+2);
+  var rawMin = new Date(Math.min.apply(null, allDates));
+  var rawMax = new Date(Math.max.apply(null, allDates));
+
+  // Extend: start of month 2 months before, end of month 2 months after
+  var minD = new Date(rawMin.getFullYear(), rawMin.getMonth() - 2, 1);
+  var maxD = new Date(rawMax.getFullYear(), rawMax.getMonth() + 3, 0); // end of +2 months
   var totalMs = maxD - minD;
 
-  function pct(d){ return Math.max(0,Math.min(100,((d-minD)/totalMs)*100)); }
-
+  function pct(d) { return Math.max(0, Math.min(100, ((d - minD) / totalMs) * 100)); }
   var todayPct = pct(today);
-  var html = '';
 
-  // ── Maandelijkse as ──
-  var MAANDEN = ['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
-
-  // Verzamel alle maanden tussen minD en maxD
+  // ── Collect months ──
   var months = [];
-  var cur = new Date(minD.getFullYear(), minD.getMonth(), 1);
-  while (cur <= maxD) {
-    months.push(new Date(cur));
-    cur.setMonth(cur.getMonth() + 1);
+  var mCur = new Date(minD.getFullYear(), minD.getMonth(), 1);
+  while (mCur <= maxD) { months.push(new Date(mCur)); mCur.setMonth(mCur.getMonth() + 1); }
+
+  // ── Helpers ──
+  function wekenTot(d) { return d ? Math.ceil((d - today) / (1000*60*60*24*7)) : null; }
+  function wekenLabel(wk) {
+    if (wk === null) return { cls:'wk-none', txt:'— geen datum' };
+    if (wk < 0)  return { cls:'wk-over', txt: Math.abs(wk)+'w geleden' };
+    if (wk === 0) return { cls:'wk-warn', txt: 'deze week' };
+    if (wk <= 4) return { cls:'wk-warn', txt: wk+'w' };
+    return { cls:'wk-ok', txt: wk+'w' };
+  }
+  function fmtFull(d) {
+    return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear();
   }
 
-  // ── Rij 1: Maandnamen met breedte proportioneel aan kalenderdagen ──
-  html += '<div style="display:flex;margin-left:110px;padding-left:.625rem;margin-bottom:0;position:relative">'
-    + '<div style="flex:1;display:flex;border-bottom:1px solid var(--border-md);position:relative">';
+  var html = '<div class="gantt-grid">';
+
+  // ── Month axis header ──
+  html += '<div class="gantt-axis-row">'
+    + '<div style="grid-column:1"></div>'
+    + '<div class="gantt-axis-track">';
 
   months.forEach(function(mStart) {
-    var mEnd = new Date(mStart.getFullYear(), mStart.getMonth()+1, 1);
+    var mEnd     = new Date(mStart.getFullYear(), mStart.getMonth()+1, 1);
     var visStart = Math.max(mStart.getTime(), minD.getTime());
-    var visEnd   = Math.min(mEnd.getTime(),   maxD.getTime());
-    var widthPct = Math.max(0, (visEnd - visStart) / totalMs * 100);
-    var isToday  = today >= mStart && today < mEnd;
-    var yearStr  = mStart.getMonth() === 0 ? (' ' + String(mStart.getFullYear())) : '';
-    html += '<div style="width:'+widthPct+'%;overflow:hidden;text-align:center;'
-      + 'font-size:9px;font-weight:'+(isToday?'800':'600')+';'
-      + 'color:'+(isToday?'#FF3B30':'var(--text-2)')+';'
-      + 'padding:2px 0;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0">'
-      + MAANDEN[mStart.getMonth()] + yearStr
+    var visEnd   = Math.min(mEnd.getTime(), maxD.getTime());
+    var wPct     = Math.max(0, (visEnd - visStart) / totalMs * 100);
+    var isCur    = (today >= mStart && today < mEnd);
+    var yearLabel = (mStart.getMonth() === 0) ? (' ' + mStart.getFullYear()) : '';
+    html += '<div class="gantt-month-cell'+(isCur?' is-today-month':'')+'" style="width:'+wPct+'%">'
+      + MAANDEN[mStart.getMonth()] + yearLabel
       + '</div>';
   });
-
-  // Vandaag lijn + label over de maandrij
-  html += '<div style="position:absolute;top:0;bottom:-100vh;left:'+todayPct+'%;'
-    + 'width:1px;background:#FF3B30;opacity:.7;pointer-events:none;z-index:5"></div>';
-
   html += '</div>'
-    + '<div style="width:120px;flex-shrink:0;padding-left:4px;font-size:9px;font-weight:700;'
-    + 'text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);align-self:flex-end">Datum &nbsp;&middot;&nbsp; Weken</div>'
+    + '<div class="gantt-axis-hdr-label">Datum &nbsp;&middot;&nbsp; Weken</div>'
     + '</div>';
 
-  // Weken-helper
-  function wekenTot(d) {
-    if (!d) return null;
-    return Math.ceil((d - today) / (1000*60*60*24*7));
-  }
-  function wekenLabel(wk) {
-    if (wk === null) return {cls:'wk-none', txt:'— geen datum'};
-    if (wk < 0)  return {cls:'wk-over', txt: Math.abs(wk)+'w geleden'};
-    if (wk === 0) return {cls:'wk-warn', txt: 'deze week'};
-    if (wk <= 4) return {cls:'wk-warn', txt: wk+'w'};
-    return {cls:'wk-ok', txt: wk+'w'};
-  }
+  // ── Axis divider ──
+  html += '<div class="gantt-axis-divider"></div>';
 
-  // Bars
+  // ── Track background: month column lines ──
+  // Build month positions for repeated use in each row
+  var monthLines = '';
+  months.forEach(function(mStart) {
+    var mEnd     = new Date(mStart.getFullYear(), mStart.getMonth()+1, 1);
+    var visStart = Math.max(mStart.getTime(), minD.getTime());
+    var visEnd   = Math.min(mEnd.getTime(), maxD.getTime());
+    var left     = Math.max(0, (visStart - minD) / totalMs * 100);
+    var wPct     = Math.max(0, (visEnd - visStart) / totalMs * 100);
+    var isCur    = (today >= mStart && today < mEnd);
+    if (isCur) {
+      monthLines += '<div class="gantt-col-line is-today-col" style="left:'+left+'%;width:'+wPct+'%"></div>';
+    } else {
+      monthLines += '<div class="gantt-col-line" style="left:'+(left+wPct)+'%"></div>';
+    }
+  });
+  var todayLine = '<div class="gantt-today-line" style="left:'+todayPct+'%"></div>';
+
+  // ── Bars ──
   var lastGroup = null;
-  phases.forEach(function(p) {
-    var endD   = parseDatumG(ROW_DATA[p.datumCol]);
-    var isDone = ROW_DATA[p.gereedCol] === 'Ja';
+  var faserPhases = phases.filter(function(q){ return q.group === 'fasering'; });
 
-    // Group header separator
+  phases.forEach(function(p) {
+    // Group separator
     if (p.group !== lastGroup) {
       lastGroup = p.group;
-      var groupLabels = { fasering:'Fasering', omgeving:'Omgevingsmanagement', vergunningen:'Vergunningen', sleufloze:'Sleufloze technieken' };
-      html += '<div style="display:flex;align-items:center;gap:.5rem;margin:6px 0 3px 110px;padding-left:.625rem">'
-        + '<span style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)">'
-        + (groupLabels[p.group]||p.group)+'</span>'
-        + '<div style="flex:1;height:1px;background:var(--border)"></div></div>';
+      var GRP_LABELS = { fasering:'Fasering', omgeving:'Omgevingsmanagement', vergunningen:'Vergunningen', sleufloze:'Sleufloze technieken' };
+      html += '<div class="gantt-row g-group-hdr">'
+        + '<div class="g-group-label">'+esc(GRP_LABELS[p.group] || p.group)+'</div>'
+        + '</div>';
     }
 
-    // Fase zonder datum: lege rij
+    var endD  = parseDatumG(ROW_DATA[p.datumCol]);
+    var isDone = ROW_DATA[p.gereedCol] === 'Ja';
+
     if (!endD) {
-      html += '<div class="gantt-row">'
+      html += '<div class="gantt-row g-no-date">'
         + '<div class="gantt-label" title="'+esc(p.label)+'">'+esc(p.label)+'</div>'
-        + '<div class="gantt-track">'
-          + '<div class="gantt-today" style="left:'+todayPct+'%"></div>'
-          + '<span style="font-size:9px;color:var(--text-3);position:absolute;left:4px;top:50%;transform:translateY(-50%);font-style:italic">Geen datum</span>'
-        + '</div>'
+        + '<div class="gantt-track">'+monthLines+todayLine
+        + '<span class="gantt-nodate-text">Geen datum</span></div>'
         + '<div class="gantt-info"><span class="gantt-info-wk wk-none">— geen datum</span></div>'
-      + '</div>';
+        + '</div>';
       return;
     }
 
-    // Start berekening
-    var fasering = phases.filter(function(q){return q.group==='fasering';});
-    var prevFas  = fasering[fasering.indexOf(p) - 1];
+    // Start: voor fasering = einde vorige fase; anders 4 weken voor deadline
     var startD;
-    if (p.group === 'fasering' && prevFas && parseDatumG(ROW_DATA[prevFas.datumCol])) {
-      startD = parseDatumG(ROW_DATA[prevFas.datumCol]);
+    var prevIdx = faserPhases.indexOf(p);
+    if (p.group === 'fasering' && prevIdx > 0) {
+      var prevDate = parseDatumG(ROW_DATA[faserPhases[prevIdx-1].datumCol]);
+      startD = prevDate || new Date(endD.getTime() - 28*24*60*60*1000);
     } else {
       startD = new Date(endD.getTime() - 28*24*60*60*1000);
     }
 
-    var x1 = pct(startD), x2 = pct(endD), w = Math.max(1.5, x2-x1);
-    var barColor = isDone ? '#8E8E93' : p.color;
-    var barLabel = fmtShortG(endD);
+    var x1  = pct(startD);
+    var x2  = pct(endD);
+    var w   = Math.max(1.5, x2 - x1);
+    var wk  = wekenTot(endD);
+    var wkL = wekenLabel(wk);
 
+    // Progress
     var doneTasks  = p.taskCols.filter(function(ci){ return ROW_DATA[ci]==='Gereed'; }).length;
     var totalTasks = p.taskCols.length;
     var progPct    = totalTasks > 0 ? Math.round(doneTasks/totalTasks*100) : (isDone?100:0);
-    var progBar    = totalTasks > 0
-      ? '<div style="position:absolute;top:0;left:0;height:100%;width:'+progPct+'%;background:rgba(255,255,255,0.25);border-radius:4px;pointer-events:none"></div>'
-      : '';
 
-    var wk    = wekenTot(endD);
-    var wkLbl = wekenLabel(wk);
-    var fmtEndD = String(endD.getDate()).padStart(2,'0')+'-'+String(endD.getMonth()+1).padStart(2,'0')+'-'+endD.getFullYear();
+    // Color: done = grey, overdue = keep color but add ring
+    var isOverdue = !isDone && wk !== null && wk < 0;
+    var barColor  = isDone
+      ? 'linear-gradient(135deg,#9E9EA8,#8E8E93)'
+      : 'linear-gradient(135deg,'+p.color+','+p.color+'dd)';
+
+    var barCls = 'gantt-bar' + (isDone?' g-done':'') + (isOverdue?' g-overdue':'');
+    var barLabel = isDone ? '&#x2713; '+fmtShortG(endD) : fmtShortG(endD);
+
+    var progOverlay = (progPct > 0 && !isDone)
+      ? '<div class="gantt-bar-prog" style="width:'+progPct+'%"></div>'
+      : '';
 
     html += '<div class="gantt-row">'
       + '<div class="gantt-label" title="'+esc(p.label)+'">'+esc(p.label)+'</div>'
       + '<div class="gantt-track">'
-        + '<div class="gantt-bar'+(isDone?' done':'')+'" style="left:'+x1+'%;width:'+w+'%;background:'+barColor+'" title="'+esc(p.label)+': t/m '+barLabel+(totalTasks?' · '+progPct+'% klaar':'')+'">'
-          + progBar + barLabel
+        + monthLines
+        + todayLine
+        + '<div class="'+barCls+'" style="left:'+x1+'%;width:'+w+'%;background:'+barColor+'" title="'+esc(p.label)+': t/m '+fmtFull(endD)+(totalTasks?' · '+progPct+'% klaar':'')+'">'
+        + progOverlay + barLabel
         + '</div>'
-        + '<div class="gantt-today" style="left:'+todayPct+'%"></div>'
       + '</div>'
       + '<div class="gantt-info">'
-        + '<span class="gantt-info-date">'+fmtEndD+'</span>'
-        + '<span class="gantt-info-wk '+wkLbl.cls+'">'+wkLbl.txt+'</span>'
+        + '<span class="gantt-info-date">'+fmtFull(endD)+'</span>'
+        + '<span class="gantt-info-wk '+wkL.cls+'">'+wkL.txt+'</span>'
       + '</div>'
     + '</div>';
   });
 
+  html += '</div>'; // .gantt-grid
+
   chart.innerHTML = html;
   renderGanttLegend();
 }
-
 
 
 var PROJECT_COMMENTS = []; // array of {id, tekst, updated_by, updated_at}
