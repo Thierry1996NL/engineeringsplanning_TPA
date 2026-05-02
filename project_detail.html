@@ -2161,48 +2161,11 @@ function setAllGanttPhases(show) {
 function renderGanttLegend() {
   var leg = document.getElementById('ganttLegend');
   if (!leg) return;
-  var GROUPS = [
-    { key:'fasering',     label:'Fasering' },
-    { key:'omgeving',     label:'Omgevingsmanagement' },
-    { key:'vergunningen', label:'Vergunningen' },
-    { key:'sleufloze',    label:'Sleufloze technieken' }
-  ];
-  var grouped = {};
-  GROUPS.forEach(function(g){ grouped[g.key] = []; });
-  GANTT_PHASES.forEach(function(p){ if (grouped[p.group]) grouped[p.group].push(p); });
-
-  var html = '<div class="gantt-leg-controls">'
-    + '<span class="gantt-leg-title">Individuele fasen</span>'
-    + '</div>';
-
-  html += '<div class="gantt-leg-groups">';
-  var cbId = 0;
-  GROUPS.forEach(function(g) {
-    var items = grouped[g.key]; if (!items || !items.length) return;
-    html += '<div>'
-      + '<div class="gantt-leg-group-hdr">'+esc(g.label)+'</div>'
-      + '<div class="gantt-leg-items">';
-    items.forEach(function(p) {
-      var hidden = !!ganttHidden[p.label];
-      var id = 'gcb_'+(cbId++);
-      html += '<label class="gantt-leg-item'+(hidden?' g-hidden':'')+'">'
-        + '<input class="gantt-leg-cb" type="checkbox" id="'+id+'" '+(hidden?'':'checked')
-        + ' onchange="toggleGanttPhase(\\"'+p.label+'\\",this)" style="accent-color:'+p.color+'">'  
-        + '<span class="gantt-leg-dot" style="background:'+p.color+'"></span>'
-        + '<span class="g-leg-name">'+esc(p.label)+'</span>'
-        + '</label>';
-    });
-    html += '</div></div>';
-  });
-  html += '</div>';
-
-  html += '<div class="gantt-leg-fixed">'
+  leg.innerHTML = '<div class="gantt-leg-fixed">'
     + '<div class="gantt-leg-fixed-item"><span style="width:9px;height:9px;border-radius:2px;background:#FF3B30;display:inline-block"></span>Vandaag</div>'
     + '<div class="gantt-leg-fixed-item"><span style="width:9px;height:9px;border-radius:2px;background:rgba(0,0,0,.12);border:1px solid #ccc;display:inline-block"></span>Voortgang</div>'
-    + '<div class="gantt-leg-fixed-item"><span style="width:18px;height:9px;border-radius:2px;background:linear-gradient(90deg,#8E8E93 0%,#aaa 100%);display:inline-block;opacity:.6"></span>Gereed</div>'
+    + '<div class="gantt-leg-fixed-item"><span style="width:18px;height:9px;border-radius:2px;background:linear-gradient(90deg,#8E8E93,#aaa);display:inline-block;opacity:.6"></span>Gereed</div>'
     + '</div>';
-
-  leg.innerHTML = html;
 }
 
 function toggleGanttPhase(label, cb) {
