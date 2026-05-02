@@ -97,7 +97,31 @@
   .sec-heading:first-of-type { margin-top:.25rem; }
   .sec-heading-icon { font-size:14px; line-height:1; }
 
-  .fase-section { margin-bottom:.875rem; }
+  /* ══ SECTIE NAVIGATIE ══ */
+  .section-nav {
+    position:sticky; top:48px; z-index:80;
+    background:rgba(255,255,255,0.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:0; padding:0 1.5rem;
+    overflow-x:auto; scrollbar-width:none;
+  }
+  .section-nav::-webkit-scrollbar { display:none; }
+  .snav-btn {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:.625rem .875rem; font-size:11px; font-weight:500;
+    color:var(--text-3); cursor:pointer; border:none; background:none;
+    border-bottom:2px solid transparent; margin-bottom:-1px;
+    font-family:'DM Sans',sans-serif; white-space:nowrap;
+    transition:color .12s, border-color .12s;
+  }
+  .snav-btn:hover { color:var(--text-2); }
+  .snav-btn.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+
+  /* Hidden sections */
+  .section-panel { display:none; }
+  .section-panel.active { display:block; }
+
+    .fase-section { margin-bottom:.875rem; }
   .fase-section-header { display:flex; align-items:center; gap:7px; margin-bottom:.5rem; cursor:pointer; user-select:none; }
   .fase-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:2px 9px; border-radius:20px; }
   .collapse-icon { font-size:9px; color:var(--text-3); transition:transform .18s; }
@@ -1158,6 +1182,19 @@
 </header>
 
 
+<!-- ══ SECTIE NAVIGATIE ══ -->
+<nav class="section-nav" id="sectionNav" style="display:none">
+  <button class="snav-btn active" data-section="info"       onclick="showSection('info',this)">&#x1F4CB; Projectinfo</button>
+  <button class="snav-btn"        data-section="team"       onclick="showSection('team',this)">&#x1F465; Team</button>
+  <button class="snav-btn"        data-section="planning"   onclick="showSection('planning',this)">&#x1F4C5; Planning</button>
+  <button class="snav-btn"        data-section="datumoverzicht" onclick="showSection('datumoverzicht',this)">&#x1F4CB; Datum overzicht</button>
+  <button class="snav-btn"        data-section="voortgang"  onclick="showSection('voortgang',this)">&#x1F4CA; Voortgang</button>
+  <button class="snav-btn"        data-section="boringen"   onclick="showSection('boringen',this)">&#x1F9F3; Boringen</button>
+  <button class="snav-btn"        data-section="proefsleuven" onclick="showSection('proefsleuven',this)">&#x2B1B; Proefsleuven</button>
+  <button class="snav-btn"        data-section="duikers"    onclick="showSection('duikers',this)">&#x1F6B0; Duikers</button>
+  <button class="snav-btn"        data-section="opmerkingen" onclick="showSection('opmerkingen',this)">&#x1F4AC; Opmerkingen</button>
+</nav>
+
 <!-- Detail controls: only search + status filters -->
 <div class="detail-controls" id="detailControls" style="display:none">
   <div class="detail-filter-row">
@@ -1195,14 +1232,18 @@
 </main>
 
 <!-- ══ BORINGEN / PROEFSLEUVEN / DUIKERS ══ -->
-<div class="main" style="padding-top:0;padding-bottom:.5rem">
-  <div id="boringenSection"></div>
-  <div id="proefsleuvenSection"></div>
-  <div id="duikersSection"></div>
+<div class="section-panel" id="panel-boringen">
+<div class="main" style="padding-top:0;padding-bottom:.5rem"><div id="boringenSection"></div></div>
+</div>
+<div class="section-panel" id="panel-proefsleuven">
+<div class="main" style="padding-top:0;padding-bottom:.5rem"><div id="proefsleuvenSection"></div></div>
+</div>
+<div class="section-panel" id="panel-duikers">
+<div class="main" style="padding-top:0;padding-bottom:.5rem"><div id="duikersSection"></div></div>
 </div>
 
 <!-- Opmerkingen sectie -->
-<div class="main" id="commentsSection" style="display:none;padding-top:0;padding-bottom:2rem">
+<div class="section-panel" id="panel-opmerkingen"><div class="main" id="commentsSection" style="padding-top:0;padding-bottom:2rem">
   <div class="sec-heading"><span class="sec-heading-icon">&#x1F4AC;</span>Opmerkingen</div>
   <div class="comments-header">
     <div class="comments-title">
@@ -1220,7 +1261,7 @@
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postComment()}"></textarea>
     <button class="btn-comment-post" id="btnPostComment" onclick="postComment()">Plaatsen</button>
   </div>
-</div>
+</div></div><!-- /panel-opmerkingen -->
 
 <!-- Status picker -->
 <div class="status-picker" id="statusPicker">
@@ -1270,6 +1311,29 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
+function showSection(id, btn) {
+  // Hide all panels
+  document.querySelectorAll('.section-panel').forEach(function(p){ p.classList.remove('active'); });
+  // Show selected
+  var panel = document.getElementById('panel-'+id);
+  if (panel) {
+    panel.classList.add('active');
+    // Special: boringen/proefsleuven/duikers need re-render on first show
+    if (id === 'boringen')     { renderBoringen(); }
+    if (id === 'proefsleuven') { renderProefsleuven(); }
+    if (id === 'duikers')      { renderDuikers(); }
+    if (id === 'opmerkingen') {
+      var cs = document.getElementById('commentsSection');
+      if (cs) cs.style.display = '';
+    }
+  }
+  // Update nav buttons
+  document.querySelectorAll('.snav-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  // Scroll to top
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
 function goBack() {
   if (window.history.length > 1) {
     window.history.back();
@@ -1821,6 +1885,7 @@ function renderPage() {
   html += '</div>';
 
   // Project info
+  html += '<div class="section-panel active" id="panel-info">';
   html += '<div class="sec-heading"><span class="sec-heading-icon">&#x1F4CB;</span>Projectinformatie</div>';
   html += '<div class="project-info">';
   var infoFields = [
@@ -1836,6 +1901,8 @@ function renderPage() {
   html += '</div>';
 
   // Rollen & gebruikers
+  html += '</div>'; // close panel-info
+  html += '<div class="section-panel" id="panel-team">';
   html += '<div class="sec-heading"><span class="sec-heading-icon">&#x1F465;</span>Team &amp; Rollen</div>';
   var rolFields = [[8,'Engineer'],[179,'Projectleider'],[180,'Uitvoerder'],[181,'Werkvoorbereider']];
   var hasRol = rolFields.some(function(f){ return ROW_DATA[f[0]] && ROW_DATA[f[0]] !== '—'; });
@@ -1849,6 +1916,8 @@ function renderPage() {
   html += '</div>';
 
   // ── Gantt chart ──
+  html += '</div>'; // close panel-team
+  html += '<div class="section-panel" id="panel-planning">';
   html += '<div class="sec-heading"><span class="sec-heading-icon">&#x1F4C5;</span>Planning</div>';
   html += buildGanttHTML();
 
@@ -1859,7 +1928,11 @@ function renderPage() {
     { heading:'&#x1F4DC; Vergunningen', icon:'', fases:['Vergunningen'] },
     { heading:'&#x1F6A7; Sleufloze technieken', icon:'', fases:['Sleufloze technieken'] }
   ];
+  html += '</div>'; // close panel-planning
+  html += '<div class="section-panel" id="panel-datumoverzicht">';
   html += buildDatumOverzicht();
+  html += '</div>'; // close panel-datumoverzicht
+  html += '<div class="section-panel" id="panel-voortgang">';
   html += '<div class="sec-heading"><span class="sec-heading-icon">&#x1F4CA;</span>Voortgang</div>';
   html += '<div class="fase-nav" id="unifiedFilter">'
     + '<div class="fase-nav-row" style="padding-top:0;border-bottom:1px solid var(--border);padding-bottom:5px">'
@@ -1972,9 +2045,11 @@ function renderPage() {
     }); // end group.fases
   }); // end phaseGroups
 
+  html += '</div>'; // close panel-voortgang
   html += '</div>'; // app-wrapper
   document.getElementById('mainContent').innerHTML = html;
   document.getElementById('detailControls').style.display = 'flex';
+  var snav = document.getElementById('sectionNav'); if(snav) snav.style.display = 'flex';
   document.getElementById('detailExportRow').style.display = 'flex';
   // Herstel huidig filter (of standaard 'alle' bij eerste load)
   setTimeout(function() {
