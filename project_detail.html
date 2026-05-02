@@ -1219,13 +1219,13 @@
 <nav class="section-nav" id="sectionNav" style="display:none">
   <button class="snav-btn active" data-section="info"       onclick="showSection('info',this)">&#x1F4CB; Projectinfo</button>
   <button class="snav-btn"        data-section="team"       onclick="showSection('team',this)">&#x1F465; Team</button>
+  <button class="snav-btn"        data-section="ontwerp"    onclick="showSection('ontwerp',this)">&#x1F5FA; Ontwerp / Tracé</button>
   <button class="snav-btn"        data-section="planning"   onclick="showSection('planning',this)">&#x1F4C5; Planning</button>
   <button class="snav-btn"        data-section="datumoverzicht" onclick="showSection('datumoverzicht',this)">&#x1F4CB; Datum overzicht</button>
   <button class="snav-btn"        data-section="voortgang"  onclick="showSection('voortgang',this)">&#x1F4CA; Voortgang</button>
   <button class="snav-btn"        data-section="boringen"   onclick="showSection('boringen',this)">&#x1F9F3; Boringen</button>
   <button class="snav-btn"        data-section="proefsleuven" onclick="showSection('proefsleuven',this)">&#x2B1B; Proefsleuven</button>
   <button class="snav-btn"        data-section="duikers"    onclick="showSection('duikers',this)">&#x1F6B0; Duikers</button>
-  <button class="snav-btn"        data-section="ontwerp"     onclick="showSection('ontwerp',this)">&#x1F5FA; Ontwerp / Tracé</button>
   <button class="snav-btn"        data-section="opmerkingen" onclick="showSection('opmerkingen',this)">&#x1F4AC; Opmerkingen</button>
   <div style="margin-left:auto;display:flex;align-items:center;gap:5px;padding-left:.75rem;border-left:1px solid var(--border)">
     <button class="btn-det-export csv" onclick="exportDetailCSV()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:11px;font-weight:600;border:1px solid var(--border-md);border-radius:var(--r);background:var(--surface2);color:var(--text-2);cursor:pointer;font-family:inherit;white-space:nowrap">
@@ -1433,6 +1433,33 @@ var ontwerpColorIdx   = 0;
 var OT_COLORS = ['#0057FF','#FF3B30','#1A7F3C','#FF9500','#881C58','#6F35CE','#0077B5','#C93400','#006B47','#636366'];
 
 // Init map when section opens
+// ── Ontwerp Supabase helpers ──
+function ontLoad() {
+  return fetch(SUPA_URL+'/rest/v1/ontwerp_lagen?werkpakket_id=eq.'+ROW_IDX+'&order=created_at.asc&select=*', {
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){ return r.json(); });
+}
+function ontInsert(o) {
+  return fetch(SUPA_URL+'/rest/v1/ontwerp_lagen', {
+    method:'POST',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+    body:JSON.stringify(o)
+  }).then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error((d&&d.message)||'HTTP '+r.status); return d; }); });
+}
+function ontPatch(id, o) {
+  return fetch(SUPA_URL+'/rest/v1/ontwerp_lagen?id=eq.'+id, {
+    method:'PATCH',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(o)
+  }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); });
+}
+function ontDelete(id) {
+  return fetch(SUPA_URL+'/rest/v1/ontwerp_lagen?id=eq.'+id, {
+    method:'DELETE',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); });
+}
+
 function initOntwerpMap() {
   var el = document.getElementById('ontwerpMap');
   if (!el || typeof L === 'undefined') return;
@@ -1442,6 +1469,22 @@ function initOntwerpMap() {
   entwickerpMapInit = true;  // typo guard
   ontwerpMapInit = true;
   ontwerpMap.invalidateSize();
+  // Load saved layers from Supabase
+  ontLoad().then(function(rows) {
+    if (!Array.isArray(rows)) return;
+    rows.forEach(function(row) {
+      var layer = {
+        id: 'otl_db_'+row.id, dbId: row.id,
+        name: row.naam, color: row.kleur || '#0057FF',
+        visible: row.zichtbaar !== false,
+        polylines: row.polylines || [],
+        leafletLayers: []
+      };
+      ontwerpLayers.push(layer);
+      renderOntwerpLayerOnMap(layer);
+    });
+    renderOntwerpLayerList();
+  }).catch(function(){});
 }
 
 function setOntwerpLayer(name) {
@@ -1510,7 +1553,26 @@ function parseOntwerpDxf(text, filename) {
     ontwerpLayers.push(layer);
     renderOntwerpLayerOnMap(layer);
     renderOntwerpLayerList();
-    showOntwerpStatus('\u2713 ' + polylines.length + ' polyline(s) geladen uit ' + filename, 'ok');
+    showOntwerpStatus('\u2713 ' + polylines.length + ' polyline(s) geladen — opslaan...', 'ok');
+    // Save to Supabase
+    ontInsert({
+      werkpakket_id: ROW_IDX,
+      naam: layer.name,
+      kleur: layer.color,
+      polylines: polylines,
+      zichtbaar: true,
+      created_by: currentUser,
+      created_at: new Date().toISOString(),
+      updated_by: currentUser,
+      updated_at: new Date().toISOString()
+    }).then(function(ins) {
+      var ret = Array.isArray(ins) ? ins[0] : ins;
+      if (ret && ret.id) { layer.dbId = ret.id; layer.id = 'otl_db_'+ret.id; }
+      showOntwerpStatus('\u2713 ' + polylines.length + ' polyline(s) opgeslagen: ' + filename, 'ok');
+      setTimeout(function(){ document.getElementById('ontwerpStatus').style.display='none'; }, 3000);
+    }).catch(function(err){
+      showOntwerpStatus('Opgeslagen in geheugen (DB fout: '+err.message+')', 'err');
+    });
     setTimeout(function(){ document.getElementById('ontwerpStatus').style.display='none'; }, 3000);
   } catch(err) {
     showOntwerpStatus('Parseerfout: ' + err.message, 'err');
@@ -1544,14 +1606,18 @@ function toggleOntwerpLayer(id) {
   layer.visible = !layer.visible;
   layer.leafletLayers.forEach(function(pl){ pl.setStyle({opacity: layer.visible?0.9:0, fillOpacity: layer.visible?0.2:0}); });
   renderOntwerpLayerList();
+  if (layer.dbId) ontPatch(layer.dbId, {zichtbaar: layer.visible}).catch(function(){});
 }
 
 function deleteOntwerpLayer(id) {
   var idx = ontwerpLayers.findIndex(function(l){ return l.id===id; });
   if (idx < 0) return;
-  ontwerpLayers[idx].leafletLayers.forEach(function(pl){ if(ontwerpMap&&ontwerpMap.hasLayer(pl)) ontwerpMap.removeLayer(pl); });
+  var layer = ontwerpLayers[idx];
+  layer.leafletLayers.forEach(function(pl){ if(ontwerpMap&&ontwerpMap.hasLayer(pl)) ontwerpMap.removeLayer(pl); });
   ontwerpLayers.splice(idx, 1);
   renderOntwerpLayerList();
+  // Delete from Supabase
+  if (layer.dbId) ontDelete(layer.dbId).catch(function(){});
 }
 
 function clearAllOntwerpLayers() {
