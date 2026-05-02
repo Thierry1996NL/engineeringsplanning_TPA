@@ -2146,12 +2146,32 @@ function buildDatumOverzicht() {
     return { cls:'wk-ok', txt: '+'+wk+'w' };
   }
 
+  // Determine primary role for a phase from its taskCols
+  function phaseRole(p) {
+    if (!p.taskCols || !p.taskCols.length) return null;
+    var counts = {};
+    p.taskCols.forEach(function(ci) {
+      var r = (TASK_ROLE_MAP && TASK_ROLE_MAP[ci]) || 'engineer';
+      counts[r] = (counts[r] || 0) + 1;
+    });
+    var best = 'engineer', bestN = 0;
+    Object.keys(counts).forEach(function(k){ if(counts[k] > bestN){ best=k; bestN=counts[k]; } });
+    return best;
+  }
+
+  var engineer = ROW_DATA[8] || '—';
+
   var grouped = {};
   GROUPS.forEach(function(g){ grouped[g.key] = []; });
   GANTT_PHASES.forEach(function(p){ if(grouped[p.group]) grouped[p.group].push(p); });
 
-  var colW = { label:'minmax(100px,1fr)', date:'88px', wk:'64px', done:'60px' };
-  var gridStyle = 'display:grid;grid-template-columns:'+colW.label+' '+colW.date+' '+colW.wk+' '+colW.done+';align-items:center;';
+  // Grid: label | datum | weken | rol | verantwoordelijke | gereed
+  var gridTpl = 'minmax(120px,1fr) 92px 60px 120px 140px 60px';
+  var gridStyle = 'display:grid;grid-template-columns:'+gridTpl+';align-items:center;';
+
+  var hdrCell = function(txt) {
+    return '<div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3)">'+txt+'</div>';
+  };
 
   var html = '<div class="datum-overzicht">'
     + '<div class="datum-overzicht-header">'
@@ -2165,12 +2185,14 @@ function buildDatumOverzicht() {
 
     html += '<div style="border-top:1px solid var(--border)">';
 
-    // Group header row
+    // Group header with column labels
     html += '<div style="'+gridStyle+'background:var(--surface2);padding:.375rem 1rem;border-bottom:1px solid var(--border)">'
-      + '<div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-3)">'+esc(g.label)+'</div>'
-      + '<div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3)">Datum</div>'
-      + '<div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3)">Weken</div>'
-      + '<div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3)">Gereed</div>'
+      + hdrCell(g.label)
+      + hdrCell('Datum')
+      + hdrCell('Weken')
+      + hdrCell('Rol')
+      + hdrCell('Verantwoordelijke')
+      + hdrCell('Gereed')
       + '</div>';
 
     items.forEach(function(p, idx) {
@@ -2178,32 +2200,46 @@ function buildDatumOverzicht() {
       var isDone = ROW_DATA[p.gereedCol] === 'Ja';
       var wk     = wekenTot(endD);
       var wkD    = wkDisplay(wk);
+      var role   = phaseRole(p);
       var isLast = idx === items.length - 1;
-      var rowBorder = isLast ? '' : 'border-bottom:1px solid var(--border);';
+      var rowBdr = isLast ? '' : 'border-bottom:1px solid var(--border);';
 
-      // Date cell
+      // Date
       var dateCell = endD
         ? '<span style="font-size:10px;font-weight:600;color:var(--text-2);font-family:monospace;font-variant-numeric:tabular-nums">'+fmtDate(endD)+'</span>'
-        : '<span style="font-size:10px;color:var(--text-3);font-style:italic">—</span>';
+        : '<span style="font-size:10px;color:var(--text-3)">—</span>';
 
-      // Weeks cell
+      // Weeks
       var wkCell = endD
         ? '<span class="do-wk '+wkD.cls+'" style="font-size:10px;font-weight:700;font-variant-numeric:tabular-nums">'+wkD.txt+'</span>'
         : '<span style="font-size:10px;color:var(--text-3)">—</span>';
 
-      // Gereed cell
+      // Role badge
+      var roleCell;
+      if (role) {
+        var rc = (ROLE_COLOR_MAP && ROLE_COLOR_MAP[role]) || '#888';
+        var rl = (ROLE_LABEL_MAP && ROLE_LABEL_MAP[role]) || role;
+        roleCell = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;'
+          + 'padding:2px 7px;border-radius:20px;background:'+rc+'18;color:'+rc+';white-space:nowrap">'
+          + rl + '</span>';
+      } else {
+        roleCell = '<span style="font-size:10px;color:var(--text-3)">—</span>';
+      }
+
+      // Responsible person
+      var personCell = '<span style="font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(engineer)+'</span>';
+
+      // Gereed
       var doneCell = isDone
         ? '<span style="font-size:9px;font-weight:700;padding:2px 6px;background:var(--g-bg);color:var(--g-fg);border-radius:20px">Ja</span>'
         : '<span style="font-size:9px;font-weight:600;padding:2px 6px;background:var(--n-bg);color:var(--text-3);border-radius:20px">Nee</span>';
 
-      html += '<div style="'+gridStyle+rowBorder+'padding:.375rem 1rem;transition:background .07s" '
-        + '>'
-        + '<div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--text-2);overflow:hidden">'
-        + '<span style="width:7px;height:7px;border-radius:2px;flex-shrink:0;background:'+p.color+'"></span>'
-        + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.label)+'</span>'
-        + '</div>'
+      html += '<div style="'+gridStyle+rowBdr+'padding:.375rem 1rem">'
+        + '<div style="font-size:11px;font-weight:500;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.label)+'</div>'
         + '<div>'+dateCell+'</div>'
         + '<div>'+wkCell+'</div>'
+        + '<div>'+roleCell+'</div>'
+        + '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+personCell+'</div>'
         + '<div>'+doneCell+'</div>'
         + '</div>';
     });
