@@ -2070,28 +2070,43 @@ function renderGanttChart() {
   var todayPct = pct(today);
   var html = '';
 
-  // ── As met datums + Vandaag markering ──
-  html += '<div style="display:flex;align-items:flex-end;margin-left:110px;padding-left:.625rem;margin-bottom:0">'
-    + '<div class="gantt-axis" style="flex:1;position:relative;margin:0;padding:0">';
-  // Tick labels
-  for (var ti = 0; ti <= 3; ti++) {
-    var tDate = new Date(minD.getTime() + (totalMs / 3) * ti);
-    html += '<div class="gantt-tick">'+fmtShortG(tDate)+'</div>';
+  // ── Maandelijkse as ──
+  var MAANDEN = ['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+
+  // Verzamel alle maanden tussen minD en maxD
+  var months = [];
+  var cur = new Date(minD.getFullYear(), minD.getMonth(), 1);
+  while (cur <= maxD) {
+    months.push(new Date(cur));
+    cur.setMonth(cur.getMonth() + 1);
   }
-  // Vandaag label op juiste positie
-  html += '<div style="position:absolute;bottom:0;left:'+todayPct+'%;transform:translateX(-50%);'
-    + 'font-size:9px;font-weight:700;color:#FF3B30;white-space:nowrap;background:var(--surface);'
-    + 'padding:0 2px;border-radius:2px">Vandaag</div>';
+
+  // ── Rij 1: Maandnamen met breedte proportioneel aan kalenderdagen ──
+  html += '<div style="display:flex;margin-left:110px;padding-left:.625rem;margin-bottom:0;position:relative">'
+    + '<div style="flex:1;display:flex;border-bottom:1px solid var(--border-md);position:relative">';
+
+  months.forEach(function(mStart) {
+    var mEnd = new Date(mStart.getFullYear(), mStart.getMonth()+1, 1);
+    var visStart = Math.max(mStart.getTime(), minD.getTime());
+    var visEnd   = Math.min(mEnd.getTime(),   maxD.getTime());
+    var widthPct = Math.max(0, (visEnd - visStart) / totalMs * 100);
+    var isToday  = today >= mStart && today < mEnd;
+    var yearStr  = mStart.getMonth() === 0 ? (' ' + String(mStart.getFullYear())) : '';
+    html += '<div style="width:'+widthPct+'%;overflow:hidden;text-align:center;'
+      + 'font-size:9px;font-weight:'+(isToday?'800':'600')+';'
+      + 'color:'+(isToday?'#FF3B30':'var(--text-2)')+';'
+      + 'padding:2px 0;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0">'
+      + MAANDEN[mStart.getMonth()] + yearStr
+      + '</div>';
+  });
+
+  // Vandaag lijn + label over de maandrij
+  html += '<div style="position:absolute;top:0;bottom:-100vh;left:'+todayPct+'%;'
+    + 'width:1px;background:#FF3B30;opacity:.7;pointer-events:none;z-index:5"></div>';
+
   html += '</div>'
     + '<div style="width:120px;flex-shrink:0;padding-left:4px;font-size:9px;font-weight:700;'
-    + 'text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Datum &nbsp;·&nbsp; Weken</div>'
-    + '</div>';
-
-  // Lijn onder de as
-  html += '<div style="display:flex;gap:.625rem;margin-bottom:6px">'
-    + '<div style="width:110px;flex-shrink:0"></div>'
-    + '<div style="flex:1;height:1px;background:var(--border-md)"></div>'
-    + '<div style="width:120px;flex-shrink:0"></div>'
+    + 'text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);align-self:flex-end">Datum &nbsp;&middot;&nbsp; Weken</div>'
     + '</div>';
 
   // Weken-helper
