@@ -1196,22 +1196,7 @@
 </nav>
 
 <!-- Detail controls: only search + status filters -->
-<div class="detail-controls" id="detailControls" style="display:none">
-  <div class="detail-filter-row">
-    <input class="detail-search" type="text" id="detailSearch" placeholder="&#128269; Zoek veldnaam..." oninput="applyDetailFilters()">
-    <div class="filter-status-btns">
-      <button class="fsb fsb-G" onclick="toggleStatusFilter('Gereed',this)"><span class="fsb-dot" style="background:var(--g-fg)"></span>Gereed</button>
-      <button class="fsb fsb-L" onclick="toggleStatusFilter('Loopt',this)"><span class="fsb-dot" style="background:var(--l-fg)"></span>Loopt</button>
-      <button class="fsb fsb-R" onclick="toggleStatusFilter('Review',this)"><span class="fsb-dot" style="background:var(--r-fg)"></span>Review</button>
-      <button class="fsb fsb-B" onclick="toggleStatusFilter('Geblokkeerd',this)"><span class="fsb-dot" style="background:var(--b-fg)"></span>Geblokkeerd</button>
-      <button class="fsb fsb-N" onclick="toggleStatusFilter('Nog te starten',this)"><span class="fsb-dot" style="background:var(--n-fg)"></span>Nog te starten</button>
-    </div>
-    <label class="toggle-empty">
-      <input type="checkbox" id="hideEmpty" onchange="applyDetailFilters()"> Verberg lege velden
-    </label>
-    <span class="detail-filter-count" id="detailFilterCount"></span>
-  </div>
-</div>
+
 
 <div class="detail-export-row" id="detailExportRow" style="display:none">
   <span class="export-label">Exporteer</span>
@@ -2048,9 +2033,9 @@ function renderPage() {
   html += '</div>'; // close panel-voortgang
   html += '</div>'; // app-wrapper
   document.getElementById('mainContent').innerHTML = html;
-  document.getElementById('detailControls').style.display = 'flex';
+
   var snav = document.getElementById('sectionNav'); if(snav) snav.style.display = 'flex';
-  document.getElementById('detailExportRow').style.display = 'flex';
+
   // Herstel huidig filter (of standaard 'alle' bij eerste load)
   setTimeout(function() {
     var fase = currentDetailFase || 'alle';
